@@ -1,0 +1,23 @@
+App Structure:
+- staff
+    - DetailView
+    - ListView
+- game
+    - DetailView
+    - ListViewp
+- replay
+    - DetailView
+    - ListView
+- superreplay
+    - DetailView
+    - ListView
+- testchamber
+    - DetailView
+    - ListView
+
+- ISSUE: Some models like Game, Staff, etc. are shared between each app. 
+Should I just create them in one and import in the others 
+OR create a base app to hold any shared models and import them into other apps?
+Maybe all apps with shared models should be in combined into single app OR create 
+separate app for each of those shared models since they each need their own DetailView 
+and ListView also.
