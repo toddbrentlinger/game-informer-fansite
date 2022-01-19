@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from django.db import models
 
 # Create your models here.
@@ -20,12 +21,41 @@ class Thumbnail(models.Model):
     pass
 
 class Game(models.Model):
+    GAME_SYSTEMS = (
+        ('PC', 'PC'),
+        ('PS4', 'PlayStation 4'),
+        ('X360', 'XBox 360'),
+    )
+
+    # Fields
+
+    title = models.CharField(max_length=100, help_text='Enter game title.')
+    system = models.CharField(max_length=10, choices=GAME_SYSTEMS, help_text='Enter game system (ex. PC, PS4, XBox 360, etc.).')
+    release_date = models.DateField(help_text='Enter date the game was released.')
+
+    # Metadata
+    # Methods
+
+class Person(models.Model):
+    # Fields
+
+    first_name = models.CharField(max_length=100, help_text='Enter first name.')
+    last_name = models.CharField(max_length=100, help_text='Enter last name.')
+
+    # Metadata
+
+    class Meta:
+        abstract = True
+
+    # Methods
+
+class Guest(Person):
     # Fields
     # Metadata
     # Methods
     pass
 
-class Staff(models.Model):
+class Staff(Person):
     # Fields
     # Metadata
     # Methods
@@ -33,11 +63,31 @@ class Staff(models.Model):
 
 class Article(models.Model):
     # Fields
+
+    title = models.CharField(max_length=100, help_text='Enter article title.')
+    author = NULL
+    datetime = models.DateTimeField(help_text='Enter date and time article was published.')
+    content = models.TextField(help_text='Enter main content of article.')
+
+    # Metadata
+    # Methods
+
+class Segment(models.Model):
+    # Fields
     # Metadata
     # Methods
     pass
 
-class Segment(models.Model):
+class ExternalLink(models.Model):
+    # Fields
+
+    url = models.CharField(max_length=500, help_text='Enter URL of external link.')
+    title = models.CharField(max_length=100, help_text='Enter display title of external link.')
+
+    # Metadata
+    # Methods
+
+class OtherHeading(models.Model):
     # Fields
     # Metadata
     # Methods
@@ -51,9 +101,11 @@ class Episode(models.Model):
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
     host = models.ForeignKey(Staff, help_text='Enter staff member who hosts in the episode.')
-    featuring = models.ManyToManyField(Staff, help_text='Enter staff members who features in the episode.')
-    description = models.TextField(max_length=10000, help_text='Enter episode description')
-    youtube_video = models.ForeignKey(YouTubeVideo, help_text='Enter the YouTube video for the episode.')
+    featuring = models.ManyToManyField(Staff, blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
+    description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
+    youtube_video = models.ForeignKey(YouTubeVideo, blank=True, help_text='Enter the YouTube video for the episode.')
+    external_links = models.ManyToManyField(ExternalLink, help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
+    other_headings = models.ForeignKey(OtherHeading, help_text='Enter heading se')
 
     # Metadata
 
@@ -80,6 +132,10 @@ class ReplayEpisode(Episode):
         pass
 
     # Methods
+
+    def getSeason(self):
+        replaySeasonStartEpisodes = [1, 107, 268, 385, 443, 499] # [S1, S2, S3, S4, S5, S6]
+        # Return tuple (season, seasonEpisode)
 
 class SuperReplayEpisode(Episode):
     # Fields
