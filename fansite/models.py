@@ -1,24 +1,36 @@
-from asyncio.windows_events import NULL
+import uuid # Used for unique model instances
+
 from django.db import models
 
 # Create your models here.
+
+class Thumbnail(models.Model):
+    QualityType = models.TextChoices(
+        'default', 'medium', 'high', 'standard', 'maxres',
+    )
+
+    # Fields
+
+    quality = models.CharField(choices=QualityType.choices, max_length=20, help_text='Enter quality of thumbnail.')
+    url = models.URLField(help_text='Enter URL of thumbnail.')
+    width = models.PositiveSmallIntegerField(help_text='Enter width of thumbnail')
+    height = models.PositiveSmallIntegerField(help_text='Enter height of thumbnail')
+
+    # Metadata
+    # Methods
+    pass
 
 class YouTubeVideo(models.Model):
     # Fields
 
     youtube_id = models.CharField(max_length=15) # YouTube ID has 11 characters
-    views = models.PositiveIntegerField(help_text='Enter number of views.')
+    views = models.PositiveBigIntegerField(help_text='Enter number of views.')
     likes = models.PositiveIntegerField(help_text='Enter number of likes.')
     dislikes = models.PositiveIntegerField(help_text='Enter the number of dislikes.')
+    thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the video.')
 
     # Metadata
     # Methods
-
-class Thumbnail(models.Model):
-    # Fields
-    # Metadata
-    # Methods
-    pass
 
 class Game(models.Model):
     GAME_SYSTEMS = (
@@ -53,35 +65,77 @@ class Guest(Person):
     # Fields
     # Metadata
     # Methods
-    pass
+    
+    def __str__(self):
+        pass
+
+    def get_absolute_url(self):
+        pass
 
 class Staff(Person):
     # Fields
     # Metadata
     # Methods
-    pass
+    
+    def __str__(self):
+        pass
+
+    def get_absolute_url(self):
+        pass
 
 class Article(models.Model):
     # Fields
 
     title = models.CharField(max_length=100, help_text='Enter article title.')
-    author = NULL
+    author = models.ForeignKey(Staff, help_text='Enter staff who authored the article.')
     datetime = models.DateTimeField(help_text='Enter date and time article was published.')
     content = models.TextField(help_text='Enter main content of article.')
 
     # Metadata
     # Methods
+    
+    def __str__(self):
+        pass
+
+    def get_absolute_url(self):
+        pass
 
 class Segment(models.Model):
+    SEGMENT_TYPES = (
+        ('RR', 'Replay Roulette'),
+        ('SRS', 'Super Replay Showdown'),
+        ('YDIW', 'You\'re Doing It Wrong'),
+        ('ST', 'Stress Test'),
+        ('RP', 'RePorted'),
+        ('DP', 'Developer Pick'),
+        ('2037', 'Replay 2037'),
+        ('HF', 'Horror Fest'),
+        ('RRL', 'Replay Real Life'),
+    )
+
     # Fields
     # Metadata
     # Methods
-    pass
+    
+    def __str__(self):
+        pass
+
+    def get_absolute_url(self):
+        pass
 
 class ExternalLink(models.Model):
+    EXTERNAL_LINK_SOURCES = (
+        ('gameinformer', 'Game Informer'),
+        ('youtube', 'YouTube'),
+        ('fandom', 'Fandom'),
+        ('wikipedia', 'Wikipedia'),
+        ('gamespot', 'GameSpot'),
+        ('steampowered', 'Steam'),
+    )
+
     # Fields
 
-    url = models.CharField(max_length=500, help_text='Enter URL of external link.')
+    url = models.URLField(help_text='Enter URL of external link.')
     title = models.CharField(max_length=100, help_text='Enter display title of external link.')
 
     # Metadata
@@ -96,6 +150,7 @@ class OtherHeading(models.Model):
 class Episode(models.Model):
     # Fields
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100, help_text='Enter episode title.')
     runtime = models.PositiveIntegerField(help_text='Enter episode runtime as number of seconds.')
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the episode.')
@@ -120,7 +175,7 @@ class Episode(models.Model):
 class ReplayEpisode(Episode):
     # Fields
 
-    number = models.PositiveIntegerField(help_text='Enter Replay episode number.')
+    number = models.PositiveSmallIntegerField(help_text='Enter Replay episode number.')
     main_segment_games = models.ManyToManyField(Game, help_text='Enter any games part of the main segment of the Replay episode.')
     middle_segment = models.ForeignKey(Segment, help_text='Enter middle segment for the Replay episode.')
     second_segment = models.ForeignKey(Segment, help_text='Enter second segment for the Replay episode.')
@@ -132,10 +187,33 @@ class ReplayEpisode(Episode):
         pass
 
     # Methods
+    
+    def __str__(self):
+        pass
 
-    def getSeason(self):
+    def get_absolute_url(self):
+        pass
+
+    def get_season(self):
+        # Episode numbers less than 1 are special unofficial episodes
         replaySeasonStartEpisodes = [1, 107, 268, 385, 443, 499] # [S1, S2, S3, S4, S5, S6]
+
+        # Season
+        
+        for index in range(len(replaySeasonStartEpisodes)):
+            if (self.number < replaySeasonStartEpisodes[index]):
+                season = index
+                break
+            # If reached end of loop, assign last season
+            if index == (len(replaySeasonStartEpisodes) - 1):
+                season = len(replaySeasonStartEpisodes)
+
+        # Season Episode
+
+        seasonEpisode = self.number - replaySeasonStartEpisodes[season - 1] + 1 if season > 1 else self.number
+
         # Return tuple (season, seasonEpisode)
+        return (season, seasonEpisode)
 
 class SuperReplayEpisode(Episode):
     # Fields
@@ -145,3 +223,9 @@ class SuperReplayEpisode(Episode):
         pass
 
     # Methods
+    
+    def __str__(self):
+        pass
+
+    def get_absolute_url(self):
+        pass

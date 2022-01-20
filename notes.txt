@@ -1,3 +1,9 @@
+
+X Replace PositiveIntegerField with PositiveSmallIntegerField
+Small Integer limit is 32767
+
+- Could I use ImageField built-in model for Thumbnail?
+
 - Host/Featuring: For new Featuring entries, check that each Staff is NOT already listed in Host position
 
 App Structure:
