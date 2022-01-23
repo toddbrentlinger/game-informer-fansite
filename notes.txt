@@ -1,3 +1,9 @@
+- Should Episode.id be 'editable'?
+
+- YouTubeVideo.thumbnails should use a default thumbnail referenced by the pk value. Perhaps it should be 
+the first thumbnail instanced added to the database with pk=0
+
+- Runtime AND Airdate in Episode could instead be used in YouTubeVideo.
 
 X Replace PositiveIntegerField with PositiveSmallIntegerField
 Small Integer limit is 32767

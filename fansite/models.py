@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 import uuid # Used for unique model instances
 
 from django.db import models
@@ -22,10 +23,10 @@ class Thumbnail(models.Model):
 class YouTubeVideo(models.Model):
     # Fields
 
-    youtube_id = models.CharField(max_length=15) # YouTube ID has 11 characters
-    views = models.PositiveBigIntegerField(help_text='Enter number of views.')
-    likes = models.PositiveIntegerField(help_text='Enter number of likes.')
-    dislikes = models.PositiveIntegerField(help_text='Enter the number of dislikes.')
+    youtube_id = models.CharField(max_length=15, null=True, blank=True, verbose_name='video ID', help_text='Enter YouTube video ID') # YouTube ID has 11 characters
+    views = models.PositiveBigIntegerField(null=True, blank=True, help_text='Enter number of views.')
+    likes = models.PositiveIntegerField(null=True, blank=True, help_text='Enter number of likes.')
+    dislikes = models.PositiveIntegerField(null=True, blank=True, help_text='Enter the number of dislikes.')
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the video.')
 
     # Metadata
@@ -33,8 +34,17 @@ class YouTubeVideo(models.Model):
 
     @property
     def like_ratio(self):
+        # 
+        if (self.dislikes is NULL or self.likes is NULL):
+            return 0
+
+        # Check if both likes/dislikes are zero to avoid dividing by zero
+        if (self.dislikes == 0 and self.likes == 0):
+            return 0
+
         return round(round(self.likes/(self.likes + self.dislikes)) * 100, 1)
 
+# TODO: Use VGDB (Video Game Database API)
 class Game(models.Model):
     GAME_SYSTEMS = (
         ('PC', 'PC'),
@@ -54,8 +64,8 @@ class Game(models.Model):
 class Person(models.Model):
     # Fields
 
-    first_name = models.CharField(max_length=100, help_text='Enter first name.')
-    last_name = models.CharField(max_length=100, help_text='Enter last name.')
+    first_name = models.CharField(max_length=100, verbose_name='first Name', help_text='Enter first name.')
+    last_name = models.CharField(max_length=100, verbose_name='last Name', help_text='Enter last name.')
 
     # Metadata
 
@@ -77,6 +87,9 @@ class Guest(Person):
 
 class Staff(Person):
     # Fields
+
+    role = models.CharField(max_length=200, help_text='Enter professional role of staff member.')
+
     # Metadata
     # Methods
     
@@ -100,9 +113,6 @@ class Article(models.Model):
     def __str__(self):
         pass
 
-    def get_absolute_url(self):
-        pass
-
 class Segment(models.Model):
     SEGMENT_TYPES = (
         ('RR', 'Replay Roulette'),
@@ -117,6 +127,9 @@ class Segment(models.Model):
     )
 
     # Fields
+
+    type = models.CharField(max_length=10, choices=SEGMENT_TYPES, help_text='Enter type of segment.')
+
     # Metadata
     # Methods
     
@@ -127,6 +140,7 @@ class Segment(models.Model):
         pass
 
 class ExternalLink(models.Model):
+    # TODO: Used to display source of url: <title> on <source>
     EXTERNAL_LINK_SOURCES = (
         ('gameinformer', 'Game Informer'),
         ('youtube', 'YouTube'),
@@ -144,6 +158,13 @@ class ExternalLink(models.Model):
     # Metadata
     # Methods
 
+    def getLinkSource(self):
+        # Loop through EXTERNAL_LINK_SOURCES
+            # If url contains first item of tuple
+                # return second item of tuple
+        # If reach this point, no match was found. Return default vaule
+        pass
+
 class OtherHeading(models.Model):
     # Fields
     # Metadata
@@ -155,15 +176,15 @@ class Episode(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100, help_text='Enter episode title.')
-    runtime = models.PositiveIntegerField(help_text='Enter episode runtime as number of seconds.')
+    runtime = models.PositiveIntegerField(blank=True, help_text='Enter episode runtime as number of seconds.')
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
     host = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, help_text='Enter staff member who hosts in the episode.')
-    featuring = models.ManyToManyField(Staff, blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
+    featuring = models.ManyToManyField(Staff, null=True, blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
     description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
-    youtube_video = models.ForeignKey(YouTubeVideo, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter the YouTube video for the episode.')
-    external_links = models.ManyToManyField(ExternalLink, help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
-    other_headings = models.ForeignKey(OtherHeading, on_delete=models.SET_NULL, null=True, help_text='Enter heading se')
+    youtube_video = models.ForeignKey(YouTubeVideo, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='youTube Video', help_text='Enter the YouTube video for the episode.')
+    external_links = models.ManyToManyField(ExternalLink, null=True, blank=True, verbose_name='external Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
+    other_headings = models.ForeignKey(OtherHeading, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='other Headings', help_text='Enter heading se')
 
     # Metadata
 
@@ -192,11 +213,11 @@ class Episode(models.Model):
 class ReplayEpisode(Episode):
     # Fields
 
-    number = models.PositiveSmallIntegerField(help_text='Enter Replay episode number.')
-    main_segment_games = models.ManyToManyField(Game, help_text='Enter any games part of the main segment of the Replay episode.')
-    middle_segment = models.ForeignKey(Segment, on_delete=models.SET_NULL, null=True, help_text='Enter middle segment for the Replay episode.')
-    second_segment = models.ForeignKey(Segment, on_delete=models.SET_NULL, null=True, help_text='Enter second segment for the Replay episode.')
-    article = models.OneToOneField(Article, help_text='Enter article for the Replay episode.')
+    number = models.SmallIntegerField(unique=True, help_text='Enter Replay episode number (unofficial episodes use negative numbers).')
+    main_segment_games = models.ManyToManyField(Game, verbose_name='main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
+    middle_segment = models.ForeignKey(Segment, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='middle Segment', help_text='Enter middle segment for the Replay episode.')
+    second_segment = models.ForeignKey(Segment, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='second Segment', help_text='Enter second segment for the Replay episode.')
+    article = models.OneToOneField(Article, null=True, blank=True, help_text='Enter article for the Replay episode.')
 
     # Metadata
 
