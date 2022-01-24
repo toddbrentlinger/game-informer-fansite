@@ -1,3 +1,6 @@
+- How to account for choices not having an appropriate choice?
+Create separate model for the choices where a new one can be added.
+
 - Should Episode.id be 'editable'?
 
 - YouTubeVideo.thumbnails should use a default thumbnail referenced by the pk value. Perhaps it should be 
