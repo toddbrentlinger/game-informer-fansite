@@ -8,10 +8,8 @@ from django.urls import reverse
 
 class Thumbnail(models.Model):
     """Model representing a thumbnail."""
-
-    QualityType = models.TextChoices(
-        'default', 'medium', 'high', 'standard', 'maxres',
-    )
+    
+    QualityType = models.TextChoices('QualityType', 'DEFAULT MEDIUM HIGH STANDARD MAXRES')
 
     # Fields
 
@@ -177,28 +175,44 @@ class Article(models.Model):
     def __str__(self):
         return f'{self.title} by {self.author} on {self.datetime}'
 
-# TODO: Create segment type as separate class so new segments can be added
-# and convert this to SegmentInstance
 class Segment(models.Model):
     """Model representing a segment of an episode."""
 
-    SEGMENT_TYPES = (
-        ('RR', 'Replay Roulette'),
-        ('SRS', 'Super Replay Showdown'),
-        ('YDIW', 'You\'re Doing It Wrong'),
-        ('ST', 'Stress Test'),
-        ('RP', 'RePorted'),
-        ('DP', 'Developer Pick'),
-        ('2037', 'Replay 2037'),
-        ('HF', 'Horror Fest'),
-        ('RRL', 'Replay Real Life'),
-    )
+    # SEGMENT_TYPES = (
+    #     ('RR', 'Replay Roulette'),
+    #     ('SRS', 'Super Replay Showdown'),
+    #     ('YDIW', 'You\'re Doing It Wrong'),
+    #     ('ST', 'Stress Test'),
+    #     ('RP', 'RePorted'),
+    #     ('DP', 'Developer Pick'),
+    #     ('2037', 'Replay 2037'),
+    #     ('HF', 'Horror Fest'),
+    #     ('RRL', 'Replay Real Life'),
+    # )
 
     # Fields
 
-    type = models.CharField(max_length=10, choices=SEGMENT_TYPES, help_text='Enter type of segment.')
-    games = models.ManyToManyField(Game, help_text='Enter games played during the segment.')
+    title = models.CharField(max_length=100, help_text='Enter title of segment.')
+    abbreviation = models.CharField(max_length=10, blank=True, help_text='Enter shortened abbreviation of segment title.')
+    description = models.CharField(max_length=1000, blank=True, help_text='Enter description of segment.')
 
+    # Metadata
+    # Methods
+
+    def __str__(self):
+        return self.title
+
+# TODO: Could SegmentInstance use a UUID field?
+class SegmentInstance(models.Model):
+    """Model representing a single instance of a segment in an episode."""
+
+    # Fields
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, help_text='Unique ID for this particular segment instance.')
+    segment = models.ForeignKey(Segment, on_delete=models.RESTRICT, help_text='Enter type of segment.')
+    games = models.ManyToManyField(Game, blank=True, help_text='Enter games played during the segment.')
+    content = models.TextField(null=True, blank=True, help_text='Enter content description of this segment instance.')
+    
     # Metadata
     # Methods
     
@@ -245,21 +259,40 @@ class ExternalLink(models.Model):
         # If reach this point, no match was found. Return default vaule
         pass
 
-# TODO: Create heading type as separate model so new ones can be added dynamically.
-# TODO: Different headings have different requirements. Description is just text, 
-# quotes should be formatted differently, gallery includes images, etc.
 class Heading(models.Model):
-    """Model representing a specific heading with different content."""
+    """Model representing a type of heading of an episode."""
 
-    HEADING_TYPES = (
-        ('description', 'Description'),
-        ('gallery', 'Gallery'),
-        ('quotes', 'Quotes'),
-    )
+    # HEADING_TYPES = (
+    #     ('description', 'Description'),
+    #     ('gallery', 'Gallery'),
+    #     ('quotes', 'Quotes'),
+    # )
+
     # Fields
+
+    title = models.CharField(max_length=100, help_text='Enter heading title.')
+
     # Metadata
     # Methods
-    pass
+
+    def __str__(self):
+        pass
+
+# TODO: Different headings have different requirements. Description is just text, 
+# quotes should be formatted differently, gallery includes images, etc.
+class HeadingInstance(models.Model):
+    """Model representing a specific heading with different content."""
+
+    # Fields
+
+    heading = models.ForeignKey(Heading, on_delete=models.RESTRICT, help_text='Enter heading type.')
+    #episode = models.ForeignKey('Episode', on_delete=models.CASCADE, help_text='Enter episode for which this heading instance belongs.')
+
+    # Metadata
+    # Methods
+    
+    def __str__(self):
+        pass
 
 # TODO: Combine 'description' and 'other_headings' to 'headings'
 class Episode(models.Model):
@@ -273,11 +306,15 @@ class Episode(models.Model):
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
     host = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff member who hosts in the episode.')
-    featuring = models.ManyToManyField(Staff, null=True, blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
-    description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
+    featuring = models.ManyToManyField(Staff, blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
     youtube_video = models.ForeignKey(YouTubeVideo, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='youTube Video', help_text='Enter the YouTube video for the episode.')
-    external_links = models.ManyToManyField(ExternalLink, null=True, blank=True, verbose_name='external Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
-    other_headings = models.ForeignKey(Heading, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='other Headings', help_text='Enter heading se')
+    external_links = models.ManyToManyField(ExternalLink, blank=True, verbose_name='external Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
+    # TODO: Combine next two into single headingInstances = ForeignKey but ForeignKey should be inside 'one' of 'one-to-many' relationship.
+    # This should be inside HeadingInstance class as an 'episode' property. More is required since it makes more sense to adding new HeadingInstances
+    # when creating an Episode instead of adding an Episode when creating a HeadingInstance.
+    # *** Use 'django polymorphic'
+    #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
+    #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='other Headings', help_text='Enter heading se')
 
     # Metadata
 
@@ -311,9 +348,9 @@ class ReplayEpisode(Episode):
 
     number = models.SmallIntegerField(unique=True, help_text='Enter Replay episode number (unofficial episodes use negative numbers).')
     main_segment_games = models.ManyToManyField(Game, verbose_name='main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
-    middle_segment = models.ForeignKey(Segment, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='middle Segment', help_text='Enter middle segment for the Replay episode.')
-    second_segment = models.ForeignKey(Segment, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='second Segment', help_text='Enter second segment for the Replay episode.')
-    article = models.OneToOneField(Article, null=True, blank=True, help_text='Enter article for the Replay episode.')
+    middle_segment = models.ForeignKey(SegmentInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='middle Segment', help_text='Enter middle segment for the Replay episode.')
+    second_segment = models.ForeignKey(SegmentInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='second Segment', help_text='Enter second segment for the Replay episode.')
+    article = models.OneToOneField(Article, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter article for the Replay episode.')
 
     # Metadata
 
@@ -372,7 +409,7 @@ class SuperReplayEpisode(Episode):
 
     # Fields
 
-    super_replay = models.ForeignKey(SuperReplay, on_delete=models.CASCADE, help_text='Enter Super Replay for this episode.')
+    super_replay = models.ForeignKey(SuperReplay, on_delete=models.RESTRICT, help_text='Enter Super Replay for this episode.')
 
     # Metadata
 
