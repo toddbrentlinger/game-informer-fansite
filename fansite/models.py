@@ -14,7 +14,7 @@ class Thumbnail(models.Model):
     # Fields
 
     quality = models.CharField(choices=QualityType.choices, max_length=20, help_text='Enter quality of thumbnail.')
-    url = models.URLField(help_text='Enter URL of thumbnail.')
+    url = models.URLField(verbose_name='uRL', help_text='Enter URL of thumbnail.')
     width = models.PositiveSmallIntegerField(help_text='Enter width of thumbnail')
     height = models.PositiveSmallIntegerField(help_text='Enter height of thumbnail')
 
@@ -30,13 +30,17 @@ class YouTubeVideo(models.Model):
 
     # Fields
 
-    youtube_id = models.CharField(max_length=15, null=True, blank=True, verbose_name='video ID', help_text='Enter YouTube video ID') # YouTube ID has 11 characters
+    youtube_id = models.CharField(max_length=15, blank=True, verbose_name='video ID', help_text='Enter YouTube video ID') # YouTube ID has 11 characters
     views = models.PositiveBigIntegerField(null=True, blank=True, help_text='Enter number of views.')
     likes = models.PositiveIntegerField(null=True, blank=True, help_text='Enter number of likes.')
     dislikes = models.PositiveIntegerField(null=True, blank=True, help_text='Enter the number of dislikes.')
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the video.')
 
     # Metadata
+
+    class Meta:
+        verbose_name = 'youTube Video'
+
     # Methods
 
     def __str__(self):
@@ -103,6 +107,8 @@ class Person(models.Model):
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
+# TODO: Use Person as normal class for guests since there's no extra functionality for Guest over generic Person class.
+# However, do want separate detail page for guests and staff members.
 class Guest(Person):
     """Model representing a guest (not staff member)."""
 
@@ -129,6 +135,7 @@ class StaffRole(models.Model):
 
     class Meta:
         ordering = ['title']
+        verbose_name = 'staff Role'
 
     # Methods
 
@@ -145,6 +152,11 @@ class Staff(Person):
     roles = models.ManyToManyField(StaffRole, help_text='Enter professional positions for staff member.')
     
     # Metadata
+
+    class Meta:
+        verbose_name = 'staff Member'
+        verbose_name = 'staff'
+
     # Methods
     
     def __str__(self):
@@ -153,7 +165,7 @@ class Staff(Person):
     def get_absolute_url(self):
         # staff/andrew-reiner
         # staff/tim-turi
-        pass
+        return reverse('staff', args=[str(self.id)])
 
 class Article(models.Model):
     """Model representing an article."""
@@ -208,12 +220,16 @@ class SegmentInstance(models.Model):
 
     # Fields
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, help_text='Unique ID for this particular segment instance.')
-    segment = models.ForeignKey(Segment, on_delete=models.RESTRICT, help_text='Enter type of segment.')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, help_text='Unique ID for this particular segment instance.')
+    segment = models.ForeignKey(Segment, on_delete=models.PROTECT, help_text='Enter type of segment.')
     games = models.ManyToManyField(Game, blank=True, help_text='Enter games played during the segment.')
-    content = models.TextField(null=True, blank=True, help_text='Enter content description of this segment instance.')
+    content = models.TextField(blank=True, help_text='Enter content description of this segment instance.')
     
     # Metadata
+
+    class Meta:
+        verbose_name = 'segment Instance'
+
     # Methods
     
     def __str__(self):
@@ -247,6 +263,10 @@ class ExternalLink(models.Model):
     title = models.CharField(max_length=100, help_text='Enter display title of external link.')
 
     # Metadata
+
+    class Meta:
+        verbose_name = 'external Link'
+
     # Methods
 
     def __str__(self):
@@ -276,7 +296,7 @@ class Heading(models.Model):
     # Methods
 
     def __str__(self):
-        pass
+        return self.title
 
 # TODO: Different headings have different requirements. Description is just text, 
 # quotes should be formatted differently, gallery includes images, etc.
@@ -285,16 +305,25 @@ class HeadingInstance(models.Model):
 
     # Fields
 
-    heading = models.ForeignKey(Heading, on_delete=models.RESTRICT, help_text='Enter heading type.')
+    heading = models.ForeignKey(Heading, on_delete=models.PROTECT, help_text='Enter heading type.')
     #episode = models.ForeignKey('Episode', on_delete=models.CASCADE, help_text='Enter episode for which this heading instance belongs.')
 
     # Metadata
+
+    class Meta:
+        verbose_name = 'heading Instance'
+
     # Methods
     
     def __str__(self):
         pass
 
 # TODO: Combine 'description' and 'other_headings' to 'headings'
+# TODO: Combine next two into single headingInstances = ForeignKey but ForeignKey should be inside 'one' of 'one-to-many' relationship.
+# This should be inside HeadingInstance class as an 'episode' property. More is required since it makes more sense to adding new HeadingInstances
+# when creating an Episode instead of adding an Episode when creating a HeadingInstance.
+# *** Use 'django polymorphic'
+# TODO: Combine 'host' and 'featuring' into single 'featuring'. Could create separate Featuring class to hold 'host', 'staff', and 'guests'
 class Episode(models.Model):
     """Abstract model representing a base episode."""
 
@@ -305,14 +334,11 @@ class Episode(models.Model):
     runtime = models.PositiveIntegerField(blank=True, help_text='Enter episode runtime as number of seconds.')
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
-    host = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff member who hosts in the episode.')
-    featuring = models.ManyToManyField(Staff, blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
+    host = models.ForeignKey(Staff, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff member who hosts the episode.')
+    featuring = models.ManyToManyField(Staff, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
+    guests = models.ManyToManyField(Guest, blank=True, help_text='Enter any other guests (NOT official staff members).')
     youtube_video = models.ForeignKey(YouTubeVideo, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='youTube Video', help_text='Enter the YouTube video for the episode.')
     external_links = models.ManyToManyField(ExternalLink, blank=True, verbose_name='external Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
-    # TODO: Combine next two into single headingInstances = ForeignKey but ForeignKey should be inside 'one' of 'one-to-many' relationship.
-    # This should be inside HeadingInstance class as an 'episode' property. More is required since it makes more sense to adding new HeadingInstances
-    # when creating an Episode instead of adding an Episode when creating a HeadingInstance.
-    # *** Use 'django polymorphic'
     #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
     #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='other Headings', help_text='Enter heading se')
 
@@ -341,6 +367,7 @@ class Episode(models.Model):
         
         return seconds + minutes + hours
 
+# TODO: Replace 'middle_segment' and 'second_segment' with 'segments' ManyToManyField
 class ReplayEpisode(Episode):
     """Model representing an episode of Replay."""
 
@@ -348,14 +375,14 @@ class ReplayEpisode(Episode):
 
     number = models.SmallIntegerField(unique=True, help_text='Enter Replay episode number (unofficial episodes use negative numbers).')
     main_segment_games = models.ManyToManyField(Game, verbose_name='main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
-    middle_segment = models.ForeignKey(SegmentInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='middle Segment', help_text='Enter middle segment for the Replay episode.')
-    second_segment = models.ForeignKey(SegmentInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='second Segment', help_text='Enter second segment for the Replay episode.')
+    middle_segment = models.ForeignKey(SegmentInstance, related_name='%(app_label)s_%(class)s_middle_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='middle Segment', help_text='Enter middle segment for the Replay episode.')
+    second_segment = models.ForeignKey(SegmentInstance, related_name='%(app_label)s_%(class)s_second_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='second Segment', help_text='Enter second segment for the Replay episode.')
     article = models.OneToOneField(Article, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter article for the Replay episode.')
 
     # Metadata
 
     class Meta(Episode.Meta):
-        pass
+        verbose_name = 'replay Episode'
 
     # Methods
     
@@ -394,6 +421,10 @@ class SuperReplay(models.Model):
 
     # Fields
     # Metadata
+
+    class Meta:
+        verbose_name = 'super Replay'
+
     # Methods
     
     def __str__(self):
@@ -409,12 +440,13 @@ class SuperReplayEpisode(Episode):
 
     # Fields
 
-    super_replay = models.ForeignKey(SuperReplay, on_delete=models.RESTRICT, help_text='Enter Super Replay for this episode.')
+    super_replay = models.ForeignKey(SuperReplay, on_delete=models.CASCADE, help_text='Enter Super Replay for this episode.')
 
     # Metadata
 
     class Meta(Episode.Meta):
         ordering = ['airdate']
+        verbose_name = 'super Replay Episode'
 
     # Methods
     
