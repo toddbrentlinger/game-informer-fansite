@@ -147,6 +147,10 @@ class StaffPosition(models.Model):
     title = models.CharField(max_length=200, help_text='Enter title of position.')
 
     # Metadata
+
+    class Meta:
+        verbose_name = 'staff Position'
+
     # Methods
 
     def __str__(self):
@@ -184,6 +188,7 @@ class Article(models.Model):
     author = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff who authored the article.')
     datetime = models.DateTimeField(help_text='Enter date and time article was published.')
     content = models.TextField(help_text='Enter main content of article.')
+    url = models.URLField(null=True, verbose_name='uRL', help_text='Enter URL of article.')
 
     # Metadata
 
@@ -217,6 +222,10 @@ class SegmentType(models.Model):
     description = models.CharField(max_length=1000, blank=True, help_text='Enter description of segment.')
 
     # Metadata
+
+    class Meta:
+        verbose_name = 'segment Type'
+
     # Methods
 
     def __str__(self):
@@ -266,7 +275,7 @@ class ExternalLink(models.Model):
 
     # Fields
 
-    url = models.URLField(help_text='Enter URL of external link.')
+    url = models.URLField(verbose_name='uRL', help_text='Enter URL of external link.')
     title = models.CharField(max_length=100, help_text='Enter display title of external link.')
 
     # Metadata
