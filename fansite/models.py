@@ -14,10 +14,9 @@ class Thumbnail(models.Model):
     # Fields
 
     quality = models.CharField(choices=QualityType.choices, max_length=20, help_text='Enter quality of thumbnail.')
-    url = models.URLField(verbose_name='uRL', help_text='Enter URL of thumbnail.')
+    url = models.URLField(verbose_name='URL', help_text='Enter URL of thumbnail.')
     width = models.PositiveSmallIntegerField(help_text='Enter width of thumbnail')
     height = models.PositiveSmallIntegerField(help_text='Enter height of thumbnail')
-
     # Metadata
     # Methods
 
@@ -30,7 +29,8 @@ class YouTubeVideo(models.Model):
 
     # Fields
 
-    youtube_id = models.CharField(max_length=15, blank=True, verbose_name='video ID', help_text='Enter YouTube video ID') # YouTube ID has 11 characters
+    youtube_id = models.CharField(max_length=15, blank=True, verbose_name='Video ID', help_text='Enter YouTube video ID') # YouTube ID has 11 characters
+    title = models.CharField(max_length=100, help_text='Enter title of the video.')
     views = models.PositiveBigIntegerField(null=True, blank=True, help_text='Enter number of views.')
     likes = models.PositiveIntegerField(null=True, blank=True, help_text='Enter number of likes.')
     dislikes = models.PositiveIntegerField(null=True, blank=True, help_text='Enter the number of dislikes.')
@@ -39,12 +39,12 @@ class YouTubeVideo(models.Model):
     # Metadata
 
     class Meta:
-        verbose_name = 'youTube Video'
+        verbose_name = 'YouTube Video'
 
     # Methods
 
     def __str__(self):
-        return self.youtube_id
+        return f'{self.youtube_id} - {self.title}'
 
     @property
     def like_ratio(self):
@@ -72,7 +72,7 @@ class Game(models.Model):
 
     title = models.CharField(max_length=100, help_text='Enter game title.')
     system = models.CharField(max_length=10, choices=GAME_SYSTEMS, help_text='Enter game system (ex. PC, PS4, XBox 360, etc.).')
-    release_date = models.DateField(verbose_name='release Date', help_text='Enter date the game was released.')
+    release_date = models.DateField(verbose_name='Release Date', help_text='Enter date the game was released.')
 
     # Metadata
 
@@ -93,8 +93,8 @@ class Person(models.Model):
 
     # Fields
 
-    first_name = models.CharField(max_length=100, verbose_name='first Name', help_text='Enter first name.')
-    last_name = models.CharField(max_length=100, blank=True, verbose_name='last Name', help_text='Enter last name.')
+    first_name = models.CharField(max_length=100, verbose_name='First Name', help_text='Enter first name.')
+    last_name = models.CharField(max_length=100, blank=True, verbose_name='Last Name', help_text='Enter last name.')
 
     # Metadata
 
@@ -129,8 +129,8 @@ class Staff(Person):
     # Metadata
 
     class Meta:
-        verbose_name = 'staff Member'
-        verbose_name_plural = 'staff'
+        verbose_name = 'Staff Member'
+        verbose_name_plural = 'Staff'
 
     # Methods
 
@@ -149,7 +149,8 @@ class StaffPosition(models.Model):
     # Metadata
 
     class Meta:
-        verbose_name = 'staff Position'
+        ordering = ['title']
+        verbose_name = 'Staff Position'
 
     # Methods
 
@@ -164,15 +165,15 @@ class StaffPositionInstance(models.Model):
     # Fields
 
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE, help_text='Enter staff member for this position instance.')
-    position = models.ManyToManyField(StaffPosition, help_text='Enter position of the staff member.')
-    start_date = models.DateField(help_text='Enter date started the position.')
-    end_date = models.DateField(null=True, blank=True, help_text='Enter date started the position.')
+    position = models.ForeignKey(StaffPosition, on_delete=models.PROTECT, help_text='Enter position of the staff member.')
+    start_year = models.PositiveSmallIntegerField(verbose_name='Start Year', help_text='Enter date started the position.')
+    end_year = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='End Year', help_text='Enter date started the position.')
 
     # Metadata
 
     class Meta:
-        ordering = ['-start_date']
-        verbose_name = 'staff Role'
+        ordering = ['-start_year']
+        verbose_name = 'Staff Position Instance'
 
     # Methods
 
@@ -188,7 +189,7 @@ class Article(models.Model):
     author = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff who authored the article.')
     datetime = models.DateTimeField(help_text='Enter date and time article was published.')
     content = models.TextField(help_text='Enter main content of article.')
-    url = models.URLField(null=True, verbose_name='uRL', help_text='Enter URL of article.')
+    url = models.URLField(null=True, verbose_name='URL', help_text='Enter URL of article.')
 
     # Metadata
 
@@ -224,7 +225,8 @@ class SegmentType(models.Model):
     # Metadata
 
     class Meta:
-        verbose_name = 'segment Type'
+        ordering = ['title']
+        verbose_name = 'Segment Type'
 
     # Methods
 
@@ -244,7 +246,7 @@ class Segment(models.Model):
     # Metadata
 
     class Meta:
-        verbose_name = 'segment Instance'
+        verbose_name = 'Segment Instance'
 
     # Methods
     
@@ -275,13 +277,13 @@ class ExternalLink(models.Model):
 
     # Fields
 
-    url = models.URLField(verbose_name='uRL', help_text='Enter URL of external link.')
+    url = models.URLField(verbose_name='URL', help_text='Enter URL of external link.')
     title = models.CharField(max_length=100, help_text='Enter display title of external link.')
 
     # Metadata
 
     class Meta:
-        verbose_name = 'external Link'
+        verbose_name = 'External Link'
 
     # Methods
 
@@ -330,7 +332,7 @@ class HeadingInstance(models.Model):
     # Metadata
 
     class Meta:
-        verbose_name = 'heading Instance'
+        verbose_name = 'Heading Instance'
 
     # Methods
     
@@ -357,9 +359,9 @@ class Episode(models.Model):
     featuring = models.ManyToManyField(Staff, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
     guests = models.ManyToManyField(Guest, blank=True, help_text='Enter any other guests (NOT official staff members).')
     youtube_video = models.ForeignKey(YouTubeVideo, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='youTube Video', help_text='Enter the YouTube video for the episode.')
-    external_links = models.ManyToManyField(ExternalLink, blank=True, verbose_name='external Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
+    external_links = models.ManyToManyField(ExternalLink, blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
     #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
-    #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='other Headings', help_text='Enter heading se')
+    #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Other Headings', help_text='Enter heading se')
 
     # Metadata
 
@@ -393,15 +395,15 @@ class ReplayEpisode(Episode):
     # Fields
 
     number = models.SmallIntegerField(unique=True, help_text='Enter Replay episode number (unofficial episodes use negative numbers).')
-    main_segment_games = models.ManyToManyField(Game, verbose_name='main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
-    middle_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_middle_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='middle Segment', help_text='Enter middle segment for the Replay episode.')
-    second_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_second_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='second Segment', help_text='Enter second segment for the Replay episode.')
+    main_segment_games = models.ManyToManyField(Game, verbose_name='Main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
+    middle_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_middle_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Middle Segment', help_text='Enter middle segment for the Replay episode.')
+    second_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_second_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Second Segment', help_text='Enter second segment for the Replay episode.')
     article = models.OneToOneField(Article, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter article for the Replay episode.')
 
     # Metadata
 
     class Meta(Episode.Meta):
-        verbose_name = 'replay Episode'
+        verbose_name = 'Replay Episode'
 
     # Methods
     
@@ -442,7 +444,7 @@ class SuperReplay(models.Model):
     # Metadata
 
     class Meta:
-        verbose_name = 'super Replay'
+        verbose_name = 'Super Replay'
 
     # Methods
     
@@ -465,7 +467,7 @@ class SuperReplayEpisode(Episode):
 
     class Meta(Episode.Meta):
         ordering = ['airdate']
-        verbose_name = 'super Replay Episode'
+        verbose_name = 'Super Replay Episode'
 
     # Methods
     

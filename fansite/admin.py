@@ -3,9 +3,9 @@ from .models import Thumbnail, YouTubeVideo, Game, Guest, StaffPosition, StaffPo
 
 # Register your models here.
 admin.site.register(Thumbnail)
-admin.site.register(YouTubeVideo)
+#admin.site.register(YouTubeVideo)
 admin.site.register(Game)
-admin.site.register(Guest)
+#admin.site.register(Guest)
 admin.site.register(StaffPosition)
 admin.site.register(StaffPositionInstance)
 #admin.site.register(Staff)
@@ -19,6 +19,18 @@ admin.site.register(ReplayEpisode)
 admin.site.register(SuperReplay)
 admin.site.register(SuperReplayEpisode)
 
+@admin.register(YouTubeVideo)
+class YouTubeVideoAdmin(admin.ModelAdmin):
+    list_display = ('title', 'youtube_id', 'views', 'likes', 'dislikes')
+
+@admin.register(Guest)
+class GuestAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Staff)
+class StaffAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'datetime')
@@ -26,7 +38,3 @@ class ArticleAdmin(admin.ModelAdmin):
 @admin.register(ExternalLink)
 class ExternalLinkAdmin(admin.ModelAdmin):
     list_display = ('title', 'url')
-
-@admin.register(Staff)
-class StaffAdmin(admin.ModelAdmin):
-    pass
