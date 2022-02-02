@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Custom apps
     'accounts.apps.AccountsConfig',
     'fansite.apps.FansiteConfig',
+    #'game.apps.GameConfig',
 ]
 
 MIDDLEWARE = [

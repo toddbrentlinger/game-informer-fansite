@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import uuid # Used for unique model instances
 
 from django.db import models
@@ -59,31 +58,40 @@ class YouTubeVideo(models.Model):
         return round(round(self.likes/(self.likes + self.dislikes)) * 100, 1)
 
 # TODO: Use VGDB (Video Game Database API)
+# - *Could use API to fill a few basic fields to be stored on custom database and 
+# use API whenever user accesses custom page for single game (ex. /game/metal-gear-solid-3)
+# Which fields to store on custom database? (fields to sort/filter by)
+#   -   Title, System, Release Date, Developer, Genres
+# - Game model should hold system they played the game on since the IGDB shows all platforms per game ID,
+# however IGDB displays separate release dates per system.
 class Game(models.Model):
     """Model representing a video game."""
 
-    GAME_SYSTEMS = (
-        ('PC', 'PC'),
-        ('PS4', 'PlayStation 4'),
-        ('X360', 'XBox 360'),
-    )
+    # GAME_SYSTEMS = (
+    #     ('PC', 'PC'),
+    #     ('PS4', 'PlayStation 4'),
+    #     ('X360', 'XBox 360'),
+    # )
 
     # Fields
 
+    igdb_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='IGDB ID', help_text='Enter IGDB game ID to be used with API.')
     title = models.CharField(max_length=100, help_text='Enter game title.')
-    system = models.CharField(max_length=10, choices=GAME_SYSTEMS, help_text='Enter game system (ex. PC, PS4, XBox 360, etc.).')
-    release_date = models.DateField(verbose_name='Release Date', help_text='Enter date the game was released.')
+    system = models.CharField(max_length=30, help_text='Enter game system (ex. PC, PS4, XBox 360, etc.).')
+    release_year = models.PositiveSmallIntegerField(verbose_name='Release Year', help_text='Enter date the game was released.')
 
     # Metadata
 
     class Meta:
-        ordering = ['title', 'release_date']
+        ordering = ['title', 'release_year']
 
     # Methods
 
     def __str__(self):
         return f'{self.title} [{self.get_system_display()}]'
 
+    # TODO: Use IGDB API to display information about the game as well as any stored
+    # fields (ex. other episodes that include that game)
     def get_absolute_url(self):
         # game/metal-gear-solid-3
         pass
@@ -343,8 +351,10 @@ class HeadingInstance(models.Model):
 # TODO: Combine next two into single headingInstances = ForeignKey but ForeignKey should be inside 'one' of 'one-to-many' relationship.
 # This should be inside HeadingInstance class as an 'episode' property. More is required since it makes more sense to adding new HeadingInstances
 # when creating an Episode instead of adding an Episode when creating a HeadingInstance.
-# *** Use 'django polymorphic'
-# TODO: Combine 'host' and 'featuring' into single 'featuring'. Could create separate Featuring class to hold 'host', 'staff', and 'guests'
+# *** Use 'django polymorphic' on base abstract class 'Heading' with child classes TextHeading, ImageGalleryHeading, QuoteHeading, ListHeading.
+# TODO: Combine 'host', 'featuring', and 'guests' into single 'featuring'. 
+# Could create separate Featuring class to hold 'host', 'staff', and 'guests'
+# OR use another 'django polymorphic' on base abstract class 'Person'
 class Episode(models.Model):
     """Abstract model representing a base episode."""
 
@@ -353,7 +363,7 @@ class Episode(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100, help_text='Enter episode title.')
     runtime = models.PositiveIntegerField(blank=True, help_text='Enter episode runtime as number of seconds.')
-    thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the episode.')
+    thumbnails = models.ManyToManyField(Thumbnail, blank=True, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
     host = models.ForeignKey(Staff, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff member who hosts the episode.')
     featuring = models.ManyToManyField(Staff, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
@@ -362,6 +372,7 @@ class Episode(models.Model):
     external_links = models.ManyToManyField(ExternalLink, blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
     #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
     #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Other Headings', help_text='Enter heading se')
+    headings = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
 
     # Metadata
 
