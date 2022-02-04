@@ -1,3 +1,20 @@
+Reset PostgreSQL database:
+
+- Delete files in <app-title>/migrations/ except those that start with "__init__"
+
+- Open SQL Shell (psql) and login to database using user, password, and port.
+    DROP DATABASE dbname;
+    CREATE DATABASE dbname;
+
+- Re-create migrations.
+    python manage.py makemigrations
+    python manage.py migrate
+
+- Superuser was removed. Must add it again.
+    python manage.py createsuperuser
+
+-------------------------------------------------------------------------------
+
 - How to account for choices not having an appropriate choice?
 Create separate model for the choices where a new one can be added.
 

@@ -11,7 +11,7 @@ admin.site.register(StaffPositionInstance)
 #admin.site.register(Staff)
 #admin.site.register(Article)
 admin.site.register(SegmentType)
-admin.site.register(Segment)
+#admin.site.register(Segment)
 #admin.site.register(ExternalLink)
 admin.site.register(Heading)
 admin.site.register(HeadingInstance)
@@ -34,6 +34,10 @@ class StaffAdmin(admin.ModelAdmin):
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'datetime')
+
+@admin.register(Segment)
+class SegmentAdmin(admin.ModelAdmin):
+    list_display = ('segment_type', 'display_games')
 
 @admin.register(ExternalLink)
 class ExternalLinkAdmin(admin.ModelAdmin):

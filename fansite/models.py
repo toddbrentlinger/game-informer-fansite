@@ -88,13 +88,16 @@ class Game(models.Model):
     # Methods
 
     def __str__(self):
-        return f'{self.title} [{self.get_system_display()}]'
+        return f'{self.title} [{self.system}]'
 
     # TODO: Use IGDB API to display information about the game as well as any stored
     # fields (ex. other episodes that include that game)
     def get_absolute_url(self):
         # game/metal-gear-solid-3
         pass
+
+    def save(self, *args, **kwargs):
+        super(Game, self).save(*args, **kwargs)
 
 class Person(models.Model):
     """Abstract model representing a person."""
@@ -254,12 +257,12 @@ class Segment(models.Model):
     # Metadata
 
     class Meta:
-        verbose_name = 'Segment Instance'
+        pass
 
     # Methods
     
     def __str__(self):
-        pass
+        return f'{self.segment_type} - {self.games}'
 
     def get_absolute_url(self):
         # replay/segments/rr
@@ -269,6 +272,11 @@ class Segment(models.Model):
         # replay/segments/youre-doing-it-wrong
         # replay/segments/doing-it-wrong
         pass
+
+    def display_games(self):
+        return ', '.join(game.__str__() for game in self.games.all()[:3])
+    
+    display_games.short_description = 'Games'
 
 class ExternalLink(models.Model):
     """Model representing an external url link."""
@@ -362,7 +370,8 @@ class Episode(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100, help_text='Enter episode title.')
-    runtime = models.PositiveIntegerField(blank=True, help_text='Enter episode runtime as number of seconds.')
+    # nn:nn:nn (ex. 01:35:23 for 1hr 35min 23sec)
+    runtime = models.CharField(max_length=10, blank=True, help_text='Enter episode runtime in format hh:mm:ss.')
     thumbnails = models.ManyToManyField(Thumbnail, blank=True, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
     host = models.ForeignKey(Staff, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff member who hosts the episode.')
@@ -384,6 +393,9 @@ class Episode(models.Model):
 
     def __str__(self):
         return self.title
+
+    def display_featuring(self):
+        return ', '.join( person.__str__() for person in (self.featuring.all()[:3] + self.guests.all()[:3]) )
 
     def convertRuntimeToSeconds(self, runtimeStr):
         '''Takes duration parameter in form 00:00:00 and returns total number of seconds'''
