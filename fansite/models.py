@@ -16,6 +16,7 @@ class Thumbnail(models.Model):
     url = models.URLField(verbose_name='URL', help_text='Enter URL of thumbnail.')
     width = models.PositiveSmallIntegerField(help_text='Enter width of thumbnail')
     height = models.PositiveSmallIntegerField(help_text='Enter height of thumbnail')
+    
     # Metadata
     # Methods
 
@@ -125,7 +126,7 @@ class Guest(Person):
 
     # Fields
     # Metadata
-    # Methods
+    # # Methods
 
     def get_absolute_url(self):
         # guests/hilary-wilton
@@ -139,7 +140,7 @@ class Staff(Person):
     # Fields
     # Metadata
 
-    class Meta:
+    class Meta(Person.Meta):
         verbose_name = 'Staff Member'
         verbose_name_plural = 'Staff'
 
@@ -262,7 +263,10 @@ class Segment(models.Model):
     # Methods
     
     def __str__(self):
-        return f'{self.segment_type} - {self.games}'
+        if self.games.exists():
+            return f'{self.segment_type} - {self.games}'
+        else:
+            return self.segment_type
 
     def get_absolute_url(self):
         # replay/segments/rr
@@ -419,8 +423,9 @@ class ReplayEpisode(Episode):
 
     number = models.SmallIntegerField(unique=True, help_text='Enter Replay episode number (unofficial episodes use negative numbers).')
     main_segment_games = models.ManyToManyField(Game, verbose_name='Main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
-    middle_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_middle_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Middle Segment', help_text='Enter middle segment for the Replay episode.')
-    second_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_second_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Second Segment', help_text='Enter second segment for the Replay episode.')
+    other_segments = models.ManyToManyField(Segment, blank=True, verbose_name='Other Segments', help_text='Enter other segments for the Replay episode.')
+    # middle_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_middle_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Middle Segment', help_text='Enter middle segment for the Replay episode.')
+    # second_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_second_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Second Segment', help_text='Enter second segment for the Replay episode.')
     article = models.OneToOneField(Article, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter article for the Replay episode.')
 
     # Metadata
@@ -459,6 +464,8 @@ class ReplayEpisode(Episode):
 
         # Return tuple (season, seasonEpisode)
         return (season, seasonEpisode)
+    get_season.short_description = 'Season'
+
 
 class SuperReplay(models.Model):
     """Model representing a Super Replay."""

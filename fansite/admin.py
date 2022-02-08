@@ -2,12 +2,12 @@ from django.contrib import admin
 from .models import Thumbnail, YouTubeVideo, Game, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplayEpisode, SuperReplay, SuperReplayEpisode
 
 # Register your models here.
-admin.site.register(Thumbnail)
+#admin.site.register(Thumbnail)
 #admin.site.register(YouTubeVideo)
 admin.site.register(Game)
 #admin.site.register(Guest)
 admin.site.register(StaffPosition)
-admin.site.register(StaffPositionInstance)
+#admin.site.register(StaffPositionInstance)
 #admin.site.register(Staff)
 #admin.site.register(Article)
 admin.site.register(SegmentType)
@@ -15,9 +15,13 @@ admin.site.register(SegmentType)
 #admin.site.register(ExternalLink)
 admin.site.register(Heading)
 admin.site.register(HeadingInstance)
-admin.site.register(ReplayEpisode)
+#admin.site.register(ReplayEpisode)
 admin.site.register(SuperReplay)
 admin.site.register(SuperReplayEpisode)
+
+@admin.register(Thumbnail)
+class ThumbnailAdmin(admin.ModelAdmin):
+    list_filter = ('quality',)
 
 @admin.register(YouTubeVideo)
 class YouTubeVideoAdmin(admin.ModelAdmin):
@@ -27,6 +31,10 @@ class YouTubeVideoAdmin(admin.ModelAdmin):
 class GuestAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(StaffPositionInstance)
+class StaffPositionInstanceAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(Staff)
 class StaffAdmin(admin.ModelAdmin):
     pass
@@ -34,6 +42,7 @@ class StaffAdmin(admin.ModelAdmin):
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'datetime')
+    list_filter = ('datetime',)
 
 @admin.register(Segment)
 class SegmentAdmin(admin.ModelAdmin):
@@ -42,3 +51,9 @@ class SegmentAdmin(admin.ModelAdmin):
 @admin.register(ExternalLink)
 class ExternalLinkAdmin(admin.ModelAdmin):
     list_display = ('title', 'url')
+
+@admin.register(ReplayEpisode)
+class ReplayEpisodeAdmin(admin.ModelAdmin):
+    list_filter = ('airdate',)
+    #fields = ['number', ]
+    filter_horizontal = ('thumbnails', 'featuring', 'guests')
