@@ -253,7 +253,7 @@ class Segment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, help_text='Unique ID for this particular segment instance.')
     segment_type = models.ForeignKey(SegmentType, on_delete=models.PROTECT, help_text='Enter type of segment.')
     games = models.ManyToManyField(Game, blank=True, help_text='Enter games played during the segment.')
-    content = models.TextField(blank=True, help_text='Enter content description of this segment instance.')
+    description = models.TextField(blank=True, help_text='Enter description of this segment instance.')
     
     # Metadata
 
@@ -381,7 +381,7 @@ class Episode(models.Model):
     host = models.ForeignKey(Staff, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff member who hosts the episode.')
     featuring = models.ManyToManyField(Staff, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
     guests = models.ManyToManyField(Guest, blank=True, help_text='Enter any other guests (NOT official staff members).')
-    youtube_video = models.ForeignKey(YouTubeVideo, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='youTube Video', help_text='Enter the YouTube video for the episode.')
+    youtube_video = models.OneToOneField(YouTubeVideo, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='YouTube Video', help_text='Enter the YouTube video for the episode.')
     external_links = models.ManyToManyField(ExternalLink, blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
     #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
     #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Other Headings', help_text='Enter heading se')
@@ -415,12 +415,35 @@ class Episode(models.Model):
         
         return seconds + minutes + hours
 
+class ReplaySeason(models.Model):
+    # Fields
+
+    # n=0 for unofficial episodes and n>0 for regular seasons 
+    number = models.SmallIntegerField(primary_key=True, help_text='Enter unique number of Replay season.')
+    description = models.TextField(blank=True, help_text='Enter description for the Replay season.')
+
+    # Metadata
+
+    class Meta:
+        ordering = ['-number']
+
+    # Methods
+    
+    def __str__(self):
+        return self.number
+
+    def get_absolute_url(self):
+        # replay/s2
+        # replay/s0 - unofficial
+        return reverse('replay-season', args=[str(self.number)])
+
 # TODO: Replace 'middle_segment' and 'second_segment' with 'segments' ManyToManyField
 class ReplayEpisode(Episode):
     """Model representing an episode of Replay."""
 
     # Fields
 
+    replay_season = models.ForeignKey(ReplaySeason, on_delete=models.CASCADE, verbose_name='Replay Season', help_text='Enter season of the Replay episode.')
     number = models.SmallIntegerField(unique=True, help_text='Enter Replay episode number (unofficial episodes use negative numbers).')
     main_segment_games = models.ManyToManyField(Game, verbose_name='Main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
     other_segments = models.ManyToManyField(Segment, blank=True, verbose_name='Other Segments', help_text='Enter other segments for the Replay episode.')
