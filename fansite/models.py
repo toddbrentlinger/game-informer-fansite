@@ -226,6 +226,7 @@ class SegmentType(models.Model):
     #     ('2037', 'Replay 2037'),
     #     ('HF', 'Horror Fest'),
     #     ('RRL', 'Replay Real Life'),
+    #     ('AD', 'Advertisement'),
     # )
 
     # Fields
@@ -251,7 +252,7 @@ class Segment(models.Model):
     # Fields
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, help_text='Unique ID for this particular segment instance.')
-    segment_type = models.ForeignKey(SegmentType, on_delete=models.PROTECT, help_text='Enter type of segment.')
+    type = models.ForeignKey(SegmentType, on_delete=models.PROTECT, help_text='Enter type of segment.')
     games = models.ManyToManyField(Game, blank=True, help_text='Enter games played during the segment.')
     description = models.TextField(blank=True, help_text='Enter description of this segment instance.')
     
@@ -264,9 +265,9 @@ class Segment(models.Model):
     
     def __str__(self):
         if self.games.exists():
-            return f'{self.segment_type} - {self.games}'
+            return f'{self.type} - {self.games}'
         else:
-            return self.segment_type
+            return self.type
 
     def get_absolute_url(self):
         # replay/segments/rr
@@ -359,6 +360,7 @@ class HeadingInstance(models.Model):
     def __str__(self):
         pass
 
+# TODO: Convert external_links to JSON field instead. Saving unique instances of links does not seem necessary.
 # TODO: Combine 'description' and 'other_headings' to 'headings'
 # TODO: Combine next two into single headingInstances = ForeignKey but ForeignKey should be inside 'one' of 'one-to-many' relationship.
 # This should be inside HeadingInstance class as an 'episode' property. More is required since it makes more sense to adding new HeadingInstances
@@ -373,7 +375,7 @@ class Episode(models.Model):
     # Fields
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=100, help_text='Enter episode title.')
+    title = models.CharField(max_length=100, unique=True, help_text='Enter episode title.')
     # nn:nn:nn (ex. 01:35:23 for 1hr 35min 23sec)
     runtime = models.CharField(max_length=10, blank=True, help_text='Enter episode runtime in format hh:mm:ss.')
     thumbnails = models.ManyToManyField(Thumbnail, blank=True, help_text='Enter thumbnail images for the episode.')
@@ -443,7 +445,7 @@ class ReplayEpisode(Episode):
 
     # Fields
 
-    replay_season = models.ForeignKey(ReplaySeason, on_delete=models.CASCADE, verbose_name='Replay Season', help_text='Enter season of the Replay episode.')
+    season = models.ForeignKey(ReplaySeason, on_delete=models.CASCADE, verbose_name='Replay Season', help_text='Enter season of the Replay episode.')
     number = models.SmallIntegerField(unique=True, help_text='Enter Replay episode number (unofficial episodes use negative numbers).')
     main_segment_games = models.ManyToManyField(Game, verbose_name='Main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
     other_segments = models.ManyToManyField(Segment, blank=True, verbose_name='Other Segments', help_text='Enter other segments for the Replay episode.')
