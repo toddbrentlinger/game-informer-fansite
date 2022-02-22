@@ -3,7 +3,7 @@ import json
 
 from decouple import config
 
-def main():
+def get_access_token():
     # Request access token
     response = requests.post(
         'https://id.twitch.tv/oauth2/token',
@@ -13,9 +13,14 @@ def main():
             'grant_type': 'client_credentials'
         }
     )
-    # Set access token
-    access_token = response.json()['access_token']
 
+    # Return access token
+    try:
+        return response.json()['access_token']
+    except requests.exceptions.JSONDecodeError:
+        return None
+
+def get_igdb_data(access_token, fields, title, platform, year_released):
     # Headers for search request
     headers = {
         'Accept': 'application/json',
@@ -24,7 +29,11 @@ def main():
         }
     # Request details for IGDB
     #data = 'fields *;search "overblood";'
-    data = 'fields id,name,platforms.*,release_dates.date,summary;search "uncharted";'
+    # release_dates for matching platform OR first_release_date
+    data = ' '.join((
+        'fields cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;',
+        f'search "{title}";'
+    ))
     # Request game based on search
     response = requests.post(
         'https://api.igdb.com/v4/games', 
@@ -32,13 +41,16 @@ def main():
         headers=headers
     )
     # Set respone from game request
-    responseData = response.json()
+    response_data = response.json()
     
-    if (responseData):
-        print(json.dumps(responseData, sort_keys=True, indent=4))
-        
+    if (response_data):
+        print(json.dumps(response_data, sort_keys=True, indent=4))
     else:
         print('No search results!')
+    return response_data
 
 if __name__ == '__main__':
-    main()
+    access_token = get_access_token()
+    if access_token is not None:
+        request_data = 'fields cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;search "overblood";'
+        get_igdb_data(access_token, request_data, 'Metal Gear Solid 3: Snake Eater', 'PlayStation 2', '2004')

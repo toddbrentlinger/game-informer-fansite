@@ -369,6 +369,7 @@ class HeadingInstance(models.Model):
 # TODO: Combine 'host', 'featuring', and 'guests' into single 'featuring'. 
 # Could create separate Featuring class to hold 'host', 'staff', and 'guests'
 # OR use another 'django polymorphic' on base abstract class 'Person'
+# 2/21/22 - Could use HStoreField importing from django.contrib.postgres.fields which stores key/value pairs for 'headings' field.
 class Episode(models.Model):
     """Abstract model representing a base episode."""
 
