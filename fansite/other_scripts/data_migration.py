@@ -1,8 +1,8 @@
-from asyncio.windows_events import NULL
 import json
 import datetime
-from turtle import title
-from ..models import Thumbnail, YouTubeVideo, Game, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
+from igdb import get_igdb_data, get_igdb_platform_data
+from ..models import Thumbnail, YouTubeVideo, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
+from ...game.models import *
 
 SEGMENT_TYPES = {
     'RR': 'Replay Roulette',
@@ -17,7 +17,7 @@ SEGMENT_TYPES = {
     'AD': 'Advertisement',
 }
 
-def createReplayEpisodeFromJSON(replayData):
+def createReplayEpisodeFromJSON(replayData, access_token = None):
     # Create Replay episode object
     replay = ReplayEpisode()
 
@@ -45,9 +45,8 @@ def createReplayEpisodeFromJSON(replayData):
         if 'host' in replayData['details'] and replayData['details']['host']:
             nameList = replayData['details']['host'].split()
             try:
-                person = Staff.objects.get(first_name=nameList[0], last_name__startswith=nameList[1])
+                person = Staff.objects.get(first_name=nameList[0], last_name=nameList[1])
             except Staff.DoesNotExist:
-                # If name is NOT already in database, create new database entry (use 'create' to automatically save to database)
                 person = Staff.objects.create(first_name=nameList[0], last_name=nameList[1])
             replay.host = person
 
@@ -56,7 +55,7 @@ def createReplayEpisodeFromJSON(replayData):
             for personName in replayData['details']['featuring']:
                 nameList = personName.split()
                 try:
-                    person = Staff.objects.get(first_name=nameList[0], last_name__startswith=nameList[1])
+                    person = Staff.objects.get(first_name=nameList[0], last_name=nameList[1])
                 except Staff.DoesNotExist:
                     person = Staff.objects.create(first_name=nameList[0], last_name=nameList[1])
                 replay.featuring.add(person)
@@ -139,10 +138,31 @@ def createReplayEpisodeFromJSON(replayData):
             replay.season = ReplaySeason.objects.get(pk=season)
         except ReplaySeason.DoesNotExist:
             replay.season = ReplaySeason.objects.create(
-                replay.get_season()[0]
+                number=replay.get_season()[0]
             )
     
     # Main Segment Games - replayData.mainSegmentGamesAdv, replayData.details.system, replayData.details.gamedate (ManyToMany)
+    if 'mainSegmentGamesAdv' in replayData:
+        # Game - Name
+        game_name = replayData['mainSegmentGamesAdv']['title']
+        # Game - Platform
+        platform_data = get_igdb_platform_data(access_token, replayData['mainSegmentGamesAdv']['system'])
+        if platform_data is not None and 'id' in platform_data:
+            try:
+                platform = Platform.objects.get(platform_data['id'])
+            except Platform.DoesNotExist:
+                platform = Platform.objects.create()
+            game_platform = ''
+        else: # Else platform_data is None OR 'id' NOT a key in platform_data
+            pass
+        # Game - Year Released
+        game_year_released = ''
+        fields = 'fields cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
+        get_igdb_data(access_token, fields, game_name, game_platform, game_year_released)
+        if access_token is not None:
+            pass
+        else: # Else access_token is None
+            pass
     
     # Other Segments - replayData.details (ManyToMany)
 

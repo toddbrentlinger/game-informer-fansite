@@ -20,7 +20,7 @@ def get_access_token():
     except requests.exceptions.JSONDecodeError:
         return None
 
-def get_igdb_data(access_token, fields, title, platform, year_released):
+def get_igdb_platform_data(access_token, platform_name, fields = '*'):
     # Headers for search request
     headers = {
         'Accept': 'application/json',
@@ -31,8 +31,46 @@ def get_igdb_data(access_token, fields, title, platform, year_released):
     #data = 'fields *;search "overblood";'
     # release_dates for matching platform OR first_release_date
     data = ' '.join((
-        'fields cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;',
-        f'search "{title}";'
+        'fields ' + fields + ';',
+        f'search "{platform_name}";'
+    ))
+    # Request game based on search
+    response = requests.post(
+        'https://api.igdb.com/v4/platforms', 
+        data=data,
+        headers=headers
+    )
+
+    if response.status_code != requests.codes.ok:
+        print('Request failed!')
+        return None
+
+    # Set respone from game request
+    try:
+        response_data = response.json()
+    except requests.exceptions.JSONDecodeError:
+        print('Converting response to JSON failed!')
+        return None
+
+    if response_data:
+        print(json.dumps(response_data, sort_keys=True, indent=4))
+    else:
+        print('No search results!')
+    return response_data
+
+def get_igdb_game_data(access_token, fields, name, platform, year_released):
+    # Headers for search request
+    headers = {
+        'Accept': 'application/json',
+        'Client-ID': config('IGDB_CLIENT_ID'),
+        'Authorization': 'Bearer ' + access_token
+        }
+    # Request details for IGDB
+    #data = 'fields *;search "overblood";'
+    # release_dates for matching platform OR first_release_date
+    data = ' '.join((
+        fields,
+        f'search "{name}";'
     ))
     # Request game based on search
     response = requests.post(
@@ -40,17 +78,27 @@ def get_igdb_data(access_token, fields, title, platform, year_released):
         data=data,
         headers=headers
     )
-    # Set respone from game request
-    response_data = response.json()
-    
-    if (response_data):
+    if response.status_code != requests.codes.ok:
+        print('Request failed!')
+        return None
+
+    # Set response from game request
+    try:
+        response_data = response.json()
+    except requests.exceptions.JSONDecodeError:
+        print('Converting response to JSON failed!')
+        return None
+
+    if response_data:
         print(json.dumps(response_data, sort_keys=True, indent=4))
+        return response_data
     else:
         print('No search results!')
-    return response_data
+        return None
 
 if __name__ == '__main__':
     access_token = get_access_token()
     if access_token is not None:
-        request_data = 'fields cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;search "overblood";'
-        get_igdb_data(access_token, request_data, 'Metal Gear Solid 3: Snake Eater', 'PlayStation 2', '2004')
+        get_igdb_platform_data(access_token, 'Playstation 2')
+        # request_data = 'fields cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;search "overblood";'
+        # get_igdb_game_data(access_token, request_data, 'Metal Gear Solid 3: Snake Eater', 'PlayStation 2', '2004')
