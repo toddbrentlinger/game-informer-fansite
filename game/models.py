@@ -24,6 +24,7 @@ class Developer(models.Model):
 
 class PlatformLogo(models.Model):
     # Fields
+
     # Metadata
     # Methods
     pass
@@ -32,9 +33,9 @@ class Platform(models.Model):
     # Fields
     id = models.PositiveSmallIntegerField(primary_key=True, help_text='Enter IGDB ID for this system/platform.')
     abbreviation = models.CharField(max_length=20, help_text='Enter shortened abbreviation for this system/platform.')
-    alternate_names = models.CharField(max_length=1000, help_text='Enter alternate names as list separated by commas.')
+    alternate_name = models.CharField(max_length=1000, help_text='Enter alternate names as list separated by commas.')
     name = models.CharField(max_length=200, help_text='Enter name of this system/platform.')
-    logo = models.ForeignKey(PlatformLogo, help_text='Enter logo for this system/platform.')
+    logo = models.ForeignKey(PlatformLogo, null=True, blank=True, help_text='Enter logo for this system/platform.')
 
     # Metadata
     class Meta:

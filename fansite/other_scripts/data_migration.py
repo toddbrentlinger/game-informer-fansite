@@ -1,6 +1,7 @@
 import json
 import datetime
-from igdb import get_igdb_data, get_igdb_platform_data
+from django.db.models import Q
+from igdb import IGDB #get_igdb_data, get_igdb_platform_data
 from ..models import Thumbnail, YouTubeVideo, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
 from ...game.models import *
 
@@ -18,6 +19,8 @@ SEGMENT_TYPES = {
 }
 
 def createReplayEpisodeFromJSON(replayData, access_token = None):
+    igdb = IGDB()
+
     # Create Replay episode object
     replay = ReplayEpisode()
 
@@ -146,23 +149,23 @@ def createReplayEpisodeFromJSON(replayData, access_token = None):
         # Game - Name
         game_name = replayData['mainSegmentGamesAdv']['title']
         # Game - Platform
-        platform_data = get_igdb_platform_data(access_token, replayData['mainSegmentGamesAdv']['system'])
-        if platform_data is not None and 'id' in platform_data:
-            try:
-                platform = Platform.objects.get(platform_data['id'])
-            except Platform.DoesNotExist:
-                platform = Platform.objects.create()
-            game_platform = ''
-        else: # Else platform_data is None OR 'id' NOT a key in platform_data
-            pass
+        platform_name = replayData['mainSegmentGamesAdv']['system']
+        try:
+            platform = Platform.objects.get(
+                Q(abbreviation=platform_name) | Q(alternate_name__icontains=platform_name) | Q(name=platform_name)
+            )
+        except Platform.DoesNotExist:
+            platform_data = igdb.get_platform_data(platform_name)
+            platform = Platform.objects.create(
+                id=platform_data['id'],
+                abbreviation=platform_data['abbreviation'],
+                alternate_name=platform_data['alternate_name'],
+                name=platform_data['name']
+            )
         # Game - Year Released
-        game_year_released = ''
-        fields = 'fields cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
-        get_igdb_data(access_token, fields, game_name, game_platform, game_year_released)
-        if access_token is not None:
-            pass
-        else: # Else access_token is None
-            pass
+        game_year_released = replayData['mainSegmentGamesAdv']['yearReleased']
+        fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
+        game_data = igdb.get_game_data(game_name, platform.id, game_year_released, fields)
     
     # Other Segments - replayData.details (ManyToMany)
 
