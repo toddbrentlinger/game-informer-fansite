@@ -40,8 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Custom apps
     'accounts.apps.AccountsConfig',
+    'game.apps.GameConfig',
     'fansite.apps.FansiteConfig',
-    #'game.apps.GameConfig',
 ]
 
 MIDDLEWARE = [

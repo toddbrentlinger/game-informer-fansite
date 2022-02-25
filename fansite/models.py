@@ -2,6 +2,7 @@ import uuid # Used for unique model instances
 
 from django.db import models
 from django.urls import reverse
+from ..game.models import Game
 
 # Create your models here.
 
@@ -49,7 +50,7 @@ class YouTubeVideo(models.Model):
     @property
     def like_ratio(self):
         # 
-        if (self.dislikes is NULL or self.likes is NULL):
+        if (self.dislikes is None or self.likes is None):
             return 0
 
         # Check if both likes/dislikes are zero to avoid dividing by zero
@@ -65,40 +66,40 @@ class YouTubeVideo(models.Model):
 #   -   Title, System, Release Date, Developer, Genres
 # - Game model should hold system they played the game on since the IGDB shows all platforms per game ID,
 # however IGDB displays separate release dates per system.
-class Game(models.Model):
-    """Model representing a video game."""
+# class Game(models.Model):
+#     """Model representing a video game."""
 
-    # GAME_SYSTEMS = (
-    #     ('PC', 'PC'),
-    #     ('PS4', 'PlayStation 4'),
-    #     ('X360', 'XBox 360'),
-    # )
+#     # GAME_SYSTEMS = (
+#     #     ('PC', 'PC'),
+#     #     ('PS4', 'PlayStation 4'),
+#     #     ('X360', 'XBox 360'),
+#     # )
 
-    # Fields
+#     # Fields
 
-    igdb_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='IGDB ID', help_text='Enter IGDB game ID to be used with API.')
-    title = models.CharField(max_length=100, help_text='Enter game title.')
-    system = models.CharField(max_length=30, help_text='Enter game system (ex. PC, PS4, XBox 360, etc.).')
-    release_year = models.PositiveSmallIntegerField(verbose_name='Release Year', help_text='Enter date the game was released.')
+#     igdb_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='IGDB ID', help_text='Enter IGDB game ID to be used with API.')
+#     title = models.CharField(max_length=100, help_text='Enter game title.')
+#     system = models.CharField(max_length=30, help_text='Enter game system (ex. PC, PS4, XBox 360, etc.).')
+#     release_year = models.PositiveSmallIntegerField(verbose_name='Release Year', help_text='Enter date the game was released.')
 
-    # Metadata
+#     # Metadata
 
-    class Meta:
-        ordering = ['title', 'release_year']
+#     class Meta:
+#         ordering = ['title', 'release_year']
 
-    # Methods
+#     # Methods
 
-    def __str__(self):
-        return f'{self.title} [{self.system}]'
+#     def __str__(self):
+#         return f'{self.title} [{self.system}]'
 
-    # TODO: Use IGDB API to display information about the game as well as any stored
-    # fields (ex. other episodes that include that game)
-    def get_absolute_url(self):
-        # game/metal-gear-solid-3
-        pass
+#     # TODO: Use IGDB API to display information about the game as well as any stored
+#     # fields (ex. other episodes that include that game)
+#     def get_absolute_url(self):
+#         # game/metal-gear-solid-3
+#         pass
 
-    def save(self, *args, **kwargs):
-        super(Game, self).save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         super(Game, self).save(*args, **kwargs)
 
 class Person(models.Model):
     """Abstract model representing a person."""

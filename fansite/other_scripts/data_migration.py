@@ -18,7 +18,8 @@ SEGMENT_TYPES = {
     'AD': 'Advertisement',
 }
 
-def createReplayEpisodeFromJSON(replayData, access_token = None):
+def createReplayEpisodeFromJSON(replayData):
+    # Instance initialization creates API access_token
     igdb = IGDB()
 
     # Create Replay episode object
@@ -148,24 +149,45 @@ def createReplayEpisodeFromJSON(replayData, access_token = None):
     if 'mainSegmentGamesAdv' in replayData:
         # Game - Name
         game_name = replayData['mainSegmentGamesAdv']['title']
+
         # Game - Platform
         platform_name = replayData['mainSegmentGamesAdv']['system']
+        platform = None
         try:
             platform = Platform.objects.get(
                 Q(abbreviation=platform_name) | Q(alternate_name__icontains=platform_name) | Q(name=platform_name)
             )
         except Platform.DoesNotExist:
             platform_data = igdb.get_platform_data(platform_name)
-            platform = Platform.objects.create(
-                id=platform_data['id'],
-                abbreviation=platform_data['abbreviation'],
-                alternate_name=platform_data['alternate_name'],
-                name=platform_data['name']
-            )
+            if platform_data is not None:
+                platform = Platform.objects.create(
+                    id=platform_data['id'],
+                    abbreviation=platform_data['abbreviation'],
+                    alternate_name=platform_data['alternate_name'],
+                    name=platform_data['name']
+                )
+
         # Game - Year Released
         game_year_released = replayData['mainSegmentGamesAdv']['yearReleased']
+        
+        # Get game data using IGDB API
         fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
         game_data = igdb.get_game_data(game_name, platform.id, game_year_released, fields)
+        if game_data is not None:
+            # Check if game ID already exists in database
+            try:
+                game = Game.objects.get(pk=game_data['id'])
+            except Game.DoesNotExist:
+                game = Game.objects.create(
+                    igdb_id=game_data['id'],
+                    name=game_data['name'],
+                    slug=game_data['slug'],
+                    summary=game_data['summary'],
+                    platform=platform,
+                    developer=None,
+                    release_date=game_data['first_release_date']
+                )
+                # Genre is ManyToManyField, use game.genre.add(newGenre)
     
     # Other Segments - replayData.details (ManyToMany)
 
@@ -318,5 +340,20 @@ def initialize_database(apps, schema_editor):
     #         createReplayEpisodeFromJSON(replayData)
     createReplayEpisodeFromJSON(allReplayData[0])
 
-    # Close JSON data file
+    # Close JSON data file 1100649600 1109894400
     dataFile.close()
+
+    '''
+    from django.db import migrations
+    from ..other_scripts.data_migration import initialize_database
+
+    class Migration(migrations.Migration):
+
+        dependencies = [
+            ('fansite', '0001_initial'),
+        ]
+
+        operations = [
+            migrations.RunPython(initialize_database),
+        ]
+    '''

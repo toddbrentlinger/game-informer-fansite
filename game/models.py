@@ -60,10 +60,11 @@ class Game(models.Model):
     igdb_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='IGDB ID', help_text='Enter IGDB game ID to be used with API. If ID entered, other fields do NOT need to be filled out.')
     #title = models.CharField(max_length=200, help_text='Enter game title.')
     #system = models.CharField(max_length=50, help_text='Enter game system (ex. PC, PS4, XBox 360, etc.).')
-    release_year = models.PositiveSmallIntegerField(verbose_name='Release Year', help_text='Enter year the game was released.')
+    #release_year = models.PositiveSmallIntegerField(verbose_name='Release Year', help_text='Enter year the game was released.')
 
     name = models.CharField(max_length=200, help_text='Enter game title.')
     slug = models.SlugField(max_length=200)
+    summary = models.TextField(blank=True, help_text='Enter summary of the game.')
     platform = models.ForeignKey(Platform, help_text='Enter game platform (ex. PC, PS4, XBox 360, etc.).')
     genre = models.ManyToManyField(Genre, blank=True, help_text='Enter genres of the game.')
     developer = models.ForeignKey(Developer, null=True, blank=True, on_delete=models.SET_NULL, help_text='Enter developer of the game.')
