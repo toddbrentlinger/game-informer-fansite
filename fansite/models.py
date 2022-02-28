@@ -2,7 +2,7 @@ import uuid # Used for unique model instances
 
 from django.db import models
 from django.urls import reverse
-from ..game.models import Game
+from game.models import Game
 
 # Create your models here.
 

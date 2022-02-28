@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import *
+from .models import Genre, Developer, PlatformLogo, Platform, Game
 
 # Register your models here.
 
@@ -21,6 +21,6 @@ class PlatformAdmin(admin.ModelAdmin):
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('title', 'system', 'release_year')
-    list_filter = ('system', 'release_year')
-    search_fields = ['title']
+    list_display = ('name', 'platform', 'release_date')
+    list_filter = ('platform__abbreviation', 'release_date')
+    search_fields = ['name']

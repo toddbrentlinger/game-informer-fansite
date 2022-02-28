@@ -185,7 +185,7 @@ def createReplayEpisodeFromJSON(replayData):
                     summary=game_data['summary'],
                     platform=platform,
                     developer=None,
-                    release_date=game_data['first_release_date']
+                    release_date=datetime.date.fromtimestamp(game_data['first_release_date'])
                 )
                 # Genre is ManyToManyField, use game.genre.add(newGenre)
     

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import Thumbnail, YouTubeVideo, Game, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
+from .models import Thumbnail, YouTubeVideo, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
 
 # Register your models here.
 
@@ -13,11 +13,11 @@ class YouTubeVideoAdmin(admin.ModelAdmin):
     list_display = ('title', 'youtube_id', 'views', 'likes', 'dislikes')
     search_fields = ['title']
 
-@admin.register(Game)
-class GameAdmin(admin.ModelAdmin):
-    list_display = ('title', 'system', 'release_year')
-    list_filter = ('system', 'release_year')
-    search_fields = ['title']
+# @admin.register(Game)
+# class GameAdmin(admin.ModelAdmin):
+#     list_display = ('title', 'system', 'release_year')
+#     list_filter = ('system', 'release_year')
+#     search_fields = ['title']
 
 @admin.register(Guest)
 class GuestAdmin(admin.ModelAdmin):
@@ -53,7 +53,7 @@ class SegmentTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Segment)
 class SegmentAdmin(admin.ModelAdmin):
-    list_filter = ('segment_type__abbreviation',)
+    list_filter = ('type__abbreviation',)
     search_fields = ['games__title', 'description']
 
 @admin.register(ExternalLink)

@@ -35,7 +35,7 @@ class Platform(models.Model):
     abbreviation = models.CharField(max_length=20, help_text='Enter shortened abbreviation for this system/platform.')
     alternate_name = models.CharField(max_length=1000, help_text='Enter alternate names as list separated by commas.')
     name = models.CharField(max_length=200, help_text='Enter name of this system/platform.')
-    logo = models.ForeignKey(PlatformLogo, null=True, blank=True, help_text='Enter logo for this system/platform.')
+    logo = models.ForeignKey(PlatformLogo, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo for this system/platform.')
 
     # Metadata
     class Meta:
@@ -65,20 +65,20 @@ class Game(models.Model):
     name = models.CharField(max_length=200, help_text='Enter game title.')
     slug = models.SlugField(max_length=200)
     summary = models.TextField(blank=True, help_text='Enter summary of the game.')
-    platform = models.ForeignKey(Platform, help_text='Enter game platform (ex. PC, PS4, XBox 360, etc.).')
+    platform = models.ForeignKey(Platform, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter game platform (ex. PC, PS4, XBox 360, etc.).')
     genre = models.ManyToManyField(Genre, blank=True, help_text='Enter genres of the game.')
-    developer = models.ForeignKey(Developer, null=True, blank=True, on_delete=models.SET_NULL, help_text='Enter developer of the game.')
+    developer = models.ForeignKey(Developer, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter developer of the game.')
     release_date = models.DateField(verbose_name='Release Date', help_text='Enter date the game was released.')
 
     # Metadata
 
     class Meta:
-        ordering = ['name', 'release_year']
+        ordering = ['name', 'release_date']
 
     # Methods
 
     def __str__(self):
-        return f'{self.name} [{self.platform}]'
+        return f'{self.name} [{self.platform.abbreviation}]'
 
     # TODO: Use IGDB API to display information about the game as well as any stored
     # fields (ex. other episodes that include that game)
