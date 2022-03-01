@@ -1,9 +1,9 @@
 import json
 import datetime
 from django.db.models import Q
-from igdb import IGDB #get_igdb_data, get_igdb_platform_data
-from ..models import Thumbnail, YouTubeVideo, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
-from ...game.models import *
+from .igdb import IGDB #get_igdb_data, get_igdb_platform_data
+#from ..models import Thumbnail, YouTubeVideo, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
+#from ...game.models import *
 
 SEGMENT_TYPES = {
     'RR': 'Replay Roulette',
@@ -18,7 +18,29 @@ SEGMENT_TYPES = {
     'AD': 'Advertisement',
 }
 
-def createReplayEpisodeFromJSON(replayData):
+def createReplayEpisodeFromJSON(replayData, apps):
+    # Cannot import models directly as it may be a newer version
+    # than this migration expects. Use historical versions instead.
+    Thumbnail = apps.get_model('fansite', 'Thumbnail')
+    YouTubeVideo = apps.get_model('fansite', 'YouTubeVideo')
+    Guest = apps.get_model('fansite', 'Guest')
+    StaffPosition = apps.get_model('fansite', 'StaffPosition')
+    StaffPositionInstance = apps.get_model('fansite', 'StaffPositionInstance')
+    Staff = apps.get_model('fansite', 'Staff')
+    Article = apps.get_model('fansite', 'Article')
+    SegmentType = apps.get_model('fansite', 'SegmentType')
+    Segment = apps.get_model('fansite', 'Segment')
+    ExternalLink = apps.get_model('fansite', 'ExternalLink')
+    Heading = apps.get_model('fansite', 'Heading')
+    HeadingInstance = apps.get_model('fansite', 'HeadingInstance')
+    ReplaySeason = apps.get_model('fansite', 'ReplaySeason')
+    ReplayEpisode = apps.get_model('fansite', 'ReplayEpisode')
+    SuperReplay = apps.get_model('fansite', 'SuperReplay')
+    SuperReplayEpisode = apps.get_model('fansite', 'SuperReplayEpisode')
+
+    Game = apps.get_model('game', 'Game')
+    Platform = apps.get_model('game', 'Platform')
+
     # Instance initialization creates API access_token
     igdb = IGDB()
 
@@ -38,16 +60,16 @@ def createReplayEpisodeFromJSON(replayData):
 
     # Airdate - replayData.airDate AND replayData.details.airdate
     if 'airdate' in replayData and replayData['airDate']:
-        replay.airdate = datetime.strptime(replayData['airDate'],'%m/%d/%y') # month/day/year
+        replay.airdate = datetime.datetime.strptime(replayData['airDate'],'%m/%d/%y') # month/day/year
     elif 'details' in replayData and 'airdate' in replayData['details'] and replayData['details']['airdate']:
-        replay.airdate = datetime.strptime(replayData['details']['airdate'], '%B %d, %Y') # month day, year
+        replay.airdate = datetime.datetime.strptime(replayData['details']['airdate'], '%B %d, %Y') # month day, year
 
     # Host/Featuring/Guests inside 'details'
     if 'details' in replayData:
 
         # Host - replayData.details.host (ForeignKey)
         if 'host' in replayData['details'] and replayData['details']['host']:
-            nameList = replayData['details']['host'].split()
+            nameList = replayData['details']['host'][0].split()
             try:
                 person = Staff.objects.get(first_name=nameList[0], last_name=nameList[1])
             except Staff.DoesNotExist:
@@ -87,8 +109,11 @@ def createReplayEpisodeFromJSON(replayData):
         # Dislikes
         youtubeVideo.dislikes = replayData['youtube']['dislikes']
 
+        # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
+        youtubeVideo.save()
+
         # Thumbnails
-        for key, value in replayData['youtube']['thumbnails']:
+        for key, value in replayData['youtube']['thumbnails'].items():
             try:
                 thumbnail = Thumbnail.objects.get(url=value['url'])
             except Thumbnail.DoesNotExist:
@@ -100,7 +125,7 @@ def createReplayEpisodeFromJSON(replayData):
                 )
             youtubeVideo.thumbnails.add(thumbnail)
 
-        youtubeVideo.save()
+        # Add YouTubeVideo to ReplayEpisode
         replay.youtube_video = youtubeVideo
 
     # Thumbnails - replayData.youtube.thumbnails (ManyToMany)
@@ -113,7 +138,7 @@ def createReplayEpisodeFromJSON(replayData):
         if 'external_links' in replayData['details'] and replayData['details']['external_links']:
             for link in replayData['details']['external_links']:
                 # Skip links containing 'youtube.com'
-                if link['href'].contains('youtube.com'):
+                if 'youtube.com' in link['href']:
                     continue
                 externalLink = ExternalLink.objects.create(
                     url=link['href'],
@@ -305,7 +330,7 @@ def createReplayEpisodeFromJSON(replayData):
 
         # Datetime - replayData.article.date
         # " on Sep 26, 2015 at 03:00 AM"
-        article.datetime = datetime.strptime(
+        article.datetime = datetime.datetime.strptime(
             replayData['article']['date'],
             ' on %b %d, %Y at %I:%M %p'
         )
@@ -317,7 +342,7 @@ def createReplayEpisodeFromJSON(replayData):
         if 'details' in replayData and 'external_links' in replayData['details'] and replayData['details']['external_links']:
             for link in replayData['details']['external_links']:
                 # If link contains GameInformer url, set ID, title, and break loop
-                if ('gameinformer.com' in link['href']):
+                if 'gameinformer.com' in link['href']:
                     article.url = link['href']
                     break
 
@@ -328,29 +353,27 @@ def createReplayEpisodeFromJSON(replayData):
     replay.save()
 
 def initialize_database(apps, schema_editor):
-    # Open JSON data file
-    dataFile = open('replay_data.json')
+    with open('fansite/other_scripts/replay_data.json', 'r') as dataFile:
 
-    # Get Replay episode data
-    allReplayData = json.load(dataFile)
+        # Get Replay episode data
+        allReplayData = json.load(dataFile)
 
-    # If there is Replay data
-    # if (allReplayData):
-    #     for replayData in allReplayData:
-    #         createReplayEpisodeFromJSON(replayData)
-    createReplayEpisodeFromJSON(allReplayData[0])
-
-    # Close JSON data file 1100649600 1109894400
-    dataFile.close()
+        # If there is Replay data
+        # if (allReplayData):
+        #     for replayData in allReplayData:
+        #         createReplayEpisodeFromJSON(replayData)
+        createReplayEpisodeFromJSON(allReplayData[0], apps)
 
     '''
     from django.db import migrations
-    from ..other_scripts.data_migration import initialize_database
+    from fansite.other_scripts.data_migration import initialize_database
 
     class Migration(migrations.Migration):
 
         dependencies = [
             ('fansite', '0001_initial'),
+            # added dependency to enable models from 'game' app to initialize_database method
+            ('game', '0001_initial'),
         ]
 
         operations = [

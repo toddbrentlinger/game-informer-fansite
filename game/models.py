@@ -26,8 +26,11 @@ class PlatformLogo(models.Model):
     # Fields
 
     # Metadata
+
+    class Meta:
+        verbose_name = 'Platform Logo'
+
     # Methods
-    pass
 
 class Platform(models.Model):
     # Fields

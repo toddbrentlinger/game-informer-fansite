@@ -430,6 +430,7 @@ class ReplaySeason(models.Model):
 
     class Meta:
         ordering = ['-number']
+        verbose_name = 'Replay Season'
 
     # Methods
     
