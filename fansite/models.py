@@ -442,6 +442,9 @@ class ReplaySeason(models.Model):
         # replay/s0 - unofficial
         return reverse('replay-season', args=[str(self.number)])
 
+class ReplayEpisodeManager(models.Manager):
+    use_in_migrations = True
+
 # TODO: Replace 'middle_segment' and 'second_segment' with 'segments' ManyToManyField
 class ReplayEpisode(Episode):
     """Model representing an episode of Replay."""
@@ -455,6 +458,8 @@ class ReplayEpisode(Episode):
     # middle_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_middle_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Middle Segment', help_text='Enter middle segment for the Replay episode.')
     # second_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_second_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Second Segment', help_text='Enter second segment for the Replay episode.')
     article = models.OneToOneField(Article, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter article for the Replay episode.')
+
+    objects = ReplayEpisodeManager()
 
     # Metadata
 

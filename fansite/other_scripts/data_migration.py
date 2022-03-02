@@ -162,57 +162,67 @@ def createReplayEpisodeFromJSON(replayData, apps):
         replay.number = replayData['episodeNumber']
 
         # Season - calculate using replayData.episodeNumber (ForeignKey)
-        season = replay.get_season()[0]
+        season = get_season(replay)[0]
         try:
             replay.season = ReplaySeason.objects.get(pk=season)
         except ReplaySeason.DoesNotExist:
             replay.season = ReplaySeason.objects.create(
-                number=replay.get_season()[0]
+                number=get_season(replay)[0]
             )
     
     # Main Segment Games - replayData.mainSegmentGamesAdv, replayData.details.system, replayData.details.gamedate (ManyToMany)
     if 'mainSegmentGamesAdv' in replayData:
-        # Game - Name
-        game_name = replayData['mainSegmentGamesAdv']['title']
+        # Save ReplayEpisode before adding Games through Many-to-Many relationship
+        replay.save()
 
-        # Game - Platform
-        platform_name = replayData['mainSegmentGamesAdv']['system']
-        platform = None
-        try:
-            platform = Platform.objects.get(
-                Q(abbreviation=platform_name) | Q(alternate_name__icontains=platform_name) | Q(name=platform_name)
-            )
-        except Platform.DoesNotExist:
-            platform_data = igdb.get_platform_data(platform_name)
-            if platform_data is not None:
-                platform = Platform.objects.create(
-                    id=platform_data['id'],
-                    abbreviation=platform_data['abbreviation'],
-                    alternate_name=platform_data['alternate_name'],
-                    name=platform_data['name']
-                )
+        for game in replayData['mainSegmentGamesAdv']:
+            # Game - Name
+            game_name = game['title']
 
-        # Game - Year Released
-        game_year_released = replayData['mainSegmentGamesAdv']['yearReleased']
-        
-        # Get game data using IGDB API
-        fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
-        game_data = igdb.get_game_data(game_name, platform.id, game_year_released, fields)
-        if game_data is not None:
-            # Check if game ID already exists in database
+            # Game - Platform
+            platform_name = game['system']
+            platform = None
             try:
-                game = Game.objects.get(pk=game_data['id'])
-            except Game.DoesNotExist:
-                game = Game.objects.create(
-                    igdb_id=game_data['id'],
-                    name=game_data['name'],
-                    slug=game_data['slug'],
-                    summary=game_data['summary'],
-                    platform=platform,
-                    developer=None,
-                    release_date=datetime.date.fromtimestamp(game_data['first_release_date'])
+                platform = Platform.objects.get(
+                    Q(abbreviation=platform_name) | Q(alternate_name__icontains=platform_name) | Q(name=platform_name)
                 )
-                # Genre is ManyToManyField, use game.genre.add(newGenre)
+            except Platform.DoesNotExist:
+                # Adjust name for 'PC' to 'PC Windows'
+                if platform_name == 'PC':
+                    platform_name += ' Windows'
+                # Get data on game platform from IGDB API
+                platform_data = igdb.get_platform_data(platform_name)[0]
+                if platform_data is not None:
+                    platform = Platform.objects.create(
+                        id=platform_data['id'],
+                        abbreviation=platform_data['abbreviation'],
+                        alternate_name=platform_data['alternative_name'],
+                        name=platform_data['name']
+                    )
+
+            # Game - Year Released
+            game_year_released = game['yearReleased']
+            
+            # Get game data using IGDB API
+            fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
+            game_data = igdb.get_game_data(game_name, platform.id, game_year_released, fields)[0]
+            if game_data is not None:
+                # Check if game ID already exists in database
+                try:
+                    game_inst = Game.objects.get(pk=game_data['id'])
+                except Game.DoesNotExist:
+                    game_inst = Game.objects.create(
+                        igdb_id=game_data['id'],
+                        name=game_data['name'],
+                        slug=game_data['slug'],
+                        summary=game_data['summary'],
+                        platform=platform,
+                        developer=None,
+                        release_date=datetime.date.fromtimestamp(game_data['first_release_date'])
+                    )
+                    # Genre is ManyToManyField, use game.genre.add(newGenre)
+
+                replay.main_segment_games.add(game_inst)
     
     # Other Segments - replayData.details (ManyToMany)
 
@@ -380,3 +390,24 @@ def initialize_database(apps, schema_editor):
             migrations.RunPython(initialize_database),
         ]
     '''
+
+def get_season(replayEpisode):
+        # Episode numbers less than 1 are special unofficial episodes
+        replaySeasonStartEpisodes = [1, 107, 268, 385, 443, 499] # [S1, S2, S3, S4, S5, S6]
+
+        # Season
+        
+        for index in range(len(replaySeasonStartEpisodes)):
+            if (replayEpisode.number < replaySeasonStartEpisodes[index]):
+                season = index
+                break
+            # If reached end of loop, assign last season
+            if index == (len(replaySeasonStartEpisodes) - 1):
+                season = len(replaySeasonStartEpisodes)
+
+        # Season Episode
+
+        seasonEpisode = replayEpisode.number - replaySeasonStartEpisodes[season - 1] + 1 if season > 1 else replayEpisode.number
+
+        # Return tuple (season, seasonEpisode)
+        return (season, seasonEpisode)

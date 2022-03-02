@@ -122,8 +122,9 @@ class IGDB:
             print('No search results!')
             return None
 
-if __name__ == '__main__':
+def main():
     igdb = IGDB()
+    #platform_id = igdb.get_platform_data('PC Windows', '*,platform_logo.*')[0]['id']
     platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
     igdb.get_game_data(
         'Metal Gear Solid 3: Snake Eater', 
@@ -131,3 +132,6 @@ if __name__ == '__main__':
         2004, 
         'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
     )
+
+if __name__ == '__main__':
+    main()
