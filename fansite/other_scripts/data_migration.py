@@ -6,26 +6,80 @@ from .igdb import IGDB #get_igdb_data, get_igdb_platform_data
 #from ...game.models import *
 
 SEGMENT_TYPES = {
-    'RR': 'Replay Roulette',
-    'SRS': 'Super Replay Showdown',
-    'YDIW': 'You\'re Doing It Wrong',
-    'ST': 'Stress Test',
-    'RP': 'RePorted',
-    'DP': 'Developer Pick',
-    '2037': 'Replay 2037',
-    'HF': 'Horror Fest',
-    'RRL': 'Replay Real Life',
-    'AD': 'Advertisement',
-}
+        'RR': 'Replay Roulette',
+        'SRS': 'Super Replay Showdown',
+        'YDIW': 'You\'re Doing It Wrong',
+        'ST': 'Stress Test',
+        'RP': 'RePorted',
+        'DP': 'Developer Pick',
+        '2037': 'Replay 2037',
+        'HF': 'Horror Fest',
+        'RRL': 'Replay Real Life',
+        'AD': 'Advertisement',
+    }
+
+STAFF = [
+    'Adam Biessener',
+    'Alex Stadnik',
+    'Andrew Reiner',
+    'Andy McNamara',
+    'Annette Gonzalez',
+    'Ben Hanson',
+    'Ben Reeves',
+    'Blake Hester',
+    'Brian Shea',
+    'Bryan Vore',
+    'Cathy Preston',
+    'Curtis Fung',
+    'Dan Ryckert',
+    'Dan Tack',
+    'Elise Favis',
+    'Imran Khan',
+    'Jason Guisao',
+    'Jason Oestreicher',
+    'Javy Gwaltney',
+    'Jeff Akervik',
+    'Jeff Cork',
+    'Jeff Marchiafava',
+    'Jen Vinson',
+    'Jim Reilly',
+    'Joe Juba',
+    'Kimberley Wallace',
+    'Kristin Williams',
+    'Kyle Hilliard',
+    'Laleh Tobin',
+    'Leo Vader',
+    'Liana Ruppert',
+    'Marcus Stewart',
+    'Margaret Andrews',
+    'Matt Bertz',
+    'Matt Helgeson',
+    'Matt Miller',
+    'Matthew Kato',
+    'Meagan Marie',
+    'Nick Ahrens',
+    'Phil Kollar',
+    'Samm Langer',
+    'Suriel Vasquez',
+    'Tim Turi',
+    'Wade Wojcik',
+]
+
+def databaseInit(apps):
+    # Create Segment Types
+    SegmentType = apps.get_model('fansite', 'SegmentType')
+    for abbreviation, title in SEGMENT_TYPES.items():
+        SegmentType.objects.create(title=title, abbreviation=abbreviation)
+
 
 def createReplayEpisodeFromJSON(replayData, apps):
     # Cannot import models directly as it may be a newer version
     # than this migration expects. Use historical versions instead.
     Thumbnail = apps.get_model('fansite', 'Thumbnail')
     YouTubeVideo = apps.get_model('fansite', 'YouTubeVideo')
-    Guest = apps.get_model('fansite', 'Guest')
-    StaffPosition = apps.get_model('fansite', 'StaffPosition')
-    StaffPositionInstance = apps.get_model('fansite', 'StaffPositionInstance')
+    #Guest = apps.get_model('fansite', 'Guest')
+    #StaffPosition = apps.get_model('fansite', 'StaffPosition')
+    #StaffPositionInstance = apps.get_model('fansite', 'StaffPositionInstance')
     Staff = apps.get_model('fansite', 'Staff')
     Article = apps.get_model('fansite', 'Article')
     SegmentType = apps.get_model('fansite', 'SegmentType')
@@ -225,7 +279,6 @@ def createReplayEpisodeFromJSON(replayData, apps):
                 replay.main_segment_games.add(game_inst)
     
     # Other Segments - replayData.details (ManyToMany)
-
     # replayData.middleSegment, replayData.middleSegmentContent
     if 'middleSegment' in replayData:
         # - middleSegment could be blank while middleSegmentContent has value
@@ -369,10 +422,10 @@ def initialize_database(apps, schema_editor):
         allReplayData = json.load(dataFile)
 
         # If there is Replay data
-        # if (allReplayData):
-        #     for replayData in allReplayData:
-        #         createReplayEpisodeFromJSON(replayData)
-        createReplayEpisodeFromJSON(allReplayData[0], apps)
+        if (allReplayData):
+            for replayData in allReplayData:
+                createReplayEpisodeFromJSON(replayData, apps)
+        #createReplayEpisodeFromJSON(allReplayData[0], apps)
 
     '''
     from django.db import migrations

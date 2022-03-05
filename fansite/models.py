@@ -4,7 +4,15 @@ from django.db import models
 from django.urls import reverse
 from game.models import Game
 
-# Create your models here.
+'''
+TODO:
+- Use base Person class for Staff and Guests instead of deriving from abstract Person class.
+Inside Staff class, replace char field 'name' with foreign key 'person'.
+Can remove Guests class entirely. Simply filter Person class that are NOT Staff.
+- Remove ReplayEpisode.thumbnails field. Use Replay.youtube_video.thumbnails instead. 
+If ReplayEpisode is null, use same base thumbnails in view. 
+No need to save base thumbnails in database.
+'''
 
 class Thumbnail(models.Model):
     """Model representing a thumbnail."""
@@ -108,6 +116,11 @@ class Person(models.Model):
 
     first_name = models.CharField(max_length=100, verbose_name='First Name', help_text='Enter first name.')
     last_name = models.CharField(max_length=100, blank=True, verbose_name='Last Name', help_text='Enter last name.')
+    # description = models.TextField()
+    # thumbnail = models.ForeignKey(Thumbnail)
+    # gallery 
+    # trivia
+    # social_media: Inside SocialMediaInst, person = models.ForeignKey(Person)
 
     # Metadata
 
@@ -117,8 +130,38 @@ class Person(models.Model):
 
     # Methods
 
+    def get_absolute_url(self):
+        # staff/andrew-reiner
+        # staff/tim-turi
+        # guests/hilary-wilton
+        pass
+
     def __str__(self):
         return f'{self.last_name}, {self.first_name}'
+
+class SocialMediaType(models.Model):
+    # Fields
+
+    name = models.CharField(max_length=100)
+
+    # Metadata
+    # Methods
+
+    def __str__(self):
+        return self.name
+
+class SocialMediaInst(models.Model):
+    # Fields
+
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    type = models.ForeignKey(SocialMediaType, on_delete=models.RESTRICT)
+    url = models.URLField()
+
+    # Metadata
+    # Methods
+
+    def __str__(self):
+        return f'{self.person} ({self.type})'
 
 # TODO: Use Person as normal class for guests since there's no extra functionality for Guest over generic Person class.
 # However, do want separate detail page for guests and staff members.
@@ -362,7 +405,7 @@ class HeadingInstance(models.Model):
         pass
 
 # TODO: Convert external_links to JSON field instead. Saving unique instances of links does not seem necessary.
-# TODO: Combine 'description' and 'other_headings' to 'headings'
+# X TODO: Combine 'description' and 'other_headings' to 'headings'
 # TODO: Combine next two into single headingInstances = ForeignKey but ForeignKey should be inside 'one' of 'one-to-many' relationship.
 # This should be inside HeadingInstance class as an 'episode' property. More is required since it makes more sense to adding new HeadingInstances
 # when creating an Episode instead of adding an Episode when creating a HeadingInstance.
@@ -380,11 +423,11 @@ class Episode(models.Model):
     title = models.CharField(max_length=100, unique=True, help_text='Enter episode title.')
     # nn:nn:nn (ex. 01:35:23 for 1hr 35min 23sec)
     runtime = models.CharField(max_length=10, blank=True, help_text='Enter episode runtime in format hh:mm:ss.')
+    # TODO: Remove thumbnails field and use youtube_video.thumbnails instead
     thumbnails = models.ManyToManyField(Thumbnail, blank=True, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
-    host = models.ForeignKey(Staff, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff member who hosts the episode.')
-    featuring = models.ManyToManyField(Staff, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter staff members who feature in the episode (NOT including the host).')
-    guests = models.ManyToManyField(Guest, blank=True, help_text='Enter any other guests (NOT official staff members).')
+    host = models.ForeignKey(Person, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter person who hosts the episode.')
+    featuring = models.ManyToManyField(Person, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter people who feature in the episode (NOT including the host).')
     youtube_video = models.OneToOneField(YouTubeVideo, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='YouTube Video', help_text='Enter the YouTube video for the episode.')
     external_links = models.ManyToManyField(ExternalLink, blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
     #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
@@ -435,17 +478,15 @@ class ReplaySeason(models.Model):
     # Methods
     
     def __str__(self):
-        return self.number
+        return str(self.number)
 
     def get_absolute_url(self):
         # replay/s2
         # replay/s0 - unofficial
         return reverse('replay-season', args=[str(self.number)])
 
-class ReplayEpisodeManager(models.Manager):
-    use_in_migrations = True
-
-# TODO: Replace 'middle_segment' and 'second_segment' with 'segments' ManyToManyField
+# TODO: Replace 'middle_segment' and 'second_segment' with 'segments' ManyToManyField.
+# Should add main segment inside segments instead of having separate field just for main segment games?
 class ReplayEpisode(Episode):
     """Model representing an episode of Replay."""
 
@@ -458,8 +499,6 @@ class ReplayEpisode(Episode):
     # middle_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_middle_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Middle Segment', help_text='Enter middle segment for the Replay episode.')
     # second_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_second_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Second Segment', help_text='Enter second segment for the Replay episode.')
     article = models.OneToOneField(Article, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter article for the Replay episode.')
-
-    objects = ReplayEpisodeManager()
 
     # Metadata
 
