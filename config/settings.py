@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Custom apps
     'accounts.apps.AccountsConfig',
-    'game.apps.GameConfig',
+    'games.apps.GamesConfig',
     'fansite.apps.FansiteConfig',
 ]
 

@@ -1,3 +1,11 @@
+TODO:
+
+3/6/22
+
+- Create separate apps for 'replays' and 'superreplays'
+
+-------------------------------------------------------------------------------
+
 Reset PostgreSQL database:
 
 - Delete files in <app-title>/migrations/ except those that start with "__init__"

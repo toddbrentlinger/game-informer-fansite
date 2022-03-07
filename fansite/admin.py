@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import Thumbnail, YouTubeVideo, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
+from .models import Thumbnail, YouTubeVideo, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
 
 # Register your models here.
 
@@ -19,9 +19,9 @@ class YouTubeVideoAdmin(admin.ModelAdmin):
 #     list_filter = ('system', 'release_year')
 #     search_fields = ['title']
 
-@admin.register(Guest)
-class GuestAdmin(admin.ModelAdmin):
-    search_fields = ['first_name', 'last_name']
+# @admin.register(Guest)
+# class GuestAdmin(admin.ModelAdmin):
+#     search_fields = ['first_name', 'last_name']
 
 class StaffPositionInstanceInline(admin.TabularInline):
     model = StaffPositionInstance
@@ -34,18 +34,18 @@ class StaffPositionAdmin(admin.ModelAdmin):
 @admin.register(StaffPositionInstance)
 class StaffPositionInstanceAdmin(admin.ModelAdmin):
     list_filter = ('position__title',)
-    search_fields = ['staff__first_name', 'staff__last_name', 'position__title']
+    search_fields = ['staff__person__full_name', 'staff__person__short_name', 'position__title']
 
 @admin.register(Staff)
 class StaffAdmin(admin.ModelAdmin):
-    search_fields = ['first_name', 'last_name']
+    search_fields = ['person__full_name']
     inlines = [StaffPositionInstanceInline,]
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'datetime')
     list_filter = ('datetime',)
-    search_fields = ['title', 'author__first_name', 'author__last_name']
+    search_fields = ['title', 'author__full_name', 'author__short_name']
 
 @admin.register(SegmentType)
 class SegmentTypeAdmin(admin.ModelAdmin):
@@ -83,7 +83,7 @@ class ReplaySeasonAdmin(admin.ModelAdmin):
 class ReplayEpisodeAdmin(admin.ModelAdmin):
     list_filter = ('airdate',)
     #fields = ['number', ]
-    filter_horizontal = ('thumbnails', 'featuring', 'guests')
+    filter_horizontal = ('thumbnails', 'featuring')
 
 class SuperReplayEpisodeInline(admin.TabularInline):
     model = SuperReplayEpisode

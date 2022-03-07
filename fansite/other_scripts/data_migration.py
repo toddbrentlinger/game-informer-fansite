@@ -77,6 +77,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
     # than this migration expects. Use historical versions instead.
     Thumbnail = apps.get_model('fansite', 'Thumbnail')
     YouTubeVideo = apps.get_model('fansite', 'YouTubeVideo')
+    Person = apps.get_model('fansite', 'Person')
     #Guest = apps.get_model('fansite', 'Guest')
     #StaffPosition = apps.get_model('fansite', 'StaffPosition')
     #StaffPositionInstance = apps.get_model('fansite', 'StaffPositionInstance')
@@ -123,21 +124,21 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
         # Host - replayData.details.host (ForeignKey)
         if 'host' in replayData['details'] and replayData['details']['host']:
-            nameList = replayData['details']['host'][0].split()
+            name = replayData['details']['host'][0]
             try:
-                person = Staff.objects.get(first_name=nameList[0], last_name=nameList[1])
-            except Staff.DoesNotExist:
-                person = Staff.objects.create(first_name=nameList[0], last_name=nameList[1])
+                person = Person.objects.get(full_name=name)
+            except Person.DoesNotExist:
+                person = Person.objects.create(full_name=name)
             replay.host = person
 
         # Featuring - replayData.details.featuring (ManyToMany)
         if 'featuring' in replayData['details'] and replayData['details']['featuring']:
             for personName in replayData['details']['featuring']:
-                nameList = personName.split()
+                name = personName
                 try:
-                    person = Staff.objects.get(first_name=nameList[0], last_name=nameList[1])
-                except Staff.DoesNotExist:
-                    person = Staff.objects.create(first_name=nameList[0], last_name=nameList[1])
+                    person = Person.objects.get(full_name=name)
+                except Person.DoesNotExist:
+                    person = Person.objects.create(full_name=name)
                 replay.featuring.add(person)
 
         # Guests - replayData.details.featuring (ManyToMany)

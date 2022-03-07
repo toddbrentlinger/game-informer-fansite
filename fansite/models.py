@@ -2,12 +2,12 @@ import uuid # Used for unique model instances
 
 from django.db import models
 from django.urls import reverse
-from game.models import Game
+from games.models import Game
 
 '''
 TODO:
-- Use base Person class for Staff and Guests instead of deriving from abstract Person class.
-Inside Staff class, replace char field 'name' with foreign key 'person'.
+X Use base Person class for Staff and Guests instead of deriving from abstract Person class.
+Inside Staff class, replace char field 'name' with OneToOneField 'person'.
 Can remove Guests class entirely. Simply filter Person class that are NOT Staff.
 - Remove ReplayEpisode.thumbnails field. Use Replay.youtube_video.thumbnails instead. 
 If ReplayEpisode is null, use same base thumbnails in view. 
@@ -67,55 +67,14 @@ class YouTubeVideo(models.Model):
 
         return round(round(self.likes/(self.likes + self.dislikes)) * 100, 1)
 
-# TODO: Use VGDB (Video Game Database API)
-# - *Could use API to fill a few basic fields to be stored on custom database and 
-# use API whenever user accesses custom page for single game (ex. /game/metal-gear-solid-3)
-# Which fields to store on custom database? (fields to sort/filter by)
-#   -   Title, System, Release Date, Developer, Genres
-# - Game model should hold system they played the game on since the IGDB shows all platforms per game ID,
-# however IGDB displays separate release dates per system.
-# class Game(models.Model):
-#     """Model representing a video game."""
-
-#     # GAME_SYSTEMS = (
-#     #     ('PC', 'PC'),
-#     #     ('PS4', 'PlayStation 4'),
-#     #     ('X360', 'XBox 360'),
-#     # )
-
-#     # Fields
-
-#     igdb_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='IGDB ID', help_text='Enter IGDB game ID to be used with API.')
-#     title = models.CharField(max_length=100, help_text='Enter game title.')
-#     system = models.CharField(max_length=30, help_text='Enter game system (ex. PC, PS4, XBox 360, etc.).')
-#     release_year = models.PositiveSmallIntegerField(verbose_name='Release Year', help_text='Enter date the game was released.')
-
-#     # Metadata
-
-#     class Meta:
-#         ordering = ['title', 'release_year']
-
-#     # Methods
-
-#     def __str__(self):
-#         return f'{self.title} [{self.system}]'
-
-#     # TODO: Use IGDB API to display information about the game as well as any stored
-#     # fields (ex. other episodes that include that game)
-#     def get_absolute_url(self):
-#         # game/metal-gear-solid-3
-#         pass
-
-#     def save(self, *args, **kwargs):
-#         super(Game, self).save(*args, **kwargs)
-
 class Person(models.Model):
     """Abstract model representing a person."""
 
     # Fields
 
-    first_name = models.CharField(max_length=100, verbose_name='First Name', help_text='Enter first name.')
-    last_name = models.CharField(max_length=100, blank=True, verbose_name='Last Name', help_text='Enter last name.')
+    full_name = models.CharField(max_length=100, verbose_name='Full Name', help_text='Enter full name (maximum 100 characters).')
+    short_name = models.CharField(max_length=50, blank=True, verbose_name='Short Name', help_text='Enter optional short name variation for usage in correspondence (maximum 50 characters).')
+    slug = models.SlugField(unique=True)
     # description = models.TextField()
     # thumbnail = models.ForeignKey(Thumbnail)
     # gallery 
@@ -125,8 +84,7 @@ class Person(models.Model):
     # Metadata
 
     class Meta:
-        abstract = True
-        ordering = ['last_name', 'first_name']
+        ordering = ['full_name']
 
     # Methods
 
@@ -134,27 +92,19 @@ class Person(models.Model):
         # staff/andrew-reiner
         # staff/tim-turi
         # guests/hilary-wilton
-        pass
+        # people/tim-turi
+        return reverse('people', args=[str(self.id)])
 
     def __str__(self):
         return f'{self.last_name}, {self.first_name}'
 
-class SocialMediaType(models.Model):
-    # Fields
-
-    name = models.CharField(max_length=100)
-
-    # Metadata
-    # Methods
-
-    def __str__(self):
-        return self.name
-
+# Each model represents Facebook, Twitter, etc.
+# Can use separate API to request certain data, ex. recent tweets from twitter account listed in SocialMediaInst.
 class SocialMediaInst(models.Model):
     # Fields
 
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
-    type = models.ForeignKey(SocialMediaType, on_delete=models.RESTRICT)
+    type = models.CharField(max_length=50)
     url = models.URLField()
 
     # Metadata
@@ -165,35 +115,38 @@ class SocialMediaInst(models.Model):
 
 # TODO: Use Person as normal class for guests since there's no extra functionality for Guest over generic Person class.
 # However, do want separate detail page for guests and staff members.
-class Guest(Person):
-    """Model representing a guest (not staff member)."""
+# class Guest(Person):
+#     """Model representing a guest (not staff member)."""
 
-    # Fields
-    # Metadata
-    # # Methods
+#     # Fields
+#     # Metadata
+#     # # Methods
 
-    def get_absolute_url(self):
-        # guests/hilary-wilton
-        pass
+#     def get_absolute_url(self):
+#         # guests/hilary-wilton
+#         pass
 
 # TODO: Use 'Extra fields on many-to-many relationships' for roles, creating an 
 # intermediate class RoleDuration to hold start_date, end_date, and anything else. 
-class Staff(Person):
+class Staff(models.Model):
     """Model representing a staff member."""
 
     # Fields
+
+    person = models.OneToOneField(Person, on_delete=models.CASCADE)
+
     # Metadata
 
-    class Meta(Person.Meta):
+    class Meta:
         verbose_name = 'Staff Member'
         verbose_name_plural = 'Staff'
 
     # Methods
 
-    def get_absolute_url(self):
-        # staff/andrew-reiner
-        # staff/tim-turi
-        return reverse('staff', args=[str(self.id)])
+    # def get_absolute_url(self):
+    #     # staff/andrew-reiner
+    #     # staff/tim-turi
+    #     return reverse('staff', args=[str(self.id)])
 
 class StaffPosition(models.Model):
     """Model representing a specific position at the company."""
@@ -414,6 +367,9 @@ class HeadingInstance(models.Model):
 # Could create separate Featuring class to hold 'host', 'staff', and 'guests'
 # OR use another 'django polymorphic' on base abstract class 'Person'
 # 2/21/22 - Could use HStoreField importing from django.contrib.postgres.fields which stores key/value pairs for 'headings' field.
+# 3/6/22 - Headings Issue: Could create abstract model 'Heading', then create different type of headings (Text, Quotes, Gallery, etc)
+# with ForeignKey field 'episode'. Episode could have multiple TextHeadings but TextHeading has only one episode.
+# ISSUE: How to reference abstract field Episode inside TextHeading, QuotesHeading, etc.?
 class Episode(models.Model):
     """Abstract model representing a base episode."""
 
@@ -421,10 +377,11 @@ class Episode(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100, unique=True, help_text='Enter episode title.')
+    # TODO: Runtime should be in youtube_video after using YouTube API. 
+    # One few videos do not have YouTube id but does have runtime (videos never on YouTube).
     # nn:nn:nn (ex. 01:35:23 for 1hr 35min 23sec)
     runtime = models.CharField(max_length=10, blank=True, help_text='Enter episode runtime in format hh:mm:ss.')
-    # TODO: Remove thumbnails field and use youtube_video.thumbnails instead
-    thumbnails = models.ManyToManyField(Thumbnail, blank=True, help_text='Enter thumbnail images for the episode.')
+    #thumbnails = models.ManyToManyField(Thumbnail, blank=True, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
     host = models.ForeignKey(Person, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter person who hosts the episode.')
     featuring = models.ManyToManyField(Person, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter people who feature in the episode (NOT including the host).')
