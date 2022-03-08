@@ -6,17 +6,34 @@ from .igdb import IGDB #get_igdb_data, get_igdb_platform_data
 #from ...game.models import *
 
 SEGMENT_TYPES = {
-        'RR': 'Replay Roulette',
-        'SRS': 'Super Replay Showdown',
-        'YDIW': 'You\'re Doing It Wrong',
-        'ST': 'Stress Test',
-        'RP': 'RePorted',
-        'DP': 'Developer Pick',
-        '2037': 'Replay 2037',
-        'HF': 'Horror Fest',
-        'RRL': 'Replay Real Life',
-        'AD': 'Advertisement',
-    }
+    '2037': 'Replay 2037', # game
+    'AD': 'Advertisement', # text
+    'DP': 'Developer Pick',
+    'HF': 'Horror Fest',
+    'RP': 'RePortd', # game
+    'RR': 'Replay Roulette', # game
+    'RRL': 'Replay Real Life', # text
+    'SRS': 'Super Replay Showdown',
+    'ST': 'Stress Test', # game
+    'YDIW': 'You\'re Doing It Wrong', # game
+}
+
+SEGMENT_TYPES_NO_ABBREVIATIONS = [
+    'A Poor Retelling of Gaming History',
+    'Developer Spotlight',
+    'Embarassing Moments',
+    'GI Versus',
+    'Life Advice with Ben Reeves',
+    'Moments',
+    'NES Games With User-Generated Content',
+    'Reevesplay',
+    'Reflections',
+    'Replay Civil War',
+    'Secret Access', # game
+    'Suite Nostalgia',
+    'The Commodore 64 Spectacular: Part 3',
+    'The Wiebeatdown',
+]
 
 STAFF = [
     'Adam Biessener',
@@ -294,6 +311,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
         segmentContent = replayData['middleSegmentContent'] if replayData['middleSegmentContent'].replace('-', '') else ''
         if segmentContent:
             segment = Segment()
+            # TODO: If middleSegment is blank, content can be Ad OR RR (episode 360)
             segmentType = replayData['middleSegment'] if replayData['middleSegment'].replace('-', '') else 'AD'
             
             # Type
@@ -426,6 +444,10 @@ def initialize_database(apps, schema_editor):
         if (allReplayData):
             for replayData in allReplayData:
                 createReplayEpisodeFromJSON(replayData, apps)
+
+            # Use YouTube Data API to update all YouTubeVideo models.
+            # Can batch video IDs into single request rather than doing them 
+            # individually when YouTubeVideo model is first created.
         #createReplayEpisodeFromJSON(allReplayData[0], apps)
 
     '''
