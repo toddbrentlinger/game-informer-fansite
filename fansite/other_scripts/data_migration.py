@@ -5,34 +5,33 @@ from .igdb import IGDB #get_igdb_data, get_igdb_platform_data
 #from ..models import Thumbnail, YouTubeVideo, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
 #from ...game.models import *
 
-SEGMENT_TYPES = {
-    '2037': 'Replay 2037', # game
-    'AD': 'Advertisement', # text
-    'DP': 'Developer Pick',
-    'HF': 'Horror Fest',
-    'RP': 'RePortd', # game
-    'RR': 'Replay Roulette', # game
-    'RRL': 'Replay Real Life', # text
-    'SRS': 'Super Replay Showdown',
-    'ST': 'Stress Test', # game
-    'YDIW': 'You\'re Doing It Wrong', # game
-}
-
-SEGMENT_TYPES_NO_ABBREVIATIONS = [
-    'A Poor Retelling of Gaming History',
-    'Developer Spotlight',
-    'Embarassing Moments',
-    'GI Versus',
-    'Life Advice with Ben Reeves',
-    'Moments',
-    'NES Games With User-Generated Content',
-    'Reevesplay',
-    'Reflections',
-    'Replay Civil War',
-    'Secret Access', # game
-    'Suite Nostalgia',
-    'The Commodore 64 Spectacular: Part 3',
-    'The Wiebeatdown',
+# (<Segment Title>, <Segment Abbreviation>, <Game/Text ID>)
+# Game/Text ID: 0-game 1-text 2-game/text
+SEGMENT_TYPES = [
+    ('Advertisement', 'AD', 1), # text
+    ('A Poor Retelling of Gaming History', None, 1), # text
+    ('Developer Pick', 'DP', 0), # game
+    ('Developer Spotlight', None, 2), # game/text
+    ('Embarassing Moments', None, 1), # text
+    ('GI Versus', None, 0), # game
+    ('Horror Fest', 'HF', 0), # game
+    ('Life Advice with Ben Reeves', None, 1), # text (empty content)
+    ('Moments', None, 2), # game/text
+    ('NES Games With User-Generated Content', None, 0), # game
+    ('Reevesplay', None, 0), # game
+    ('Reflections', None, 1), # text
+    ('Replay 2037', '2037', 0), # game
+    ('Replay Civil War', None, 1), # text (empty content)
+    ('Replay Real Life', 'RRL', 1), # text
+    ('Replay Roulette', 'RR', 0), # game
+    ('RePorted', 'RP', 0), # game
+    ('Secret Access', None, 0), # game
+    ('Stress Test', 'ST', 0), # game
+    ('Suite Nostalgia', None, 0), # game
+    ('Super Replay Showdown', 'SRS', 0), # game (except 'Editor's Picks' and blank values)
+    ('The Commodore 64 Spectacular: Part 3', None, 0), # game
+    ('The Wiebeatdown', None, 0), # game ('Super Smash Bros. for WiiU' should be 'Super Smash Bros. for Wii U' when searching IGDB)
+    ('You\'re Doing It Wrong', 'YDIW', 0), # game
 ]
 
 STAFF = [
@@ -298,7 +297,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
     
     # Other Segments - replayData.details (ManyToMany)
     # replayData.middleSegment, replayData.middleSegmentContent
-    if 'middleSegment' in replayData:
+    if 'middleSegment' in replayData and (len(replayData['middleSegment']).replace('-', '') != 0 or len(replayData['middleSegmentContent']).replace('-', '') != 0):
         # - middleSegment could be blank while middleSegmentContent has value
         # - middleSegment is blank if middleSegmentContent is blank 
         # - middleSegment has value if middleSegmentContent has value
@@ -306,13 +305,30 @@ def createReplayEpisodeFromJSON(replayData, apps):
         # - Could have games or description
 
         # If middleSegment is blank AND middleSegmentContent is NOT blank
-        #     Segment is 'Ad'
+        #     Segment is 'Ad' OR RR game OR Red Faction D&D Skit
+
+        # Ads do not always have middleSegment blank. Could be labeled under 'Moments'
+
+        # Replace 'WiiU' with 'Wii U' for middleSegmentContent
 
         segmentContent = replayData['middleSegmentContent'] if replayData['middleSegmentContent'].replace('-', '') else ''
         if segmentContent:
             segment = Segment()
             # TODO: If middleSegment is blank, content can be Ad OR RR (episode 360)
             segmentType = replayData['middleSegment'] if replayData['middleSegment'].replace('-', '') else 'AD'
+
+            # If middleSegment is blank
+            if len(replayData['middleSegment'].replace('-', '')) == 0:
+                # If middleSegmentContent ends with Ad
+                if replayData['middleSegmentContent'].endswith('Ad'):
+                    segmentType = 'AD'
+                # Else if middleSegmentContent not blank, segment is Replay Roulette
+                elif len(replayData['middleSegmentContent']).replace('-', '') != 0:
+                    segmentType = 'RR'
+                # Else both middleSegment and middleSegmentContent are blank.
+                # Already checked above.
+            else:
+                segmentType = replayData['middleSegment']
             
             # Type
             
@@ -352,6 +368,8 @@ def createReplayEpisodeFromJSON(replayData, apps):
         segmentContent = replayData['secondSegmentGames']
         # - secondSegment could be blank while secondSegmentGames has value
         
+        # Replace 'WiiU' with 'Wii U' for secondSegmentGames
+
         if replayData['secondSegmentGames']:
 
             segment = Segment()
