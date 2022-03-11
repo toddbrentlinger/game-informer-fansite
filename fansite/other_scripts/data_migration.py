@@ -297,17 +297,19 @@ def createReplayEpisodeFromJSON(replayData, apps):
     
     # Other Segments - replayData.details (ManyToMany)
     # replayData.middleSegment, replayData.middleSegmentContent
+    # If middleSegment or middleSegmentContent are NOT blank
     if 'middleSegment' in replayData and (len(replayData['middleSegment']).replace('-', '') != 0 or len(replayData['middleSegmentContent']).replace('-', '') != 0):
         # - middleSegment could be blank while middleSegmentContent has value
-        # - middleSegment is blank if middleSegmentContent is blank 
-        # - middleSegment has value if middleSegmentContent has value
+        # - middleSegment is blank if middleSegmentContent is blank
         # - both can be blank
         # - Could have games or description
 
         # If middleSegment is blank AND middleSegmentContent is NOT blank
         #     Segment is 'Ad' OR RR game OR Red Faction D&D Skit
 
-        # Ads do not always have middleSegment blank. Could be labeled under 'Moments'
+        # Ads do not always have middleSegment blank. Could be labeled under 'Moments'.
+        # Should instead add Ads to Moments segment rather then Advertisement
+        # OR add single Moments advertisement to Advertisement segment.
 
         # Replace 'WiiU' with 'Wii U' for middleSegmentContent
 
@@ -315,8 +317,6 @@ def createReplayEpisodeFromJSON(replayData, apps):
         if segmentContent:
             segment = Segment()
             # TODO: If middleSegment is blank, content can be Ad OR RR (episode 360)
-            segmentType = replayData['middleSegment'] if replayData['middleSegment'].replace('-', '') else 'AD'
-
             # If middleSegment is blank
             if len(replayData['middleSegment'].replace('-', '')) == 0:
                 # If middleSegmentContent ends with Ad
