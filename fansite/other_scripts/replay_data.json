@@ -18422,7 +18422,7 @@
         ],
         "airDate": "4/21/17",
         "videoLength": "1:02:53",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Battleship Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -18709,7 +18709,7 @@
         ],
         "airDate": "3/31/17",
         "videoLength": "55:22",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Mario \"Got Milk?\" Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -18926,7 +18926,7 @@
         ],
         "airDate": "3/17/17",
         "videoLength": "1:03:37",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Crash Team Racing Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -19111,7 +19111,7 @@
         ],
         "airDate": "3/3/17",
         "videoLength": "56:00",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Sonic the Hedgehog (2006) Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -19478,7 +19478,7 @@
         ],
         "airDate": "2/3/17",
         "videoLength": "1:04:15",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Sonic Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -19942,7 +19942,7 @@
         ],
         "airDate": "12/30/16",
         "videoLength": "55:23",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "GoldenEye 007 Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -20134,7 +20134,7 @@
         ],
         "airDate": "12/16/16",
         "videoLength": "51:54",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "PlayStation Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -20218,7 +20218,7 @@
         ],
         "airDate": "12/9/16",
         "videoLength": "1:03:28",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Game Boy Micro Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -20309,7 +20309,7 @@
         ],
         "airDate": "12/2/16",
         "videoLength": "55:31",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Final Fantasy IX Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -20613,7 +20613,7 @@
         ],
         "airDate": "11/11/16",
         "videoLength": "50:20",
-        "middleSegment": "",
+        "middleSegment": "RR",
         "middleSegmentContent": "Avatar: The Last Airbender - The Burning Earth",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -20695,7 +20695,7 @@
         ],
         "airDate": "11/4/16",
         "videoLength": "59:04",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Mario Bros. Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -20789,7 +20789,7 @@
         ],
         "airDate": "10/29/16",
         "videoLength": "1:21:27",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Toontown Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -20881,7 +20881,7 @@
         ],
         "airDate": "10/21/16",
         "videoLength": "55:49",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Red Dead Revolver Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -20963,7 +20963,7 @@
         ],
         "airDate": "10/14/16",
         "videoLength": "1:01:44",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Super Mario Sunshine Ad",
         "secondSegment": "YDIW",
         "secondSegmentGames": [
@@ -21143,7 +21143,7 @@
         ],
         "airDate": "9/30/16",
         "videoLength": "59:16",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Super Smash Bros. Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -21393,7 +21393,7 @@
         ],
         "airDate": "9/9/16",
         "videoLength": "1:06:52",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Pole Position Ad",
         "secondSegment": "ST",
         "secondSegmentGames": [
@@ -21475,7 +21475,7 @@
         ],
         "airDate": "9/2/16",
         "videoLength": "1:05:08",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "PlayStation 9 Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -21692,7 +21692,7 @@
         ],
         "airDate": "8/19/16",
         "videoLength": "1:02:56",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Metroid Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22151,7 +22151,7 @@
         ],
         "airDate": "7/15/16",
         "videoLength": "54:07",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Pokemon GBC Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22317,7 +22317,7 @@
         ],
         "airDate": "7/1/16",
         "videoLength": "50:23",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Red Steel Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22399,7 +22399,7 @@
         ],
         "airDate": "6/24/16",
         "videoLength": "1:06:23",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Crash Bandicoot 2 Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22481,7 +22481,7 @@
         ],
         "airDate": "6/17/16",
         "videoLength": "1:01:01",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Alone in the Dark Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22563,7 +22563,7 @@
         ],
         "airDate": "6/10/16",
         "videoLength": "46:41",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Monster Hunter Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22646,7 +22646,7 @@
         ],
         "airDate": "6/3/16",
         "videoLength": "55:47",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Pac-Man Cereal Ad",
         "secondSegment": "YDIW",
         "secondSegmentGames": [
@@ -22728,7 +22728,7 @@
         ],
         "airDate": "5/27/16",
         "videoLength": "1:05:37",
-        "middleSegment": "",
+        "middleSegment": "RR",
         "middleSegmentContent": "The Tick",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22810,7 +22810,7 @@
         ],
         "airDate": "5/20/16",
         "videoLength": "59:15",
-        "middleSegment": "",
+        "middleSegment": "RR",
         "middleSegmentContent": "Realm",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22892,7 +22892,7 @@
         ],
         "airDate": "5/13/16",
         "videoLength": "1:00:21",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Jak and Daxter Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -22972,7 +22972,7 @@
         ],
         "airDate": "5/7/16",
         "videoLength": "1:03:23",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Sonic & Knuckles Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -23053,7 +23053,7 @@
         ],
         "airDate": "4/29/16",
         "videoLength": "1:02:17",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Game Genie Ad",
         "secondSegment": "GI Versus",
         "secondSegmentGames": [
@@ -23327,7 +23327,7 @@
         ],
         "airDate": "4/8/16",
         "videoLength": "58:34",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Portable Donkey Kong Arcade Ad",
         "secondSegment": "SRS",
         "secondSegmentGames": [
@@ -23409,7 +23409,7 @@
         ],
         "airDate": "4/1/16",
         "videoLength": "56:11",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Steven Spielberg's Director's Chair Ad",
         "secondSegment": "SRS",
         "secondSegmentGames": [
@@ -23492,7 +23492,7 @@
         ],
         "airDate": "3/25/16",
         "videoLength": "1:07:27",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Pitfall! Ad",
         "secondSegment": "SRS",
         "secondSegmentGames": [
@@ -23828,7 +23828,7 @@
         ],
         "airDate": "2/26/16",
         "videoLength": "1:00:54",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Jirachi: Wish Maker Movie Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -24017,7 +24017,7 @@
         ],
         "airDate": "2/12/16",
         "videoLength": "1:07:30",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Harry Potter and the Sorcerer's Stone Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -24222,7 +24222,7 @@
         ],
         "airDate": "1/29/16",
         "videoLength": "1:00:59",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Cool Boarders 4 Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -24387,7 +24387,7 @@
         ],
         "airDate": "1/16/16",
         "videoLength": "1:06:04",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Final Fantasy IV Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -24552,7 +24552,7 @@
         ],
         "airDate": "1/2/16",
         "videoLength": "1:01:51",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "PlayStation Greatest Hits Ad",
         "secondSegment": "ST",
         "secondSegmentGames": [
@@ -24718,7 +24718,7 @@
         ],
         "airDate": "12/11/15",
         "videoLength": "52:01",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Mark of Kri Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -24800,7 +24800,7 @@
         ],
         "airDate": "12/4/15",
         "videoLength": "1:00:09",
-        "middleSegment": "Moments",
+        "middleSegment": "AD",
         "middleSegmentContent": "Road Rash: Jailbreak Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -24965,7 +24965,7 @@
         ],
         "airDate": "11/20/15",
         "videoLength": "57:35",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Mercenaries: Playground of Destruction Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -25047,7 +25047,7 @@
         ],
         "airDate": "11/14/15",
         "videoLength": "1:05:29",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Earthworm Jim 3D Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -25567,7 +25567,7 @@
         ],
         "airDate": "10/3/15",
         "videoLength": "50:50",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Zelda II: The Adventure of Link Ad",
         "secondSegment": "GI Versus",
         "secondSegmentGames": [
@@ -25907,7 +25907,7 @@
         ],
         "airDate": "9/5/15",
         "videoLength": "57:29",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Star Wars for Atari Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -26070,7 +26070,7 @@
         ],
         "airDate": "8/22/15",
         "videoLength": "1:04:19",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Battletankx Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -26397,7 +26397,7 @@
         ],
         "airDate": "7/25/15",
         "videoLength": "57:36",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Nintendo GameCube Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -26479,7 +26479,7 @@
         "airDate": "7/18/15",
         "videoLength": "35:19",
         "middleSegment": "The Wiebeatdown",
-        "middleSegmentContent": "Super Smash Bros. for WiiU",
+        "middleSegmentContent": "Super Smash Bros. for Wii U",
         "secondSegment": "RR",
         "secondSegmentGames": [
             "Donkey Kong Jr. Math"
@@ -26640,7 +26640,7 @@
         ],
         "airDate": "7/4/15",
         "videoLength": "46:12",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Boom Bots Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -26721,7 +26721,7 @@
         ],
         "airDate": "6/27/15",
         "videoLength": "52:36",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Twisted Metal 4 Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -26970,7 +26970,7 @@
         ],
         "airDate": "6/6/15",
         "videoLength": "1:02:04",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Nintendo 64 Price Drop and Player's Choice Games Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -27217,7 +27217,7 @@
         ],
         "airDate": "5/16/15",
         "videoLength": "1:00:43",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Pokemon Snap Ad",
         "secondSegment": "RR",
         "secondSegmentGames": [
@@ -27382,7 +27382,7 @@
         ],
         "airDate": "5/2/15",
         "videoLength": "59:39",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Golden Nugget for PlayStation Ad",
         "secondSegment": "YDIW",
         "secondSegmentGames": [
@@ -27972,7 +27972,7 @@
         ],
         "airDate": "3/14/15",
         "videoLength": "48:56",
-        "middleSegment": "",
+        "middleSegment": "AD",
         "middleSegmentContent": "Rugrats Totally Angelica Ad",
         "secondSegment": "YDIW",
         "secondSegmentGames": [
