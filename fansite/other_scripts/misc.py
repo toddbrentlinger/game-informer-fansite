@@ -6,15 +6,16 @@ def change_dashes_to_null(obj):
     if isinstance(obj, dict):
         for key, value in obj.items():
             if isinstance(value, str) and len(value) != 0 and len(value.replace('-', '')) == 0:
-                print(f'Value changed: {value}')
+                #print(f'Value changed: {value}')
                 obj[key] = ''
             else:
                 change_dashes_to_null(value)
     elif isinstance(obj, list):
-        for index, value in enumerate(obj):
+        for index in reversed(range(0, len(obj))):
+            value = obj[index]
             if isinstance(value, str) and len(value) != 0 and len(value.replace('-', '')) == 0:
-                print(f'Value changed: {value}')
-                obj[index] = ''
+                #print(f'Value changed: {value}')
+                del obj[index]
             else:
                 change_dashes_to_null(value)
 
@@ -68,8 +69,24 @@ def clean_json_file():
                 if 'WiiU' in replayData['middleSegmentContent']:
                     replayData['middleSegmentContent'] = replayData['middleSegmentContent'].replace('WiiU', 'Wii U')
 
+            if 'secondSegment' in replayData:
+                # If both secondSegment AND secondSegmentGames have value
+                if replayData['secondSegment'] and replayData['secondSegmentGames']:
+                    pass
+                # Else if only secondSegment has value
+                elif replayData['secondSegment']:
+                    pass
+                # Else if only secondSegmentGames has value
+                # 3 instances: 
+                # - MGS3 Secret Theater
+                # - Twisted Metal Head On: Extra Twisted Edition
+                # - Mega Man: The\u00a0 Power Battle, Mega Man Soccer, Mega Man: Dr. Wily's Revenge
+                elif replayData['secondSegmentGames']:
+                    replayData['secondSegment'] = 'RR'
+                # Else both 'secondSegment' and 'secondSegmentGames' are blank, do nothing
+
     with open('fansite/other_scripts/replay_data.json', 'w') as dataFile:
-        json.dump(allReplayData, dataFile, indent=4)
+        json.dump(allReplayData, dataFile, indent=2)
 
 def display_middle_segment_data():
     with open('fansite/other_scripts/replay_data.json', 'r') as outfile:
@@ -88,14 +105,32 @@ def display_middle_segment_data():
         # Print sorted segment data
         pprint.pprint(segment_data)
 
+def display_second_segment_data():
+    with open('fansite/other_scripts/replay_data.json', 'r') as outfile:
+        # Get Replay episode data
+        allReplayData = json.load(outfile)
+
+        # (secondSegment, secondSegmentGames array/list)
+        segment_data = {}
+        segment_type_set = set()
+        for replayData in allReplayData:
+            if 'secondSegment' in replayData and (replayData['secondSegment'] or replayData['secondSegmentGames']):
+                if replayData['secondSegment'] in segment_type_set:
+                    # Adds games to existing segment
+                    segment_data[replayData['secondSegment']].append(replayData['secondSegmentGames'])
+                else:
+                    # Add new segment with games
+                    segment_data[replayData['secondSegment']] = replayData['secondSegmentGames']
+                    segment_type_set.add(replayData['secondSegment'])
+            
+        for key in sorted(segment_data.keys()):
+            print(f'{key}: {len(segment_data[key])}')
+
 def print_segment_types():
     with open('fansite/other_scripts/replay_data.json', 'r') as dataFile:
 
         # Get Replay episode data
-        try:
-            allReplayData = json.load(dataFile)
-        except json.JSONDecodeError:
-            return
+        allReplayData = json.load(dataFile)
 
         segments = set()
         for replayData in allReplayData:
@@ -111,7 +146,8 @@ def print_segment_types():
 
 def main():
     clean_json_file()
-    display_middle_segment_data()
+    #display_middle_segment_data()
+    display_second_segment_data()
 
 if __name__ == '__main__':
     main()
