@@ -4,6 +4,8 @@ import json
 from decouple import config
 
 class IGDB:
+    '''This is a class to make requests to IGDB API.'''
+
     # Static Properties
 
     # IGDB access token
@@ -13,6 +15,7 @@ class IGDB:
     headers = {}
 
     def __init__(self):
+        '''The constructor for IGDB class.'''
         # Set static variable for access token, if not already valid.
         IGDB.set_access_token()
         IGDB.headers = {
@@ -45,6 +48,16 @@ class IGDB:
             return
 
     def get_platform_data(self, platform_name, fields = '*'):
+        '''
+        Summary line.
+
+        Parameters:
+            platform_name (str): Name of platform to search.
+            fields (str): 
+
+        Returns:
+            dict|None: Dictionary converted from IGDB JSON response for the platform. 
+        '''
         # Request details for IGDB
         #data = 'fields *;search "overblood";'
         # release_dates for matching platform OR first_release_date
