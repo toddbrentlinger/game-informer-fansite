@@ -12,7 +12,7 @@ def databaseInit(apps):
     for title, abbreviation, gameTextID in SEGMENT_TYPES.items():
         SegmentType.objects.create(title=title, abbreviation=abbreviation)
 
-def get_game_inst(game_model, platform_model, igdb, name, platform):
+def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, year_released = None):
     ''' 
     Returns specific instance of Game model.
 
@@ -39,8 +39,10 @@ def get_game_inst(game_model, platform_model, igdb, name, platform):
                 # Set platform to None so it's not used to search for game using IGDB
 
     # Search IGDB for game based on title AND platform ID
-    # If search succeeds, use first game from response AND platform ID
-    # Else search fails, attempt another search with just the title
+    # If search succeeds
+        # Use first game from response AND platform ID
+    # Else search fails
+        # Attempt another search with just the title
         # If search succeeds
             # Use first game from response
             # If game has single platform, assign that platform
@@ -50,26 +52,27 @@ def get_game_inst(game_model, platform_model, igdb, name, platform):
     # If platform is None
     # Else platform is pk of Platform model instance (IGDB platform id)
 
-    # If platform is string
-    if type(platform) is str:
-        # If platform already exists in database, assign id to platform
+
+    # If platform_name is string
+    if type(platform_name) is str:
+        # If platform_name already exists in database, assign Platform instance to platform
         try:
             platform = platform_model.objects.get(
-                Q(abbreviation=platform) | Q(alternate_name__icontains=platform) | Q(name=platform)
+                Q(abbreviation=platform_name) | Q(alternate_name__icontains=platform_name) | Q(name=platform_name)
             )
-        # Else platform does NOT exist in database
+        # Else platform_name does NOT exist in database
         except platform_model.DoesNotExist:
             # Adjust name for 'PC' to 'PC Windows'
-            if platform == 'PC':
-                platform += ' Windows'
+            if platform_name == 'PC':
+                platform_name += ' Windows'
             # Use IGDB API to search for platform data
-            platform_data = igdb.get_platform_data(platform)[0]
+            platform_data = igdb.get_platform_data(platform_name)[0]
             # If search succeeds
             if platform_data is not None:
-                # If platform id already exists in database, assign id to platform
+                # If platform id already exists in database, assign Platform instance to platform
                 try:
                     platform = platform_model.objects.get(pk=platform_data['id'])
-                # Else add new platform model using IGDB platform data and assign id to platform
+                # Else add new platform model using IGDB platform data and assign it to platform
                 except platform_model.DoesNotExist:
                     platform = platform_model.objects.create(
                         id=platform_data['id'],
@@ -84,35 +87,34 @@ def get_game_inst(game_model, platform_model, igdb, name, platform):
                 platform = None
 
     # Search IGDB for game based on title AND platform ID
-    # If search succeeds, use first game from response AND platform ID
-    # Else search fails, attempt another search with just the title
+    fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
+    game_data = igdb.get_game_data(name, platform.id, year_released, fields)
+    # If search fails
+    if game_data is None:
+        # Attempt another search with just the title
+        game_data = igdb.get_game_data(name, None, year_released, fields)
         # If search succeeds
             # Use first game from response
             # If game has single platform, assign that platform
         # Else search failed
             # Raise error OR create Game model using only game name but required id is pk
 
-    # If platform is None
-    # Else platform is pk of Platform model instance (IGDB platform id)
-
-    # Get game data using IGDB API
-    fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
-    game_data = igdb.get_game_data(name=name, fields=fields)[0]
-    if game_data is not None:
-        # Check if game ID already exists in database
-        try:
-            game_inst = game_model.objects.get(pk=game_data['id'])
-        except game_model.DoesNotExist:
-            game_inst = game_model.objects.create(
-                igdb_id=game_data['id'],
-                name=game_data['name'],
-                slug=game_data['slug'],
-                summary=game_data['summary'],
-                platform=platform,
-                developer=None,
-                release_date=datetime.date.fromtimestamp(game_data['first_release_date'])
-            )
-            # Genre is ManyToManyField, use game.genre.add(newGenre)
+    # Check if game ID already exists in database
+    try:
+        game_inst = game_model.objects.get(pk=game_data[0]['id'])
+    except game_model.DoesNotExist:
+        game_inst = game_model.objects.create(
+            igdb_id=game_data[0]['id'],
+            name=game_data[0]['name'],
+            slug=game_data[0]['slug'],
+            summary=game_data[0]['summary'],
+            platform=platform,
+            developer=None,
+            release_date=datetime.date.fromtimestamp(game_data[0]['first_release_date'])
+        )
+        # Genre is ManyToManyField, use game.genre.add(newGenre)
+    
+    return game_inst
 
 def createReplayEpisodeFromJSON(replayData, apps):
     # Cannot import models directly as it may be a newer version

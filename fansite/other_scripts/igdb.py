@@ -89,7 +89,19 @@ class IGDB:
             print('No search results!')
         return response_data
 
-    def get_game_data(self, name, platform, year_released, fields='*'):
+    def get_game_data(self, name, platform = None, year_released = None, fields='*'):
+        '''
+        Requests data on video game using IGDB API.
+
+        Parameters:
+            name (str): Video game name to search.
+            platform (str|number): Video game platform string OR IGDB ID for specific platform (optional).
+            year_released (number): Year the video game was released (optional).
+            fields (str): Fields used for IGDB API request to retrieve specific fields only.
+
+        Returns:
+            dict: 
+        '''
         # If platform is number, assume it is the IGDB platform id. Do nothing.
         # If platform is string
         if type(platform) is str:
@@ -105,44 +117,56 @@ class IGDB:
         # Request details for IGDB
         #data = 'fields *;search "overblood";'
         # release_dates for matching platform OR first_release_date
-        data = ' '.join((
-            f'fields {fields};',
-            f'search "{name}";',
-            f'where release_dates.platform={platform} & release_dates.y={year_released};'
-        ))
+        data = ' '.join((f'fields {fields};', f'search "{name}";'))
+        if platform is not None and year_released is not None:
+            data += f' where release_dates.platform={platform} & release_dates.y={year_released};'
+        elif platform is not None:
+            data += f' where release_dates.platform={platform};'
+        elif year_released is not None:
+            data += f' where release_dates.y={year_released};'
+        # Else both platform and year_released have value None, do nothing
+
         # Request game based on search
         response = requests.post(
             'https://api.igdb.com/v4/games', 
             data=data,
             headers=IGDB.headers
         )
+
+        # Check status code from request
         if response.status_code != requests.codes.ok:
-            print('Request failed!')
+            print(f'Request to IGDB API failed with status code: {response.status.code}')
             return None
 
         # Set response from game request
         try:
             response_data = response.json()
         except requests.exceptions.JSONDecodeError:
-            print('Converting response to JSON failed!')
+            print('Converting IGDB API response to JSON failed!')
             return None
 
         if response_data:
-            print(json.dumps(response_data, sort_keys=True, indent=4))
-            print(f'No. of entries: {len(response_data)}')
+            print(json.dumps(response_data[0], sort_keys=True, indent=4))
+            # print(f'No. of entries: {len(response_data)}')
             return response_data
         else:
-            print('No search results!')
+            print('No search results returned from IGDB API!')
             return None
 
 def main():
     igdb = IGDB()
-    #platform_id = igdb.get_platform_data('PC Windows', '*,platform_logo.*')[0]['id']
-    platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
+    # platform_id = igdb.get_platform_data('PC Windows', '*,platform_logo.*')[0]['id']
+    # platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
+    # igdb.get_game_data(
+    #     'Metal Gear Solid 3: Snake Eater', 
+    #     platform_id, 
+    #     2004, 
+    #     'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
+    # )
     igdb.get_game_data(
         'Metal Gear Solid 3: Snake Eater', 
-        platform_id, 
-        2004, 
+        None, 
+        None, 
         'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
     )
 
