@@ -101,6 +101,9 @@ class IGDB:
 
         Returns:
             dict: 
+
+        Notes:
+        - Return None if IGDB request returns no search results with given arguments.
         '''
         # If platform is number, assume it is the IGDB platform id. Do nothing.
         # If platform is string
@@ -155,7 +158,7 @@ class IGDB:
 
 def main():
     igdb = IGDB()
-    # platform_id = igdb.get_platform_data('PC Windows', '*,platform_logo.*')[0]['id']
+    platform_id = igdb.get_platform_data('PC Windows', '*,platform_logo.*')[0]['id']
     # platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
     # igdb.get_game_data(
     #     'Metal Gear Solid 3: Snake Eater', 
@@ -163,12 +166,12 @@ def main():
     #     2004, 
     #     'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
     # )
-    igdb.get_game_data(
-        'Metal Gear Solid 3: Snake Eater', 
-        None, 
-        None, 
-        'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
-    )
+    # igdb.get_game_data(
+    #     'Metal Gear Solid 3: Snake Eater', 
+    #     None, 
+    #     None, 
+    #     'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
+    # )
 
 if __name__ == '__main__':
     main()
