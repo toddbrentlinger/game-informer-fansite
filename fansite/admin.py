@@ -83,7 +83,7 @@ class ReplaySeasonAdmin(admin.ModelAdmin):
 class ReplayEpisodeAdmin(admin.ModelAdmin):
     list_filter = ('airdate',)
     #fields = ['number', ]
-    filter_horizontal = ('thumbnails', 'featuring')
+    #filter_horizontal = ('thumbnails', 'featuring')
 
 class SuperReplayEpisodeInline(admin.TabularInline):
     model = SuperReplayEpisode
