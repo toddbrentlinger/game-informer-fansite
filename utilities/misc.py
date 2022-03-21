@@ -1,6 +1,8 @@
 import json
 import pprint
+import math
 from operator import itemgetter
+from venv import create
 
 def change_dashes_to_null(obj):
     if isinstance(obj, dict):
@@ -144,10 +146,45 @@ def print_segment_types():
         for segment in sorted(segments):
             print(segment)
 
+
+def create_total_time_message(total_seconds):
+    '''
+    Creates time message given number of seconds (ex. 15 days, 18 hours, 45 minutes, 38 seconds)
+    '''
+    days = math.floor(total_seconds // 86400)
+    hours = math.floor((total_seconds - days * 86400) // 3600)
+    minutes = math.floor((total_seconds - days * 86400 - hours * 3600) // 60)
+    seconds = total_seconds - days * 86400 - hours * 3600 - minutes * 60
+
+    output_str = ''
+    if days > 0:
+        output_str += f'{days} days'
+    if output_str or hours > 0:
+        if output_str:
+            output_str += ', '
+        output_str += f'{hours} hours'
+    if output_str or minutes > 0:
+        if output_str:
+            output_str += ', '
+        output_str += f'{minutes} minutes'
+    if output_str or seconds > 0:
+        if output_str:
+            output_str += ', '
+        output_str += f'{seconds} seconds'
+
+    return output_str
+
 def main():
-    clean_json_file()
+    with open('utilities/replay_data.json', 'r') as outfile:
+        all_replay_data = json.load(outfile)
+        pprint.pprint(all_replay_data[25], indent=2)
+    print(create_total_time_message(15))
+    print(create_total_time_message(15 + 60 * 15))
+    print(create_total_time_message(15 + 60 * 15 + 3600 * 15))
+    print(create_total_time_message(15 + 60 * 15 + 3600 * 15 + 86400 * 15))
+    #clean_json_file()
     #display_middle_segment_data()
-    display_second_segment_data()
+    #display_second_segment_data()
 
 if __name__ == '__main__':
     main()

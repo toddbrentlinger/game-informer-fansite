@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 
 from decouple import config
 
@@ -72,6 +73,9 @@ class IGDB:
             headers=IGDB.headers
         )
 
+        # Sleep to account for limit of 4 requests per second
+        time.sleep(0.25)
+
         if response.status_code != requests.codes.ok:
             print('Request failed!')
             return None
@@ -84,7 +88,8 @@ class IGDB:
             return None
 
         if response_data:
-            print(json.dumps(response_data, sort_keys=True, indent=4))
+            #print(json.dumps(response_data, sort_keys=True, indent=4))
+            pass
         else:
             print('No search results!')
         return response_data
@@ -136,6 +141,9 @@ class IGDB:
             headers=IGDB.headers
         )
 
+        # Sleep to account for limit of 4 requests per second
+        time.sleep(0.25)
+
         # Check status code from request
         if response.status_code != requests.codes.ok:
             print(f'Request to IGDB API failed with status code: {response.status.code}')
@@ -149,16 +157,22 @@ class IGDB:
             return None
 
         if response_data:
-            print(json.dumps(response_data[0], sort_keys=True, indent=4))
+            # print(json.dumps(response_data[0], sort_keys=True, indent=4))
             # print(f'No. of entries: {len(response_data)}')
             return response_data
         else:
-            print('No search results returned from IGDB API!')
+            print(f'No search results returned from IGDB API using Name: {name} - Platform: {platform} - Year: {year_released}')
             return None
 
 def main():
     igdb = IGDB()
+    fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
+
     platform_id = igdb.get_platform_data('PC Windows', '*,platform_logo.*')[0]['id']
+
+    import pprint
+    pprint.pprint(igdb.get_game_data('Batman: Arkham Origins', platform_id, 2013, fields)[0], indent=2)
+
     # platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
     # igdb.get_game_data(
     #     'Metal Gear Solid 3: Snake Eater', 

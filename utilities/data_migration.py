@@ -1,10 +1,16 @@
 import json
 import datetime
+import time
+import pprint
 from django.db.models import Q
-from .igdb import IGDB #get_igdb_data, get_igdb_platform_data
-from data_migration_constants import *
-#from ..models import Thumbnail, YouTubeVideo, Guest, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
-#from ...game.models import *
+from django.utils import timezone # Used to make naive datetime object become timezone aware
+from utilities.igdb import IGDB
+from utilities.data_migration_constants import SEGMENT_TYPES, STAFF
+from utilities.misc import create_total_time_message
+
+# import igdb as igdb2
+# from igdb import IGDB #get_igdb_data, get_igdb_platform_data
+# import data_migration_constants
 
 def databaseInit(apps):
     # Create Segment Types
@@ -124,10 +130,12 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
                 # Set platform to None so it's not used to search for game using IGDB
 
     # Inner function to get or create a Game model instance with optional platform paramter
-    def create_game_model(name, platform = None):
+    def create_game_model(name, platform = None, year_released = None, fields = '*'):
         game_data = igdb.get_game_data(name, platform.id if platform is not None else None, year_released, fields)
         # If game search succeeds with given platform AND NOT empty
         if game_data is not None and len(game_data) > 0:
+            # pprint.pprint(game_data[0], indent=2)
+            # print(f'First Release Date: {game_data[0]["first_release_date"]}')
             # Check if game ID already exists in database
             try:
                 game_inst = game_model.objects.get(pk=game_data[0]['id'])
@@ -136,18 +144,27 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
                 if platform is not None:
                     platform.save()
                 
+                # Make release date (Unix Timestamp) timezone aware 1422230400
+                if 'first_release_date' in game_data[0]:
+                    release_date = timezone.make_aware(
+                        datetime.datetime.utcfromtimestamp(game_data[0]['first_release_date']),
+                        timezone=timezone.utc
+                    )
+                else:
+                    release_date = None
+
                 game_inst = game_model.objects.create(
                     igdb_id=game_data[0]['id'],
                     name=game_data[0]['name'],
                     slug=game_data[0]['slug'],
-                    summary=game_data[0]['summary'],
+                    summary=game_data[0]['summary'] if 'summary' in game_data[0] else None,
                     platform=platform,
                     developer=None,
-                    release_date=datetime.date.fromtimestamp(game_data[0]['first_release_date'])
+                    release_date=release_date
                 )
                 # Genre is ManyToManyField, use game.genre.add(newGenre)
-            finally:
-                return game_inst
+                # TODO
+            return game_inst
         return None
 
     # Search IGDB for game based on title AND platform ID
@@ -170,8 +187,34 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
         # Reach here when neither name+platform nor just name has successful game search
         
     # If reach here, could not find game
-    print(f'Could not find game using:\nName: {name}\nP: {platform_name}\nYear: {year_released}')
+    print(f'Could not find game: Name: {name} - Platform: {platform_name} - Year: {year_released}')
     return None
+
+def append_item_to_dict_of_lists(dict, key, item):
+    '''
+    Appends an item to a specific key in a dictionary where each value is a list.
+
+    Parameters:
+        dict (dict): dictionary where each value is a list
+        key (str): specific key of the dictionary
+        item (any): item to be added 
+    '''
+    if key in dict:
+        dict[key].append(item)
+    else:
+        dict[key] = [item]
+
+def add_model_inst_list_to_field(m2m_field, model_inst_list):
+    '''
+    Adds list of model instances to ManyToManyField.
+
+    Parameters:
+        m2m_field (ManyToManyField):
+        model_inst_list (Model[]):
+    '''
+    for model_inst in model_inst_list:
+        model_inst.save()
+        m2m_field.add(model_inst)
 
 def createReplayEpisodeFromJSON(replayData, apps):
     '''
@@ -201,14 +244,25 @@ def createReplayEpisodeFromJSON(replayData, apps):
     SuperReplay = apps.get_model('fansite', 'SuperReplay')
     SuperReplayEpisode = apps.get_model('fansite', 'SuperReplayEpisode')
 
-    Game = apps.get_model('game', 'Game')
-    Platform = apps.get_model('game', 'Platform')
+    Game = apps.get_model('games', 'Game')
+    Platform = apps.get_model('games', 'Platform')
 
     # Instance initialization creates API access_token
     igdb = IGDB()
 
     # Create Replay episode object
     replay = ReplayEpisode()
+
+    # Dictionary to hold model instances for ManyToManyFields.
+    # Key is field name and value is list of model instances.
+    # After other fields in Replay instance are set and it's saved to database,
+    # can then add to the actual ManyToManyField.
+    replay_manytomany_instances_dict = {
+        'featuring': [],
+        'external_links': [],
+        'main_segment_games': [],
+        'other_segments': [],
+    }
 
     # ---------- Episode ----------
 
@@ -236,7 +290,10 @@ def createReplayEpisodeFromJSON(replayData, apps):
             try:
                 person = Person.objects.get(full_name=name)
             except Person.DoesNotExist:
-                person = Person.objects.create(full_name=name)
+                person = Person.objects.create(
+                    full_name=name,
+                    slug='-'.join(name.lower().split(' '))
+                )
             replay.host = person
 
         # Featuring - replayData.details.featuring (ManyToMany)
@@ -246,8 +303,12 @@ def createReplayEpisodeFromJSON(replayData, apps):
                 try:
                     person = Person.objects.get(full_name=name)
                 except Person.DoesNotExist:
-                    person = Person.objects.create(full_name=name)
-                replay.featuring.add(person)
+                    person = Person.objects.create(
+                        full_name=name,
+                        slug='-'.join(name.lower().split(' '))
+                    )
+                #replay.featuring.add(person)
+                replay_manytomany_instances_dict['featuring'].append(person)
 
         # Guests - replayData.details.featuring (ManyToMany)
 
@@ -307,7 +368,8 @@ def createReplayEpisodeFromJSON(replayData, apps):
                     url=link['href'],
                     title=link['title']
                 )
-                replay.external_links.add(externalLink)
+                #replay.external_links.add(externalLink)
+                replay_manytomany_instances_dict['external_links'].append(externalLink)
 
         # Headings - replayData.details
         HEADINGS_TO_IGNORE = ('external_links', 'system', 'gamedate', 'airdate', 'runtime', 'host', 'featuring')
@@ -336,7 +398,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
     # Main Segment Games - replayData.mainSegmentGamesAdv, replayData.details.system, replayData.details.gamedate (ManyToMany)
     if 'mainSegmentGamesAdv' in replayData:
         # Save ReplayEpisode before adding Games through Many-to-Many relationship
-        replay.save()
+        #replay.save()
 
         for game in replayData['mainSegmentGamesAdv']:
             # Game - Name
@@ -348,19 +410,27 @@ def createReplayEpisodeFromJSON(replayData, apps):
             # Game - Platform
             platform_name = game['system']
 
-            game_inst = get_game_inst(Game, Platform, igdb, game_name, platform_name, game_year_released)
+            game_inst = get_game_inst(
+                game_model=Game, 
+                platform_model=Platform, 
+                igdb=igdb, 
+                name=game_name, 
+                platform_name=platform_name, 
+                year_released=game_year_released
+            )
             if game_inst is not None:
-                replay.main_segment_games.add(game_inst)
+                #replay.main_segment_games.add(game_inst)
+                replay_manytomany_instances_dict['main_segment_games'].append(game_inst)
     
     # Use platform from main_segment_games field to search for games in other segments
     platform = None
     if replay.main_segment_games.exists():
         platform_count = {} # key: IGDB platform ID, value: number of games with this platform in main_segment_games
         for game in replay.main_segment_games.all():
-            if game.platform__id in platform_count:
-                platform_count[game.platform__id] += 1
+            if game.platform.id in platform_count:
+                platform_count[game.platform.id] += 1
             else:
-                platform_count[game.platform__id] = 1
+                platform_count[game.platform.id] = 1
         # Use platform id with highest count
         max_count = 0
         for key, value in platform_count.items():
@@ -380,16 +450,19 @@ def createReplayEpisodeFromJSON(replayData, apps):
             Segment
         '''
         segment = Segment()
+        segment_manytomany_instances_dict = {
+            'games': []
+        }
 
         segmentTypeInst = None
-        for segmentTitle, abbreviation, gameTextID in SEGMENT_TYPES.items():
+        for segmentTitle, abbreviation, gameTextID in SEGMENT_TYPES:
             if segmentType in (abbreviation, segmentTitle):
                 try:
                     segmentTypeInst = SegmentType.objects.get(abbreviation=segmentType)
                 except SegmentType.DoesNotExist:
                     segmentTypeInst = SegmentType.objects.create(
-                        title=SEGMENT_TYPES[segmentType] ,
-                        abbreviation=segmentType
+                        title=segmentTitle,
+                        abbreviation=abbreviation
                     )
 
                 # Game/Text ID: 0-game 1-text 2-game/text
@@ -399,9 +472,17 @@ def createReplayEpisodeFromJSON(replayData, apps):
                         # Add content to 'games', leaving 'description' empty
                         game_title = game.rpartition(' Ad')[0] if game.endswith('Ad') else game
                         # Get game using title and platform from main_segment_games
-                        game_inst = get_game_inst(Game, Platform, igdb, game_title, platform, None)
+                        game_inst = get_game_inst(
+                            game_model=Game, 
+                            platform_model=Platform, 
+                            igdb=igdb, 
+                            name=game_title, 
+                            platform_name=platform, 
+                            year_released=None
+                        )
                         if game_inst is not None:
-                            segment.games.add(game_inst)
+                            #segment.games.add(game_inst)
+                            segment_manytomany_instances_dict['games'].append(game_inst)
 
                 elif gameTextID == 1: # text
                     # Add content to 'description' leaving 'games' empty
@@ -413,9 +494,17 @@ def createReplayEpisodeFromJSON(replayData, apps):
                         if segmentContent[0] == 'Syphone Filter\'s Cutscenes':
                             # Add game
                             # Get game using title and platform from main_segment_games
-                            game_inst = get_game_inst(Game, Platform, igdb, segmentContent, platform, None)
+                            game_inst = get_game_inst(
+                                game_model=Game, 
+                                platform_model=Platform, 
+                                igdb=igdb, 
+                                name=segmentContent, 
+                                platform_name=platform, 
+                                year_released=None
+                            )
                             if game_inst is not None:
-                                segment.games.add(game_inst)
+                                #segment.games.add(game_inst)
+                                segment_manytomany_instances_dict['games'].append(game_inst)
                             # Add description
                             segment.description = segmentContent[0]
                     elif segmentType == 'Developer Spotlight':
@@ -424,17 +513,33 @@ def createReplayEpisodeFromJSON(replayData, apps):
                                 # First index of game list example: Rare Games: Slalom
                                 title_split = game.split(': ', 1)
                                 # Get game using title_split[1] and platform from main_segment_games
-                                game_inst = get_game_inst(Game, Platform, igdb, title_split[1], platform, None)
+                                game_inst = get_game_inst(
+                                    game_model=Game, 
+                                    platform_model=Platform, 
+                                    igdb=igdb, 
+                                    name=title_split[1], 
+                                    platform_name=platform, 
+                                    year_released=None
+                                )
                                 if game_inst is not None:
-                                    segment.games.add(game_inst)
+                                    #segment.games.add(game_inst)
+                                    segment_manytomany_instances_dict['games'].append(game_inst)
                                 # Add description from title_split[0]
                                 segment.description = title_split[0]
                             else:
                                 # Add game
                                 # Get game using title and platform from main_segment_games
-                                game_inst = get_game_inst(Game, Platform, igdb, game, platform, None)
+                                game_inst = get_game_inst(
+                                    game_model=Game, 
+                                    platform_model=Platform, 
+                                    igdb=igdb, 
+                                    name=game, 
+                                    platform_name=platform, 
+                                    year_released=None
+                                )
                                 if game_inst is not None:
-                                    segment.games.add(game_inst)
+                                    #segment.games.add(game_inst)
+                                    segment_manytomany_instances_dict['games'].append(game_inst)
 
                 break
         # If segmentTypeInst is still none, unknown segment type.
@@ -451,7 +556,14 @@ def createReplayEpisodeFromJSON(replayData, apps):
         # Set type field in segment model instance
         segment.type = segmentTypeInst
 
+        # Save to database
         segment.save()
+
+        # Now that segment is saved to database, add ManyToManyFields
+        for game in segment_manytomany_instances_dict['games']:
+            game.save()
+            segment.games.add(game)
+
         return segment
 
     # Other Segments - replayData.details (ManyToMany)
@@ -474,7 +586,8 @@ def createReplayEpisodeFromJSON(replayData, apps):
         segmentContent = replayData['middleSegmentContent']
         
         if segmentContent:
-            replay.other_segments.add(create_segment_inst(segmentType, segmentContent))
+            #replay.other_segments.add(create_segment_inst(segmentType, segmentContent))
+            replay_manytomany_instances_dict['other_segments'].append(create_segment_inst(segmentType, segmentContent))
             # segment = Segment()
 
             # segmentTypeInst = None
@@ -554,7 +667,8 @@ def createReplayEpisodeFromJSON(replayData, apps):
         segmentContent = replayData['secondSegmentGames']
 
         if segmentContent:
-            replay.other_segments.add(create_segment_inst(segmentType, segmentContent))
+            #replay.other_segments.add(create_segment_inst(segmentType, segmentContent))
+            replay_manytomany_instances_dict['other_segments'].append(create_segment_inst(segmentType, segmentContent))
             # segment = Segment()
 
             # segmentTypeInst = None
@@ -638,13 +752,22 @@ def createReplayEpisodeFromJSON(replayData, apps):
         article.title = replayData['article']['title']
 
         # Author - replayData.article.author
-        nameList = replayData['article']['author'].split()
+        # TODO: Add Staff to author field
+        name = replayData['details']['host'][0]
         try:
-            person = Staff.objects.get(first_name=nameList[0], last_name__startswith=nameList[1])
-        except Staff.DoesNotExist:
-            # If name is NOT already in database, create new database entry (use 'create' to automatically save to database)
-            person = Staff.objects.create(first_name=nameList[0], last_name=nameList[1])
-        article.author = person
+            person = Person.objects.get(full_name=name)
+        except Person.DoesNotExist:
+            person = Person.objects.create(
+                full_name=name,
+                slug='-'.join(name.lower().split(' '))
+            )
+        # nameList = replayData['article']['author'].split()
+        # try:
+        #     person = Staff.objects.get(first_name=nameList[0], last_name__startswith=nameList[1])
+        # except Staff.DoesNotExist:
+        #     # If name is NOT already in database, create new database entry (use 'create' to automatically save to database)
+        #     person = Staff.objects.create(first_name=nameList[0], last_name=nameList[1])
+        # article.author = person
 
         # Datetime - replayData.article.date
         # " on Sep 26, 2015 at 03:00 AM"
@@ -670,32 +793,48 @@ def createReplayEpisodeFromJSON(replayData, apps):
     # Save Replay episode object to database
     replay.save()
 
+    # Now that Replay is saved to database, add ManyToManyFields
+    add_model_inst_list_to_field(replay.featuring, replay_manytomany_instances_dict['featuring'])
+    add_model_inst_list_to_field(replay.external_links, replay_manytomany_instances_dict['external_links'])
+    add_model_inst_list_to_field(replay.main_segment_games, replay_manytomany_instances_dict['main_segment_games'])
+    add_model_inst_list_to_field(replay.other_segments, replay_manytomany_instances_dict['other_segments'])
+
 def initialize_database(apps, schema_editor):
-    with open('fansite/other_scripts/replay_data.json', 'r') as dataFile:
+    with open('utilities/replay_data.json', 'r') as dataFile:
 
         # Get Replay episode data
         allReplayData = json.load(dataFile)
 
         # If there is Replay data
         if (allReplayData):
+            total_replay_count = len(allReplayData)
+            curr_replay_count = 0
+            start_time = time.time()
             for replayData in allReplayData:
                 createReplayEpisodeFromJSON(replayData, apps)
+
+                curr_replay_count += 1
+                avg_seconds_per_replay = (time.time() - start_time) / curr_replay_count
+                est_seconds_remaining = avg_seconds_per_replay * (total_replay_count - curr_replay_count)
+
+                print(f'{curr_replay_count}/{total_replay_count} - Estimated Time Remaining: {create_total_time_message(est_seconds_remaining)}')
 
             # Use YouTube Data API to update all YouTubeVideo models.
             # Can batch video IDs into single request rather than doing them 
             # individually when YouTubeVideo model is first created.
+
         #createReplayEpisodeFromJSON(allReplayData[0], apps)
 
     '''
     from django.db import migrations
-    from fansite.other_scripts.data_migration import initialize_database
+    from utilities.data_migration import initialize_database
 
     class Migration(migrations.Migration):
 
         dependencies = [
             ('fansite', '0001_initial'),
             # added dependency to enable models from 'game' app to initialize_database method
-            ('game', '0001_initial'),
+            ('games', '0001_initial'),
         ]
 
         operations = [
@@ -723,3 +862,11 @@ def get_season(replayEpisode):
 
     # Return tuple (season, seasonEpisode)
     return (season, seasonEpisode)
+
+def main():
+    print(f'SEGMENT_TYPES length: {len(SEGMENT_TYPES)}')
+    igdb_inst = IGDB()
+    igdb_inst.get_platform_data('PlayStation 2')
+
+if __name__ == '__main__':
+    main()

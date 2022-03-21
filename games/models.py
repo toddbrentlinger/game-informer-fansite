@@ -71,7 +71,7 @@ class Game(models.Model):
     platform = models.ForeignKey(Platform, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter game platform (ex. PC, PS4, XBox 360, etc.).')
     genre = models.ManyToManyField(Genre, blank=True, help_text='Enter genres of the game.')
     developer = models.ForeignKey(Developer, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter developer of the game.')
-    release_date = models.DateField(verbose_name='Release Date', help_text='Enter date the game was released.')
+    release_date = models.DateTimeField(blank=True, null=True, verbose_name='Release Date', help_text='Enter date the game was released.')
 
     # Metadata
 
