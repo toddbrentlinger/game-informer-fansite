@@ -2,6 +2,7 @@ import json
 import datetime
 import time
 import pprint
+import math
 from django.db.models import Q
 from django.utils import timezone # Used to make naive datetime object become timezone aware
 from utilities.igdb import IGDB
@@ -89,8 +90,10 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
         if type(platform_name) is str:
             # If platform_name already exists in database as different name fields, assign Platform instance to platform
             try:
+                # Regex Pattern using 'NES': r'(^NES,)|(,\sNES,)|(,\sNES$)|(^NES$)'
+                platform_alt_name_regex = r'(^' + platform_name + r',)|(,\s' + platform_name + r',)|(,\s' + platform_name + r'$)|(^' + platform_name + r'$)'
                 platform = platform_model.objects.get(
-                    Q(abbreviation=platform_name) | Q(alternate_name__icontains=platform_name) | Q(name=platform_name)
+                    Q(abbreviation=platform_name) | Q(alternate_name__regex=platform_alt_name_regex) | Q(name=platform_name)
                 )
             # Else platform_name does NOT exist in database
             except platform_model.DoesNotExist:
@@ -122,15 +125,20 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
                 except platform_model.DoesNotExist:
                     platform = platform_model()
                     platform.id = platform_data[0]['id']
-                    platform.abbreviation = platform_data[0]['abbreviation']
-                    platform.alternate_name = platform_data[0]['alternative_name']
                     platform.name = platform_data[0]['name']
+                    if 'abbreviation' in platform_data[0]:
+                        platform.abbreviation = platform_data[0]['abbreviation']
+                    if 'alternative_name' in platform_data[0]:
+                        platform.alternate_name = platform_data[0]['alternative_name']
             # Else search fails or is empty
                 # Must search for game using only name
                 # Set platform to None so it's not used to search for game using IGDB
 
     # Inner function to get or create a Game model instance with optional platform paramter
     def create_game_model(name, platform = None, year_released = None, fields = '*'):
+        # Replace '–' with '-' 
+        #name = name.replace('–', '-')
+        # Get game data from IGDB
         game_data = igdb.get_game_data(name, platform.id if platform is not None else None, year_released, fields)
         # If game search succeeds with given platform AND NOT empty
         if game_data is not None and len(game_data) > 0:
@@ -157,7 +165,7 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
                     igdb_id=game_data[0]['id'],
                     name=game_data[0]['name'],
                     slug=game_data[0]['slug'],
-                    summary=game_data[0]['summary'] if 'summary' in game_data[0] else None,
+                    summary=game_data[0]['summary'] if 'summary' in game_data[0] else '',
                     platform=platform,
                     developer=None,
                     release_date=release_date
@@ -277,9 +285,15 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
     # Airdate - replayData.airDate AND replayData.details.airdate
     if 'airdate' in replayData and replayData['airDate']:
-        replay.airdate = datetime.datetime.strptime(replayData['airDate'],'%m/%d/%y') # month/day/year
+        replay.airdate = timezone.make_aware(
+            datetime.datetime.strptime(replayData['airDate'],'%m/%d/%y'), # month/day/year
+            timezone=timezone.get_current_timezone()
+        )
     elif 'details' in replayData and 'airdate' in replayData['details'] and replayData['details']['airdate']:
-        replay.airdate = datetime.datetime.strptime(replayData['details']['airdate'], '%B %d, %Y') # month day, year
+        replay.airdate = timezone.make_aware(
+            datetime.datetime.strptime(replayData['details']['airdate'], '%B %d, %Y'), # month day, year
+            timezone=timezone.get_current_timezone()
+        )
 
     # Host/Featuring/Guests inside 'details'
     if 'details' in replayData:
@@ -313,7 +327,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
         # Guests - replayData.details.featuring (ManyToMany)
 
     # YouTube Video - replayData.youtube (OneToOne)
-    if 'youtube' in replayData and replayData['youtube']:
+    if 'youtube' in replayData and 'views' in replayData['youtube']:
         youtubeVideo = YouTubeVideo()
 
         # ID - replayData.details.external_links
@@ -384,7 +398,12 @@ def createReplayEpisodeFromJSON(replayData, apps):
     
     # Number - replayData.episodeNumber
     if 'episodeNumber' in replayData and replayData['episodeNumber']:
-        replay.number = replayData['episodeNumber']
+        # Check for unofficial episodes (number is str and between 0 exclusive to 1 exclusive)
+        # 0.01 to 0.14 converted to -1 to -14
+        episode_number = replayData['episodeNumber']
+        if type(episode_number) is str:
+            episode_number = -int(float(episode_number) * 100)
+        replay.number = episode_number
 
         # Season - calculate using replayData.episodeNumber (ForeignKey)
         season = get_season(replay)[0]
@@ -455,14 +474,16 @@ def createReplayEpisodeFromJSON(replayData, apps):
         }
 
         segmentTypeInst = None
-        for segmentTitle, abbreviation, gameTextID in SEGMENT_TYPES:
-            if segmentType in (abbreviation, segmentTitle):
+        for segmentTitle, segment_abbreviation, gameTextID in SEGMENT_TYPES:
+            if segmentType in (segment_abbreviation, segmentTitle):
                 try:
-                    segmentTypeInst = SegmentType.objects.get(abbreviation=segmentType)
+                    segmentTypeInst = SegmentType.objects.get(
+                        Q(abbreviation=segmentType) | Q(title=segmentType)
+                    )
                 except SegmentType.DoesNotExist:
                     segmentTypeInst = SegmentType.objects.create(
                         title=segmentTitle,
-                        abbreviation=abbreviation
+                        abbreviation=segment_abbreviation if segment_abbreviation is not None else ''
                     )
 
                 # Game/Text ID: 0-game 1-text 2-game/text
@@ -498,7 +519,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
                                 game_model=Game, 
                                 platform_model=Platform, 
                                 igdb=igdb, 
-                                name=segmentContent, 
+                                name=segmentContent[0], 
                                 platform_name=platform, 
                                 year_released=None
                             )
@@ -587,79 +608,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
         
         if segmentContent:
             #replay.other_segments.add(create_segment_inst(segmentType, segmentContent))
-            replay_manytomany_instances_dict['other_segments'].append(create_segment_inst(segmentType, segmentContent))
-            # segment = Segment()
-
-            # segmentTypeInst = None
-            # for segmentTitle, abbreviation, gameTextID in SEGMENT_TYPES.items():
-            #     if segmentType in (abbreviation, segmentTitle):
-            #         try:
-            #             segmentTypeInst = SegmentType.objects.get(abbreviation=segmentType)
-            #         except SegmentType.DoesNotExist:
-            #             segmentTypeInst = SegmentType.objects.create(
-            #                 title=SEGMENT_TYPES[segmentType] ,
-            #                 abbreviation=segmentType
-            #             )
-            #         # Game/Text ID: 0-game 1-text 2-game/text
-            #         if gameTextID == 0: # game
-            #             # Add content to 'games', leaving 'description' empty
-            #             game_title = segmentContent.rpartition(' Ad')[0] if segmentContent.endswith('Ad') else segmentContent
-            #             # Get game using title and platform from main_segment_games
-            #             game_inst = get_game_inst(Game, Platform, igdb, game_title, platform, None)
-            #             if game_inst is not None:
-            #                 segment.games.add(game_inst)
-
-            #         elif gameTextID == 1: # text
-            #             # Add content to 'description' leaving 'games' empty
-            #             segment.description = segmentContent
-
-            #         elif gameTextID == 2: # game/text
-            #             # Special Cases: Moments and Developer Spotlight
-            #             if segmentType == 'Moments':
-            #                 if segmentContent == 'Syphone Filter\'s Cutscenes':
-            #                     # Add game
-            #                     # Get game using title and platform from main_segment_games
-            #                     game_inst = get_game_inst(Game, Platform, igdb, segmentContent, platform, None)
-            #                     if game_inst is not None:
-            #                         segment.games.add(game_inst)
-            #                     # Add description
-            #                     segment.description = segmentContent
-            #             elif segmentType == 'Developer Spotlight':
-            #                 for index, game in enumerate(segmentContent):
-            #                     if index == 0:
-            #                         # First index of game list example: Rare Games: Slalom
-            #                         title_split = segmentContent.split(': ', 1)
-            #                         # Get game using title_split[1] and platform from main_segment_games
-            #                         game_inst = get_game_inst(Game, Platform, igdb, title_split[1], platform, None)
-            #                         if game_inst is not None:
-            #                             segment.games.add(game_inst)
-            #                         # Add description from title_split[0]
-            #                         segment.description = title_split[0]
-            #                     else:
-            #                         # Add game
-            #                         # Get game using title and platform from main_segment_games
-            #                         game_inst = get_game_inst(Game, Platform, igdb, game, platform, None)
-            #                         if game_inst is not None:
-            #                             segment.games.add(game_inst)
-
-            #         break
-            # # If segmentTypeInst is still none, unknown segment type.
-            # # Use value as segment title, leaving abbreviation blank.
-            # if segmentTypeInst is None:
-            #     try:
-            #         segmentTypeInst = SegmentType.objects.get(title=segmentType)
-            #     except SegmentType.DoesNotExist:
-            #         segmentTypeInst = SegmentType.objects.create(title=segmentType)
-
-            #     # Add description
-            #     segment.description = segmentContent
-
-            # # Set type field in segment model instance
-            # segment.type = segmentTypeInst
-
-            # # Save segment instance before adding it to ManyToManyField in replay instance
-            # segment.save()
-            # replay.other_segments.add(segment)
+            replay_manytomany_instances_dict['other_segments'].append(create_segment_inst(segmentType, [segmentContent]))
 
     # replayData.secondSegment, replayData.secondSegmentGames
     if 'secondSegment' in replayData:
@@ -669,80 +618,6 @@ def createReplayEpisodeFromJSON(replayData, apps):
         if segmentContent:
             #replay.other_segments.add(create_segment_inst(segmentType, segmentContent))
             replay_manytomany_instances_dict['other_segments'].append(create_segment_inst(segmentType, segmentContent))
-            # segment = Segment()
-
-            # segmentTypeInst = None
-            # for segmentTitle, abbreviation, gameTextID in SEGMENT_TYPES.items():
-            #     if segmentType in (abbreviation, segmentTitle):
-            #         try:
-            #             segmentTypeInst = SegmentType.objects.get(abbreviation=segmentType)
-            #         except SegmentType.DoesNotExist:
-            #             segmentTypeInst = SegmentType.objects.create(
-            #                 title=SEGMENT_TYPES[segmentType] ,
-            #                 abbreviation=segmentType
-            #             )
-
-            #         # Game/Text ID: 0-game 1-text 2-game/text
-
-            #         if gameTextID == 0: # game
-            #             for game in segmentContent:
-            #                 # Add content to 'games', leaving 'description' empty
-            #                 game_title = game.rpartition(' Ad')[0] if game.endswith('Ad') else game
-            #                 # Get game using title and platform from main_segment_games
-            #                 game_inst = get_game_inst(Game, Platform, igdb, game_title, platform, None)
-            #                 if game_inst is not None:
-            #                     segment.games.add(game_inst)
-
-            #         elif gameTextID == 1: # text
-            #             # Add content to 'description' leaving 'games' empty
-            #             segment.description = ', '.join(segmentContent)
-
-            #         elif gameTextID == 2: # game/text
-            #             # Special Cases: Moments and Developer Spotlight
-            #             if segmentType == 'Moments':
-            #                 if segmentContent[0] == 'Syphone Filter\'s Cutscenes':
-            #                     # Add game
-            #                     # Get game using title and platform from main_segment_games
-            #                     game_inst = get_game_inst(Game, Platform, igdb, segmentContent, platform, None)
-            #                     if game_inst is not None:
-            #                         segment.games.add(game_inst)
-            #                     # Add description
-            #                     segment.description = segmentContent
-            #             elif segmentType == 'Developer Spotlight':
-            #                 for index, game in enumerate(segmentContent):
-            #                     if index == 0:
-            #                         # First index of game list example: Rare Games: Slalom
-            #                         title_split = game.split(': ', 1)
-            #                         # Get game using title_split[1] and platform from main_segment_games
-            #                         game_inst = get_game_inst(Game, Platform, igdb, title_split[1], platform, None)
-            #                         if game_inst is not None:
-            #                             segment.games.add(game_inst)
-            #                         # Add description from title_split[0]
-            #                         segment.description = title_split[0]
-            #                     else:
-            #                         # Add game
-            #                         # Get game using title and platform from main_segment_games
-            #                         game_inst = get_game_inst(Game, Platform, igdb, game, platform, None)
-            #                         if game_inst is not None:
-            #                             segment.games.add(game_inst)
-
-            #         break
-            # # If segmentTypeInst is still none, unknown segment type.
-            # # Use value as segment title, leaving abbreviation blank.
-            # if segmentTypeInst is None:
-            #     try:
-            #         segmentTypeInst = SegmentType.objects.get(title=segmentType)
-            #     except SegmentType.DoesNotExist:
-            #         segmentTypeInst = SegmentType.objects.create(title=segmentType)
-
-            #     # Add description
-            #     segment.description = segmentContent
-
-            # # Set type field in segment model instance
-            # segment.type = segmentTypeInst
-
-            # segment.save()
-            # replay.other_segments.add(segment)
     
     # Article - replayData.article  (OneToOne)
     if 'article' in replayData:
@@ -771,9 +646,9 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
         # Datetime - replayData.article.date
         # " on Sep 26, 2015 at 03:00 AM"
-        article.datetime = datetime.datetime.strptime(
-            replayData['article']['date'],
-            ' on %b %d, %Y at %I:%M %p'
+        article.datetime = timezone.make_aware(
+            datetime.datetime.strptime(replayData['article']['date'], ' on %b %d, %Y at %I:%M %p'),
+            timezone=timezone.get_current_timezone()
         )
 
         # Content - replayData.article.content
@@ -810,14 +685,14 @@ def initialize_database(apps, schema_editor):
             total_replay_count = len(allReplayData)
             curr_replay_count = 0
             start_time = time.time()
-            for replayData in allReplayData:
+            for replayData in reversed(allReplayData):
                 createReplayEpisodeFromJSON(replayData, apps)
 
                 curr_replay_count += 1
                 avg_seconds_per_replay = (time.time() - start_time) / curr_replay_count
-                est_seconds_remaining = avg_seconds_per_replay * (total_replay_count - curr_replay_count)
+                est_seconds_remaining = math.floor(avg_seconds_per_replay * (total_replay_count - curr_replay_count))
 
-                print(f'{curr_replay_count}/{total_replay_count} - Estimated Time Remaining: {create_total_time_message(est_seconds_remaining)}')
+                print(f'Replay #{replayData["episodeNumber"]} - {curr_replay_count}/{total_replay_count} Completed! - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}')
 
             # Use YouTube Data API to update all YouTubeVideo models.
             # Can batch video IDs into single request rather than doing them 
@@ -832,9 +707,9 @@ def initialize_database(apps, schema_editor):
     class Migration(migrations.Migration):
 
         dependencies = [
-            ('fansite', '0001_initial'),
+            ('fansite', '0002_remove_replayepisode_thumbnails_and_more'),
             # added dependency to enable models from 'game' app to initialize_database method
-            ('games', '0001_initial'),
+            ('games', '0003_alter_game_release_date'),
         ]
 
         operations = [

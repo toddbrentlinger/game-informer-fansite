@@ -35,9 +35,9 @@ class PlatformLogo(models.Model):
 class Platform(models.Model):
     # Fields
     id = models.PositiveSmallIntegerField(primary_key=True, help_text='Enter IGDB ID for this system/platform.')
-    abbreviation = models.CharField(max_length=20, help_text='Enter shortened abbreviation for this system/platform.')
-    alternate_name = models.CharField(max_length=1000, help_text='Enter alternate names as list separated by commas.')
     name = models.CharField(max_length=200, help_text='Enter name of this system/platform.')
+    abbreviation = models.CharField(max_length=20, blank=True, help_text='Enter shortened abbreviation for this system/platform.')
+    alternate_name = models.CharField(max_length=1000, blank=True, help_text='Enter alternate names as list separated by commas.')
     logo = models.ForeignKey(PlatformLogo, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo for this system/platform.')
 
     # Metadata

@@ -69,7 +69,7 @@ class IGDB:
         # Request game based on search
         response = requests.post(
             'https://api.igdb.com/v4/platforms', 
-            data=data,
+            data=data.encode('utf-8'),
             headers=IGDB.headers
         )
 
@@ -91,7 +91,8 @@ class IGDB:
             #print(json.dumps(response_data, sort_keys=True, indent=4))
             pass
         else:
-            print('No search results!')
+            #print('No search results!')
+            pass
         return response_data
 
     def get_game_data(self, name, platform = None, year_released = None, fields='*'):
@@ -137,7 +138,7 @@ class IGDB:
         # Request game based on search
         response = requests.post(
             'https://api.igdb.com/v4/games', 
-            data=data,
+            data=data.encode('utf-8'),
             headers=IGDB.headers
         )
 
@@ -161,17 +162,25 @@ class IGDB:
             # print(f'No. of entries: {len(response_data)}')
             return response_data
         else:
-            print(f'No search results returned from IGDB API using Name: {name} - Platform: {platform} - Year: {year_released}')
+            #print(f'No search results returned from IGDB API using Name: {name} - Platform: {platform} - Year: {year_released}')
             return None
 
 def main():
     igdb = IGDB()
     fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
 
-    platform_id = igdb.get_platform_data('PC Windows', '*,platform_logo.*')[0]['id']
+    platform_data = igdb.get_platform_data('SNES', '*,platform_logo.*')
+    platform_id = platform_data[0]['id'] if len(platform_data) > 0 else None
+    import re
+    pattern = r'(^NES,)|(,\sNES,)|(,\sNES$)|(^NES$)'
+    print(re.search(pattern, 'NES, SNES, Super Nintendo, NESitude'))
+    print(re.search(pattern, 'SNES, Super Nintendo, NES, NESitude'))
+    print(re.search(pattern, 'SNES, Super Nintendo, NESitude, NES'))
+    print(re.search(pattern, 'NES'))
 
     import pprint
-    pprint.pprint(igdb.get_game_data('Batman: Arkham Origins', platform_id, 2013, fields)[0], indent=2)
+    pprint.pprint(platform_data, indent=2)
+    #pprint.pprint(igdb.get_game_data('Pokemon Snap', None, None, fields)[0], indent=2) # é \u00e9
 
     # platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
     # igdb.get_game_data(

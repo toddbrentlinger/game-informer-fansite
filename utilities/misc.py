@@ -166,22 +166,18 @@ def create_total_time_message(total_seconds):
     if output_str or minutes > 0:
         if output_str:
             output_str += ', '
-        output_str += f'{minutes} minutes'
+        output_str += f'{minutes} mins'
     if output_str or seconds > 0:
         if output_str:
             output_str += ', '
-        output_str += f'{seconds} seconds'
+        output_str += f'{seconds} secs'
 
     return output_str
 
 def main():
     with open('utilities/replay_data.json', 'r') as outfile:
         all_replay_data = json.load(outfile)
-        pprint.pprint(all_replay_data[25], indent=2)
-    print(create_total_time_message(15))
-    print(create_total_time_message(15 + 60 * 15))
-    print(create_total_time_message(15 + 60 * 15 + 3600 * 15))
-    print(create_total_time_message(15 + 60 * 15 + 3600 * 15 + 86400 * 15))
+        pprint.pprint(all_replay_data[89], indent=2)
     #clean_json_file()
     #display_middle_segment_data()
     #display_second_segment_data()
