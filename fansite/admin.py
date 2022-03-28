@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import Thumbnail, YouTubeVideo, StaffPosition, StaffPositionInstance, Staff, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
+from .models import Thumbnail, YouTubeVideo, Person, Staff, StaffPosition, StaffPositionInstance, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
 
 # Register your models here.
 
@@ -22,6 +22,9 @@ class YouTubeVideoAdmin(admin.ModelAdmin):
 # @admin.register(Guest)
 # class GuestAdmin(admin.ModelAdmin):
 #     search_fields = ['first_name', 'last_name']
+@admin.register(Person)
+class PersonAdmin(admin.ModelAdmin):
+    pass
 
 class StaffPositionInstanceInline(admin.TabularInline):
     model = StaffPositionInstance
