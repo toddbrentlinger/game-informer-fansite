@@ -1,19 +1,21 @@
 import json
 import datetime
 import time
-import pprint
+import pprint # Used to debug
 import math
 from django.db.models import Q
-from django.utils import timezone # Used to make naive datetime object become timezone aware
-from utilities.igdb import IGDB
-from utilities.data_migration_constants import SEGMENT_TYPES, STAFF
-from utilities.misc import create_total_time_message
+from django.utils import timezone # Make naive datetime object become timezone aware
+from utilities.igdb import IGDB # Make requests from IGDB API
+from utilities.data_migration_constants import SEGMENT_TYPES, STAFF # Separate file to hold constants
+from utilities.misc import create_total_time_message # misc utility functions
 
-# import igdb as igdb2
-# from igdb import IGDB #get_igdb_data, get_igdb_platform_data
-# import data_migration_constants
+def database_init(apps):
+    '''
+    Initializes database with known data.
 
-def databaseInit(apps):
+    Parameters:
+        apps (): 
+    '''
     # Create Segment Types
     SegmentType = apps.get_model('fansite', 'SegmentType')
     for title, abbreviation, gameTextID in SEGMENT_TYPES.items():
@@ -24,45 +26,20 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
     Returns specific instance of Game model.
 
     Parameters:
-    game_model (Game): Reference to historic version of Game model
-    platform_model (Platform): Reference to historic version of Platform model
-    igdb (IGDB): Reference to IGDB instance to use IGDB API
-    name (str): Name of video game
-    platform (str|number): Name of platform as string type OR IGDB platform ID as number type
+        game_model (Game): Reference to historic version of Game model
+        platform_model (Platform): Reference to historic version of Platform model
+        igdb (IGDB): Reference to IGDB instance to use IGDB API
+        name (str): Name of video game
+        platform (str|number): Name of platform as string type OR IGDB platform ID as number type (optional)
+        year_released (number): Year the game was released (optional)
 
     Returns:
-    Game: Existing or created instance of Game model
+        Game: Existing or created instance of Game model
     '''
 
-    # If platform is string
-        # If platform already exists in database, assign id to platform
-        # Else platform does NOT exist in database
-            # Use IGDB API to search for platform data
-            # If search succeeds
-                # If platform id already exists in database, assign id to platform
-                # Else add new platform model using IGDB platform data and assign id to platform
-            # Else search fails
-                # Must search for game using only title
-                # Set platform to None so it's not used to search for game using IGDB
-
-    # Search IGDB for game based on title AND platform ID
-    # If search succeeds
-        # Use first game from response AND platform ID
-    # Else search fails
-        # Attempt another search with just the title
-        # If search succeeds
-            # Use first game from response
-            # If game has single platform, assign that platform
-        # Else search failed
-            # Raise error OR create Game model using only game name but required id is pk
-
-    # If platform is None
-    # Else platform is pk of Platform model instance (IGDB platform id)
-
-    # ISSUE: If name+platform fails search but just name succeeds, platform would already have been added to database
-    # even though it will NOT be assigned to field in Game model instance.
-
     '''
+    Pseudo-Code
+
     define platform and platform_id default initialized or initialized to None
     if platform_name is not None:
         if platform_name is str
@@ -87,6 +64,7 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
     platform = None
     # If platform_name has value
     if platform_name:
+        # Check if platform is already in database
         if type(platform_name) is str:
             # If platform_name already exists in database as different name fields, assign Platform instance to platform
             try:
@@ -98,7 +76,7 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
             # Else platform_name does NOT exist in database
             except platform_model.DoesNotExist:
                 # Adjust name for 'PC' to 'PC Windows' before using IGDB API
-                # TODO: Move this to misc module inside function to clean JSON file
+                # TODO: Move this to function that cleans JSON file
                 if platform_name == 'PC':
                     platform_name += ' Windows'
 
@@ -108,9 +86,10 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
                 platform = platform_model.objects.get(pk=platform_name)
             # Else platform_name does NOT exist in database
             except platform_model.DoesNotExist:
+                # Leaving platform value as None
                 pass
 
-        # If could not find existing platform in database
+        # If could not find existing platform in database (platform has value of None)
         if platform is None:
             # Use IGDB API to search for platform data
             platform_data = igdb.get_platform_data(platform_name)
@@ -132,18 +111,27 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
                         platform.alternate_name = platform_data[0]['alternative_name']
             # Else search fails or is empty
                 # Must search for game using only name
-                # Set platform to None so it's not used to search for game using IGDB
+                # Leave platform value as None so it's not used to search for game using IGDB
 
     # Inner function to get or create a Game model instance with optional platform paramter
+    # From outside scope, uses IGDB instance and historical versions of models
     def create_game_model(name, platform = None, year_released = None, fields = '*'):
-        # Replace '–' with '-' 
-        #name = name.replace('–', '-')
-        # Get game data from IGDB
+        '''
+        Returns Game model instance from database if it already exists OR needs to be created.
+
+        Parameters:
+            name (str): Title of video game
+            platform (Platform): Platform model instance for the video game
+            year_released (number): Year the video game was released
+            fields (str): Search fields passed to IGDB API request
+
+        Returns:
+            Game|None: Game model instance OR None if could not be found in database and could not be created using IGDB API
+        '''
+        # Get game data from IGDB API
         game_data = igdb.get_game_data(name, platform.id if platform is not None else None, year_released, fields)
         # If game search succeeds with given platform AND NOT empty
         if game_data is not None and len(game_data) > 0:
-            # pprint.pprint(game_data[0], indent=2)
-            # print(f'First Release Date: {game_data[0]["first_release_date"]}')
             # Check if game ID already exists in database
             try:
                 game_inst = game_model.objects.get(pk=game_data[0]['id'])
@@ -152,7 +140,7 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
                 if platform is not None:
                     platform.save()
                 
-                # Make release date (Unix Timestamp) timezone aware 1422230400
+                # Make release date (Unix Timestamp) timezone aware
                 if 'first_release_date' in game_data[0]:
                     release_date = timezone.make_aware(
                         datetime.datetime.utcfromtimestamp(game_data[0]['first_release_date']),
@@ -170,7 +158,9 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
                     developer=None,
                     release_date=release_date
                 )
-                # Genre is ManyToManyField, use game.genre.add(newGenre)
+                # Genre is ManyToManyField, use game.genre.add(new_genre)
+                # TODO
+                # Developer is ManyToManyField, use game.developers.add(new_developer)
                 # TODO
             return game_inst
         return None
@@ -195,22 +185,8 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
         # Reach here when neither name+platform nor just name has successful game search
         
     # If reach here, could not find game
-    print(f'Could not find game: Name: {name} - Platform: {platform_name} - Year: {year_released}')
+    print(f'Could not find game!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
     return None
-
-def append_item_to_dict_of_lists(dict, key, item):
-    '''
-    Appends an item to a specific key in a dictionary where each value is a list.
-
-    Parameters:
-        dict (dict): dictionary where each value is a list
-        key (str): specific key of the dictionary
-        item (any): item to be added 
-    '''
-    if key in dict:
-        dict[key].append(item)
-    else:
-        dict[key] = [item]
 
 def add_model_inst_list_to_field(m2m_field, model_inst_list):
     '''
@@ -234,6 +210,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
     '''
     # Cannot import models directly as it may be a newer version
     # than this migration expects. Use historical versions instead.
+    # Fansite app
     Thumbnail = apps.get_model('fansite', 'Thumbnail')
     YouTubeVideo = apps.get_model('fansite', 'YouTubeVideo')
     Person = apps.get_model('fansite', 'Person')
@@ -251,11 +228,11 @@ def createReplayEpisodeFromJSON(replayData, apps):
     ReplayEpisode = apps.get_model('fansite', 'ReplayEpisode')
     SuperReplay = apps.get_model('fansite', 'SuperReplay')
     SuperReplayEpisode = apps.get_model('fansite', 'SuperReplayEpisode')
-
+    # Game app
     Game = apps.get_model('games', 'Game')
     Platform = apps.get_model('games', 'Platform')
 
-    # Instance initialization creates API access_token
+    # IGDB instance initialization creates API access_token
     igdb = IGDB()
 
     # Create Replay episode object
@@ -264,7 +241,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
     # Dictionary to hold model instances for ManyToManyFields.
     # Key is field name and value is list of model instances.
     # After other fields in Replay instance are set and it's saved to database,
-    # can then add to the actual ManyToManyField.
+    # can then add to the actual ManyToManyFields.
     replay_manytomany_instances_dict = {
         'featuring': [],
         'external_links': [],
@@ -298,33 +275,28 @@ def createReplayEpisodeFromJSON(replayData, apps):
     # Host/Featuring/Guests inside 'details'
     if 'details' in replayData:
 
-        # Host - replayData.details.host (ForeignKey)
-        if 'host' in replayData['details'] and replayData['details']['host']:
-            name = replayData['details']['host'][0]
+        def get_person_inst(name):
             try:
-                person = Person.objects.get(full_name=name)
+                return Person.objects.get(full_name=name)
             except Person.DoesNotExist:
                 person = Person.objects.create(
                     full_name=name,
                     slug='-'.join(name.lower().split(' '))
                 )
-            replay.host = person
+                # TODO: If person is part of staff, create Staff model as well.
+                if name in STAFF:
+                    Staff.objects.create(person=person)
+                return person
+
+        # Host - replayData.details.host (ForeignKey)
+        if 'host' in replayData['details'] and replayData['details']['host']:
+            replay.host = get_person_inst(replayData['details']['host'][0])
 
         # Featuring - replayData.details.featuring (ManyToMany)
         if 'featuring' in replayData['details'] and replayData['details']['featuring']:
             for personName in replayData['details']['featuring']:
-                name = personName
-                try:
-                    person = Person.objects.get(full_name=name)
-                except Person.DoesNotExist:
-                    person = Person.objects.create(
-                        full_name=name,
-                        slug='-'.join(name.lower().split(' '))
-                    )
-                #replay.featuring.add(person)
+                person = get_person_inst(personName)
                 replay_manytomany_instances_dict['featuring'].append(person)
-
-        # Guests - replayData.details.featuring (ManyToMany)
 
     # YouTube Video - replayData.youtube (OneToOne)
     if 'youtube' in replayData and 'views' in replayData['youtube']:
@@ -566,6 +538,9 @@ def createReplayEpisodeFromJSON(replayData, apps):
         # If segmentTypeInst is still none, unknown segment type.
         # Use value as segment title, leaving abbreviation blank.
         if segmentTypeInst is None:
+            # If segmentType is empty string, assign to 'Other'
+            if segmentType == '':
+                segmentType = 'Other'
             try:
                 segmentTypeInst = SegmentType.objects.get(title=segmentType)
             except SegmentType.DoesNotExist:
