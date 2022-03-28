@@ -96,7 +96,7 @@ class Person(models.Model):
         return reverse('people', args=[str(self.id)])
 
     def __str__(self):
-        return f'{self.last_name}, {self.first_name}'
+        return self.full_name
 
 # Each model represents Facebook, Twitter, etc.
 # Can use separate API to request certain data, ex. recent tweets from twitter account listed in SocialMediaInst.

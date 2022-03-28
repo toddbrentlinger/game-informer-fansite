@@ -81,7 +81,10 @@ class Game(models.Model):
     # Methods
 
     def __str__(self):
-        return f'{self.name} [{self.platform.abbreviation}]'
+        output_str = self.name
+        if self.platform is not None:
+            output_str += f' ({self.platform.abbreviation})'
+        return output_str
 
     # TODO: Use IGDB API to display information about the game as well as any stored
     # fields (ex. other episodes that include that game)
