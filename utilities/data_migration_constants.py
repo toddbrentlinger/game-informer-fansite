@@ -4,9 +4,9 @@ SEGMENT_TYPES = [
     ('Advertisement', 'AD', 0), # game (remove 'Ad' from end when searching IGDB for game title)
     ('A Poor Retelling of Gaming History', None, 1), # text
     ('Developer Pick', 'DP', 0), # game
-    ('Developer Spotlight', None, 2), # game/text
-    ('Embarassing Moments', None, 1), # text
-    ('GI Versus', None, 0), # game
+    ('Developer Spotlight', 'DS', 2), # game/text
+    ('Embarassing Moments', 'EM', 1), # text
+    ('GI Versus', 'GIV', 0), # game
     ('Horror Fest', 'HF', 0), # game
     ('Life Advice with Ben Reeves', None, 1), # text (empty content)
     ('Moments', None, 2), # game/text
@@ -18,9 +18,9 @@ SEGMENT_TYPES = [
     ('Replay Real Life', 'RRL', 1), # text
     ('Replay Roulette', 'RR', 0), # game
     ('RePorted', 'RP', 0), # game
-    ('Secret Access', None, 0), # game
+    ('Secret Access', 'SA', 0), # game
     ('Stress Test', 'ST', 0), # game
-    ('Suite Nostalgia', None, 0), # game
+    ('Suite Nostalgia', 'SN', 0), # game
     ('Super Replay Showdown', 'SRS', 0), # game (except 'Editor's Picks' and blank values)
     ('The Commodore 64 Spectacular: Part 3', None, 0), # game
     ('The Wiebeatdown', None, 0), # game ('Super Smash Bros. for WiiU' should be 'Super Smash Bros. for Wii U' when searching IGDB)

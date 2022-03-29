@@ -177,7 +177,28 @@ def create_total_time_message(total_seconds):
 def main():
     with open('utilities/replay_data.json', 'r') as outfile:
         all_replay_data = json.load(outfile)
-        pprint.pprint(all_replay_data[89], indent=2)
+        # pprint.pprint(all_replay_data[89], indent=2)
+
+        blank_segment_type_replays = []
+        for replay_data in all_replay_data:
+            # Middle Segment
+            if 'middleSegment' in replay_data and not replay_data['middleSegment'] and replay_data['middleSegmentContent']:
+                blank_segment_type_replays.append(
+                    (
+                        replay_data['episodeNumber'],
+                        replay_data['middleSegmentContent']
+                    )
+                )
+            # Second Segment
+            if 'secondSegment' in replay_data and not replay_data['secondSegment'] and replay_data['secondSegmentGames']:
+                blank_segment_type_replays.append(
+                    (
+                        replay_data['episodeNumber'],
+                        replay_data['secondSegmentGames']
+                    )
+                )
+        print(blank_segment_type_replays)
+
     #clean_json_file()
     #display_middle_segment_data()
     #display_second_segment_data()

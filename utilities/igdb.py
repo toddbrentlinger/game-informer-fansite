@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import pprint
 
 from decouple import config
 
@@ -169,26 +170,40 @@ def main():
     igdb = IGDB()
     fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
 
-    platform_data = igdb.get_platform_data('SNES', '*,platform_logo.*')
-    platform_id = platform_data[0]['id'] if len(platform_data) > 0 else None
-    import re
-    pattern = r'(^NES,)|(,\sNES,)|(,\sNES$)|(^NES$)'
-    print(re.search(pattern, 'NES, SNES, Super Nintendo, NESitude'))
-    print(re.search(pattern, 'SNES, Super Nintendo, NES, NESitude'))
-    print(re.search(pattern, 'SNES, Super Nintendo, NESitude, NES'))
-    print(re.search(pattern, 'NES'))
-
-    import pprint
-    pprint.pprint(platform_data, indent=2)
-    #pprint.pprint(igdb.get_game_data('Pokemon Snap', None, None, fields)[0], indent=2) # é \u00e9
-
-    # platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
-    # igdb.get_game_data(
-    #     'Metal Gear Solid 3: Snake Eater', 
-    #     platform_id, 
-    #     2004, 
-    #     'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
+    # data = 'fields {fields};', f'search "*"; where involved_companies'
+    # response = requests.post(
+    #     'https://api.igdb.com/v4/games', 
+    #     data=data.encode('utf-8'),
+    #     headers=igdb.headers
     # )
+    # if response.status_code != requests.codes.ok:
+    #     print(f'Request to IGDB API failed with status code: {response.status.code}')
+    #     return None
+    # response_data = response.json()
+    # if response_data:
+    #     print(json.dumps(response_data[0], sort_keys=True, indent=2))
+
+    # platform_data = igdb.get_platform_data('SNES', '*,platform_logo.*')
+    # platform_id = platform_data[0]['id'] if len(platform_data) > 0 else None
+    
+    # import re
+    # pattern = r'(^NES,)|(,\sNES,)|(,\sNES$)|(^NES$)'
+    # print(re.search(pattern, 'NES, SNES, Super Nintendo, NESitude'))
+    # print(re.search(pattern, 'SNES, Super Nintendo, NES, NESitude'))
+    # print(re.search(pattern, 'SNES, Super Nintendo, NESitude, NES'))
+    # print(re.search(pattern, 'NES'))
+
+    # import pprint
+    # pprint.pprint(platform_data, indent=2)
+    # pprint.pprint(igdb.get_game_data('Pokemon Snap', None, None, fields)[0], indent=2) # é \u00e9
+
+    platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
+    pprint.pprint(igdb.get_game_data(
+        'Metal Gear Solid 3: Snake Eater', 
+        platform_id, 
+        2004, 
+        'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
+    ), indent=2)
     # igdb.get_game_data(
     #     'Metal Gear Solid 3: Snake Eater', 
     #     None, 

@@ -1,5 +1,11 @@
 TODO:
 
+3/22/22
+
+- ISSUE: Game instances haves wrong release date.
+- ISSUE: SegmentType __str__ has produces issues inside Admin site or ReplayEpisode and ReplaySeason
+- ISSUE: There is a SegmentType with blank title. Need to re-run data migration after fix.
+
 3/6/22
 
 - Create separate apps for 'replays' and 'superreplays'
