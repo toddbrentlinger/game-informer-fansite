@@ -2,6 +2,24 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from .models import Thumbnail, YouTubeVideo, Person, Staff, StaffPosition, StaffPositionInstance, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
 
+# Inlines
+
+class StaffPositionInstanceInline(admin.TabularInline):
+    model = StaffPositionInstance
+    extra = 0
+
+class HeadingInstanceInline(admin.TabularInline):
+    model = HeadingInstance
+    extra = 0
+
+class ReplayEpisodeInline(admin.StackedInline):
+    model = ReplayEpisode
+    extra = 0
+
+class SuperReplayEpisodeInline(admin.StackedInline):
+    model = SuperReplayEpisode
+    extra = 0
+
 # Register your models here.
 
 @admin.register(Thumbnail)
@@ -22,12 +40,10 @@ class YouTubeVideoAdmin(admin.ModelAdmin):
 # @admin.register(Guest)
 # class GuestAdmin(admin.ModelAdmin):
 #     search_fields = ['first_name', 'last_name']
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     pass
-
-class StaffPositionInstanceInline(admin.TabularInline):
-    model = StaffPositionInstance
 
 @admin.register(StaffPosition)
 class StaffPositionAdmin(admin.ModelAdmin):
@@ -56,16 +72,15 @@ class SegmentTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Segment)
 class SegmentAdmin(admin.ModelAdmin):
+    list_display = ('type', 'display_games')
     list_filter = ('type__abbreviation',)
     search_fields = ['games__title', 'description']
+    filter_horizontal = ('games',)
 
 @admin.register(ExternalLink)
 class ExternalLinkAdmin(admin.ModelAdmin):
     list_display = ('title', 'url')
     search_fields = ['title', 'url']
-
-class HeadingInstanceInline(admin.TabularInline):
-    model = HeadingInstance
 
 @admin.register(Heading)
 class HeadingAdmin(admin.ModelAdmin):
@@ -75,21 +90,16 @@ class HeadingAdmin(admin.ModelAdmin):
 class HeadingInstanceAdmin(admin.ModelAdmin):
     list_filter = ('heading__title',)
 
-class ReplayEpisodeInline(admin.TabularInline):
-    model = ReplayEpisode
-
 @admin.register(ReplaySeason)
 class ReplaySeasonAdmin(admin.ModelAdmin):
     inlines = [ReplayEpisodeInline,]
 
 @admin.register(ReplayEpisode)
 class ReplayEpisodeAdmin(admin.ModelAdmin):
-    list_filter = ('airdate',)
+    list_display = ('title', 'airdate')
+    list_filter = ('airdate', 'season')
     #fields = ['number', ]
-    #filter_horizontal = ('thumbnails', 'featuring')
-
-class SuperReplayEpisodeInline(admin.TabularInline):
-    model = SuperReplayEpisode
+    filter_horizontal = ('featuring', 'external_links', 'main_segment_games', 'other_segments')
 
 @admin.register(SuperReplay)
 class SuperReplayAdmin(admin.ModelAdmin):

@@ -42,7 +42,7 @@ class Platform(models.Model):
 
     # Metadata
     class Meta:
-        ordering = ['id']
+        ordering = ['name']
 
     # Methods
     def __str__(self):

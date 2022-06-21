@@ -17,7 +17,7 @@ class PlatformLogoAdmin(admin.ModelAdmin):
 
 @admin.register(Platform)
 class PlatformAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'abbreviation', 'id')
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):

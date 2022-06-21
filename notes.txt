@@ -1,9 +1,14 @@
 TODO:
 
+6/21/22
+
+- Add slug field to Person and SegmentType models used for url routing.
+Need to migrate again and incorporate new fields in data migration script.
+
 3/22/22
 
 - ISSUE: Game instances haves wrong release date.
-- ISSUE: SegmentType __str__ has produces issues inside Admin site or ReplayEpisode and ReplaySeason
+X ISSUE: SegmentType __str__ has produces issues inside Admin site or ReplayEpisode and ReplaySeason
 - ISSUE: There is a SegmentType with blank title. Need to re-run data migration after fix.
 
 3/6/22

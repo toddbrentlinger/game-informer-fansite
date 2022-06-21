@@ -85,8 +85,12 @@ class Person(models.Model):
 
     class Meta:
         ordering = ['full_name']
+        verbose_name_plural = 'people'
 
     # Methods
+
+    def __str__(self):
+        return self.full_name
 
     def get_absolute_url(self):
         # staff/andrew-reiner
@@ -94,24 +98,6 @@ class Person(models.Model):
         # guests/hilary-wilton
         # people/tim-turi
         return reverse('people', args=[str(self.id)])
-
-    def __str__(self):
-        return self.full_name
-
-# Each model represents Facebook, Twitter, etc.
-# Can use separate API to request certain data, ex. recent tweets from twitter account listed in SocialMediaInst.
-class SocialMediaInst(models.Model):
-    # Fields
-
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
-    type = models.CharField(max_length=50)
-    url = models.URLField()
-
-    # Metadata
-    # Methods
-
-    def __str__(self):
-        return f'{self.person} ({self.type})'
 
 # TODO: Use Person as normal class for guests since there's no extra functionality for Guest over generic Person class.
 # However, do want separate detail page for guests and staff members.
@@ -142,6 +128,9 @@ class Staff(models.Model):
         verbose_name_plural = 'Staff'
 
     # Methods
+
+    def __str__(self):
+        return str(self.person)
 
     # def get_absolute_url(self):
     #     # staff/andrew-reiner
@@ -231,6 +220,7 @@ class SegmentType(models.Model):
     title = models.CharField(max_length=100, help_text='Enter title of segment.')
     abbreviation = models.CharField(max_length=10, blank=True, help_text='Enter shortened abbreviation of segment title.')
     description = models.CharField(max_length=1000, blank=True, help_text='Enter description of segment.')
+    #slug = models.SlugField(unique=True)
 
     # Metadata
 
@@ -242,6 +232,15 @@ class SegmentType(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        # replay/segments/rr
+        # replay/segments/replay-roulette
+        # replay/replay-roulette
+        # ------------------------------------
+        # replay/segments/youre-doing-it-wrong
+        # replay/segments/doing-it-wrong
+        pass
 
 class Segment(models.Model):
     """Model representing a single instance of a segment in an episode."""
@@ -262,18 +261,9 @@ class Segment(models.Model):
     
     def __str__(self):
         if self.games.exists():
-            return f'{self.type} - {self.games}'
+            return f'{self.type} - {self.display_games()}'
         else:
-            return self.type
-
-    def get_absolute_url(self):
-        # replay/segments/rr
-        # replay/segments/replay-roulette
-        # replay/replay-roulette
-        # ------------------------------------
-        # replay/segments/youre-doing-it-wrong
-        # replay/segments/doing-it-wrong
-        pass
+            return str(self.type)
 
     def display_games(self):
         return ', '.join(game.__str__() for game in self.games.all()[:3])
@@ -404,6 +394,8 @@ class Episode(models.Model):
 
     def display_featuring(self):
         return ', '.join( person.__str__() for person in (self.featuring.all()[:3] + self.guests.all()[:3]) )
+
+    display_featuring.short_description = 'Featuring'
 
     def convertRuntimeToSeconds(self, runtimeStr):
         '''Takes duration parameter in form 00:00:00 and returns total number of seconds'''
@@ -537,3 +529,18 @@ class SuperReplayEpisode(Episode):
         # super-replay/5/3 -> Super Replay 5 Episode 3
         # super-replay/Overblood/3 -> Overblood Super Replay Episode 3
         pass
+
+# Each model represents Facebook, Twitter, etc.
+# Can use separate API to request certain data, ex. recent tweets from twitter account listed in SocialMediaInst.
+class SocialMediaInst(models.Model):
+    # Fields
+
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    type = models.CharField(max_length=50)
+    url = models.URLField()
+
+    # Metadata
+    # Methods
+
+    def __str__(self):
+        return f'{self.person} ({self.type})'
