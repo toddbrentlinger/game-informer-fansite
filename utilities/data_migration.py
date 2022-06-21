@@ -9,18 +9,6 @@ from utilities.igdb import IGDB # Make requests from IGDB API
 from utilities.data_migration_constants import SEGMENT_TYPES, STAFF # Separate file to hold constants
 from utilities.misc import create_total_time_message # misc utility functions
 
-def database_init(apps):
-    '''
-    Initializes database with known data.
-
-    Parameters:
-        apps (): 
-    '''
-    # Create Segment Types
-    SegmentType = apps.get_model('fansite', 'SegmentType')
-    for title, abbreviation, gameTextID in SEGMENT_TYPES.items():
-        SegmentType.objects.create(title=title, abbreviation=abbreviation)
-
 def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, year_released = None):
     ''' 
     Returns specific instance of Game model.
@@ -210,24 +198,26 @@ def createReplayEpisodeFromJSON(replayData, apps):
     '''
     # Cannot import models directly as it may be a newer version
     # than this migration expects. Use historical versions instead.
+    
     # Fansite app
     Thumbnail = apps.get_model('fansite', 'Thumbnail')
     YouTubeVideo = apps.get_model('fansite', 'YouTubeVideo')
     Person = apps.get_model('fansite', 'Person')
-    #Guest = apps.get_model('fansite', 'Guest')
-    #StaffPosition = apps.get_model('fansite', 'StaffPosition')
-    #StaffPositionInstance = apps.get_model('fansite', 'StaffPositionInstance')
+    # Guest = apps.get_model('fansite', 'Guest')
+    # StaffPosition = apps.get_model('fansite', 'StaffPosition')
+    # StaffPositionInstance = apps.get_model('fansite', 'StaffPositionInstance')
     Staff = apps.get_model('fansite', 'Staff')
     Article = apps.get_model('fansite', 'Article')
     SegmentType = apps.get_model('fansite', 'SegmentType')
     Segment = apps.get_model('fansite', 'Segment')
     ExternalLink = apps.get_model('fansite', 'ExternalLink')
-    Heading = apps.get_model('fansite', 'Heading')
-    HeadingInstance = apps.get_model('fansite', 'HeadingInstance')
+    # Heading = apps.get_model('fansite', 'Heading')
+    # HeadingInstance = apps.get_model('fansite', 'HeadingInstance')
     ReplaySeason = apps.get_model('fansite', 'ReplaySeason')
     ReplayEpisode = apps.get_model('fansite', 'ReplayEpisode')
-    SuperReplay = apps.get_model('fansite', 'SuperReplay')
-    SuperReplayEpisode = apps.get_model('fansite', 'SuperReplayEpisode')
+    # SuperReplay = apps.get_model('fansite', 'SuperReplay')
+    # SuperReplayEpisode = apps.get_model('fansite', 'SuperReplayEpisode')
+
     # Game app
     Game = apps.get_model('games', 'Game')
     Platform = apps.get_model('games', 'Platform')
@@ -649,8 +639,22 @@ def createReplayEpisodeFromJSON(replayData, apps):
     add_model_inst_list_to_field(replay.main_segment_games, replay_manytomany_instances_dict['main_segment_games'])
     add_model_inst_list_to_field(replay.other_segments, replay_manytomany_instances_dict['other_segments'])
 
+def database_init(apps):
+    '''
+    Initializes database with known data.
+
+    Parameters:
+        apps (): 
+    '''
+    # Create Segment models
+    SegmentType = apps.get_model('fansite', 'SegmentType')
+    for title, abbreviation, gameTextID in SEGMENT_TYPES.items():
+        SegmentType.objects.create(title=title, abbreviation=abbreviation)
+
+    # Create Person and Staff models
+
 def initialize_database(apps, schema_editor):
-    with open('utilities/replay_data.json', 'r') as dataFile:
+    with open('utilities/replay_data.json', 'r', encoding='utf-8') as dataFile:
 
         # Get Replay episode data
         allReplayData = json.load(dataFile)
