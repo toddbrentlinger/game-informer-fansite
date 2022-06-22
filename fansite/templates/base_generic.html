@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block title %}<title>Game Informer Fansite</title>{% endblock %}
+    <!-- Add additional CSS in static file -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/meyer_reset.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <header>
+        <img src="{% static 'img/Game_Informer_logo_(2010-present)_512(dark_mode).png' %}" alt="Game Informer logo">
+        <!-- <nav id="topnav">Top Nav</nav> -->
+    </header>
+
+    {% block sidenav %}
+    <nav id="sidenav">
+        <a href="{% url 'index' %}">Home</a>
+        <a href="{% url 'replay' %}">All Replay Episodes</a>
+        <a href="{% url 'games' %}">All Games</a>
+    </nav>
+    {% endblock %}
+
+    <main>{% block content %}{% endblock %}</main>
+
+    <footer>
+        <p>
+            <small>Source Code © <time id="copyright-year">2022</time> Todd Brentlinger, Santa Cruz, CA, USA. All Rights Reserved.</small>
+        </p>
+    </footer>
+</body>
+</html>

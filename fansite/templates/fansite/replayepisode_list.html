@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>Replay Episode List</h1>
+    {% if replayepisode_list %}
+    <ul>
+        {% for replayepisode in replayepisode_list %}
+        <li>
+            <a href="{{ replayEpisode.get_absolute_url }}">{{ replayepisode.title }}</a> ({{ replayepisode.airdate }})
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>There are no Replay episodes!</p>
+    {% endif %}
+{% endblock %}

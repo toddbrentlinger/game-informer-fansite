@@ -1,0 +1,10 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>{{ replay_episode.title }}</h1>
+
+    <p><strong>Air Date: </strong>{{ replay_episode.airdate }}</p>
+    <p><strong>Host: </strong>{{ replay_episode.host }}</p>
+    <p><strong>Featuring: </strong>{{ replay_episode.featuring.all|join:", " }}</p>
+    <p><strong>Number: </strong>{{ replay_episode.number }}</p>
+{% endblock %}

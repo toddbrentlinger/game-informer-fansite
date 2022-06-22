@@ -1,0 +1,13 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>Game Informer Fansite</h1>
+    <p>Welcome to this fansite for Game Informer!</p>
+
+    <h2>Dynamic Content</h2>
+    <p>The fansite has the following record counts:</p>
+    <ul>
+        <li><strong>Replay Episodes:</strong> {{ num_replay_episodes }}</li>
+        <li><strong>Games:</strong> {{ num_games }}</li>
+    </ul>
+{% endblock %}

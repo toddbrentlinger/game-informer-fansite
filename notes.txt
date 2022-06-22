@@ -1,8 +1,19 @@
 TODO:
 
+6/22/22
+
+- Remove UUID fields from objects where built-in default 'id' primary key
+is adequate. ReplayEpisode, etc.
+
+- In data migration script, go through all main segment games first to add 
+to the database before going through other segments. Can then as much data 
+as possible (title, platform, year released) to find games using IGDB before 
+potentially the same games occur in different segments where more data is 
+NOT provided.
+
 6/21/22
 
-- Add slug field to Person and SegmentType models used for url routing.
+- Add slug field to Person, SegmentType, ReplayEpisode (or Episode) models used for url routing.
 Need to migrate again and incorporate new fields in data migration script.
 
 3/22/22

@@ -463,7 +463,7 @@ class ReplayEpisode(Episode):
         # replay/378 -> Replay Episode 378
         # replay/s2/45 -> Replay Season 2 Episode 45
         # replay/metal-gear-solid-3
-        return reverse('replay', args=[str(self.id)])
+        return reverse('replay-detail', args=[str(self.id)])
 
     def get_season(self):
         # Episode numbers less than 1 are special unofficial episodes

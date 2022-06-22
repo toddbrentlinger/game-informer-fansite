@@ -91,7 +91,7 @@ class Game(models.Model):
     # - Append slug field to "game/"
     def get_absolute_url(self):
         # game/metal-gear-solid-3
-        pass
+        return reverse('game-detail', args=[str(self.id)])
 
     def save(self, *args, **kwargs):
         super(Game, self).save(*args, **kwargs)
