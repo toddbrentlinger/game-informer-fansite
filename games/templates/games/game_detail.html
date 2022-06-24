@@ -8,4 +8,18 @@
     <p><strong>Summary: </strong>{{ game.summary }}</p>
     <p><strong>Slug: </strong>{{ game.slug }}</p>
     <p><strong>IGDB ID: </strong>{{ game.igdb_id }}</p>
+
+    <h2>Replay Episodes:</h2>
+
+    {% for replayepisode in game.replayepisode_set.all %}
+    <hr>
+    <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
+    {% endfor %}
+
+    {% for segment in game.segment_set.all %}
+        {% for replayepisode in segment.replayepisode_set.all %}
+        <hr>
+        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
+        {% endfor %}
+    {% endfor %}
 {% endblock %}

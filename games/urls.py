@@ -3,6 +3,6 @@ from . import views
 
 urlpatterns = [
     path('', views.GameListView.as_view(), name='games'),
-    re_path(r'(?P<stub>[-\w]+)$', views.GameDetailView.as_view(), name='game-detail-slug'),
     path('<int:pk>/', views.GameDetailView.as_view(), name='game-detail'),
+    re_path(r'(?P<stub>[-\w]+)/$', views.game_detail_slug_view, name='game-detail-slug'),
 ]
