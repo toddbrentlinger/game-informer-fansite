@@ -28,7 +28,7 @@ body {
     min-height: 100vh;
 
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: max-content 1fr;
     grid-template-rows: auto 1fr auto;
     grid-template-areas: 
         "header header"
@@ -44,7 +44,9 @@ header {
     outline: 2px solid white;
 
     height: 10vh;
-
+    background-image: url('../img/Game_Informer_logo_(2010-present)_512(dark_mode).png');
+    background-position: center;
+    background-repeat: no-repeat;
     grid-area: header;
     display: grid;
     place-items: center;
@@ -83,6 +85,10 @@ main > *:not(:last-child) {
     margin-bottom: 1rem;
 }
 
+main h2 {
+    text-transform: capitalize;
+}
+
 footer {
     outline: 2px solid white;
 
@@ -96,4 +102,25 @@ footer {
 a {
     text-decoration: none;
     color: inherit;
+}
+
+.thumbnail-container {
+    width: 100%;
+    padding-top: 56.25%;
+    position: relative;
+}
+
+.thumbnail-container .thumbnail {
+    background-color: gray;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.thumbnail-container .thumbnail img {
+    display: block;
+    height: 100%;
+    margin: 0 auto;
 }
