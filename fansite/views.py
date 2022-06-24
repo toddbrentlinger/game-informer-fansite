@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views import generic
 from .models import ReplayEpisode
 from games.models import Game
@@ -25,3 +25,13 @@ class ReplayEpisodeListView(generic.ListView):
 
 class ReplayEpisodeDetailView(generic.DetailView):
     model = ReplayEpisode
+
+def replay_episode_detail_view(request, pk):
+    replayepisode = get_object_or_404(ReplayEpisode, pk=pk)
+    (season_num, season_episode_num) = replayepisode.get_season()
+    context = {
+        'replayepisode': replayepisode,
+        'season_num': season_num,
+        'season_episode_num': season_episode_num
+    }
+    return render(request, 'fansite/replayepisode_detail.html', context=context)

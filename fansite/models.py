@@ -32,6 +32,9 @@ class Thumbnail(models.Model):
     def __str__(self):
         return f'{self.url} ({self.get_quality_display()})'
 
+    def create_srcset_entry(self):
+        return f'{self.url} {self.width}w'
+
 # TODO: Use YouTube Data API
 class YouTubeVideo(models.Model):
     """Model representing a YouTube video."""
@@ -303,10 +306,13 @@ class ExternalLink(models.Model):
 
     def getLinkSource(self):
         # Loop through EXTERNAL_LINK_SOURCES
+        for match_str, source in self.EXTERNAL_LINK_SOURCES:
             # If url contains first item of tuple
+            if match_str in self.url:
                 # return second item of tuple
-        # If reach this point, no match was found. Return default vaule
-        pass
+                return source
+        # If reach this point, no match was found. Return default value
+        return None
 
 class Heading(models.Model):
     """Model representing a type of heading of an episode."""
@@ -393,7 +399,7 @@ class Episode(models.Model):
         return self.title
 
     def display_featuring(self):
-        return ', '.join( person.__str__() for person in (self.featuring.all()[:3] + self.guests.all()[:3]) )
+        return ', '.join( person.__str__() for person in self.featuring.all()[:3] )
 
     display_featuring.short_description = 'Featuring'
 

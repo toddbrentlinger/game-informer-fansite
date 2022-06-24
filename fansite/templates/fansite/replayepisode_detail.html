@@ -1,10 +1,67 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-    <h1>{{ replay_episode.title }}</h1>
-
-    <p><strong>Air Date: </strong>{{ replay_episode.airdate }}</p>
-    <p><strong>Host: </strong>{{ replay_episode.host }}</p>
-    <p><strong>Featuring: </strong>{{ replay_episode.featuring.all|join:", " }}</p>
-    <p><strong>Number: </strong>{{ replay_episode.number }}</p>
+    <h1>{{ replayepisode.title }}</h1>
+    <div class="thumbnail-container">
+        <div class="thumbnail">
+            <img
+                srcset="
+                    {% for thumbnail in replayepisode.youtube_video.thumbnails.all %}
+                        {{ thumbnail.create_srcset_entry }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                "
+                src="{{ replayepisode.youtube_video.thumbnails }}"
+                alt="Thumbnail image for Replay episode titled '{{ replayepisode.title }}'"
+            >
+        </div>
+    </div>
+    <hr>
+    <p><strong>Air Date: </strong>{{ replayepisode.airdate }}</p>
+    <hr>
+    <p><strong>Host: </strong>{{ replayepisode.host }}</p>
+    <hr>
+    <p><strong>Featuring: </strong>{{ replayepisode.display_featuring }}</p>
+    <hr>
+    <p><strong>Season: </strong>S{{ season_num }} E{{ season_episode_num }} ({{ replayepisode.number }})</p>
+    <hr>
+    <p><strong>YouTube Video: </strong>{{ replayepisode.youtube_video }}</p>
+    <hr>
+    <p><strong>Runtime: </strong>{{ replayepisode.runtime }}</p>
+    <hr>
+    <p><strong>Main Segment Games: </strong></p>
+    <ul>
+        {% for game in replayepisode.main_segment_games.all %}
+            <li><a href="{{ game.get_absolute_url }}">{{ game.name }}</a></li>
+        {% endfor %}
+    </ul>
+    <hr>
+    <p><strong>Other Segments: </strong></p>
+    <ul>
+        {% for segment in replayepisode.other_segments.all %}
+            <li>{{ segment }}</li>
+        {% endfor %}
+    </ul>
+    <hr>
+    <p><strong>Article: </strong>{{ replayepisode.article }}</p>
+    <hr>
+    <p><strong>Headings: </strong></p>
+    <h2>Description:</h2>
+    {% for entry in replayepisode.headings.description %}
+        <p>{{ entry }}</p>
+    {% endfor %}
+    {% for key, value in replayepisode.headings.items %}
+        {% if key != 'description' %}
+            <h2>{{ key }}:</h2>
+            {% for item in value %}
+                <p>{{ item }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+    <hr>
+    <p><strong>External Links: </strong></p>
+    <ul>
+        {% for external_link in replayepisode.external_links.all %}
+            <li><a href="{{ external_link.url }}" target="_blank">{{ external_link.title }}</a></li>
+        {% endfor %}
+    </ul>
 {% endblock %}
