@@ -1,9 +1,34 @@
 TODO:
 
+6/25/22
+
+|- accounts
+|- config
+|- fansite
+|- games
+|- people
+|- replay
+|- ?segments (NOTE: Could be inside 'replay' app instead)
+|- ?superreplay (NOTE: Could be inside 'replay' app instead. SuperReplayEpisode 
+                and ReplayEpisode can both derive from Episode which has common 
+                functionality.)
+
+- games, people, replay, superreplay
+Apps that each have page to search/sort/filter each main model of that app.
+Can also view detail pages about each entry.
+
 6/22/22
 
 - Remove UUID fields from objects where built-in default 'id' primary key
 is adequate. ReplayEpisode, etc.
+
+- Change youtube_id field in YouTubeVideo to just id?
+
+- Add slug field to any model with a detail page. Built-in methods to convert to slug.
+Must have unique attribute.
+
+- Add JSON field to ReplayEpisode to hold the original JSON object used to create 
+the model instance.
 
 - In data migration script, go through all main segment games first to add 
 to the database before going through other segments. Can then as much data 

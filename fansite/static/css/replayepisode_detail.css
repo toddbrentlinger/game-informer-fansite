@@ -1,0 +1,29 @@
+#primary-info {
+
+}
+
+#primary-info-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+#primary-info-details {
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+}
+
+#primary-info-details-counts {
+    display: flex;
+    gap: 1em;
+}
+
+#primary-info-details-time {
+    display: flex;
+    gap: 1em;
+}
+
+#people-in-episode {
+    display: flex;
+    justify-content: space-between;
+}
