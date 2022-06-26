@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.template.defaultfilters import slugify
 
 # Create your models here.
 
@@ -16,29 +17,33 @@ class Genre(models.Model):
     def __str__(self):
         return self.name
 
-class Developer(models.Model):
+class ImageIGDB(models.Model):
     # Fields
-    # Metadata
-    # Methods
-    pass
-
-class PlatformLogo(models.Model):
-    # Fields
+    igdb_id = models.CharField(max_length=100, help_text='Enter the ID of the image used to construct an IGDB image link.')
+    width = models.PositiveSmallIntegerField(help_text='Enter the width of the image in pixels.')
+    height = models.PositiveSmallIntegerField(help_text='Enter the height of the image in pixels.')
+    url = models.URLField(help_text='Enter the IGDB website address (URL) of the image.')
 
     # Metadata
 
     class Meta:
-        verbose_name = 'Platform Logo'
+        ordering = ['igdb_id']
+        verbose_name = 'Image'
 
     # Methods
+    def __str__(self):
+        return self.igdb_id
 
 class Platform(models.Model):
     # Fields
-    id = models.PositiveSmallIntegerField(primary_key=True, help_text='Enter IGDB ID for this system/platform.')
+    id = models.PositiveSmallIntegerField(primary_key=True, help_text='Enter IGDB ID of the system/platform.')
     name = models.CharField(max_length=200, help_text='Enter name of this system/platform.')
     abbreviation = models.CharField(max_length=20, blank=True, help_text='Enter shortened abbreviation for this system/platform.')
     alternate_name = models.CharField(max_length=1000, blank=True, help_text='Enter alternate names as list separated by commas.')
-    logo = models.ForeignKey(PlatformLogo, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo for this system/platform.')
+    logo = models.ForeignKey(ImageIGDB, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo of the first Version of this platform.')
+    slug = models.SlugField(unique=True, null=False, help_text='Enter a url-safe, unique, lower-case version of the platform.')
+    summary = models.TextField(blank=True, help_text='Enter a summary of the first Version of this platform.')
+    url = models.URLField(help_text='Enter the IGDB website address (URL) of the platform.')
 
     # Metadata
     class Meta:
@@ -47,6 +52,42 @@ class Platform(models.Model):
     # Methods
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        #return reverse('platform-detail', kwargs={'slug': self.slug})
+        pass
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        return super(Platform, self).save(*args, **kwargs)
+
+class Developer(models.Model):
+    # Fields
+    id = models.PositiveSmallIntegerField(primary_key=True, help_text='Enter IGDB ID of the company.')
+    name = models.CharField(max_length=200, help_text='Enter name of the company.')
+    country = models.PositiveSmallIntegerField(help_text='Enter the ISO 3166-1 country code.')
+    description = models.TextField(blank=True, help_text='Enter free text description of the company.')
+    logo = models.ForeignKey(ImageIGDB, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo of the company.')
+    slug = models.SlugField(unique=True, null=False, help_text='Enter a url-safe, unique, lower-case version of the company.')
+    url = models.URLField(help_text='Enter the IGDB website address (URL) of the company.')
+
+    # Metadata
+    class Meta:
+        ordering = ['name']
+
+    # Methods
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        #return reverse('developer-detail', kwargs={'slug': self.slug})
+        pass
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        return super(Developer, self).save(*args, **kwargs)
 
 # TODO: Use VGDB (Video Game Database API)
 # - *Could use API to fill a few basic fields to be stored on custom database and 
@@ -66,12 +107,16 @@ class Game(models.Model):
     #release_year = models.PositiveSmallIntegerField(verbose_name='Release Year', help_text='Enter year the game was released.')
 
     name = models.CharField(max_length=200, help_text='Enter game title.')
-    slug = models.SlugField(max_length=200)
-    summary = models.TextField(blank=True, help_text='Enter summary of the game.')
+    slug = models.SlugField(unique=True, null=False)
+    summary = models.TextField(blank=True, help_text='Enter description of the game.')
+    storyline = models.TextField(blank=True, help_text='Enter short description of the game\'s story.')
     platform = models.ForeignKey(Platform, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter game platform (ex. PC, PS4, XBox 360, etc.).')
     genre = models.ManyToManyField(Genre, blank=True, help_text='Enter genres of the game.')
     developer = models.ForeignKey(Developer, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter developer of the game.')
     release_date = models.DateTimeField(blank=True, null=True, verbose_name='Release Date', help_text='Enter date the game was released.')
+    cover = models.OneToOneField(ImageIGDB, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter the cover of the game.')
+    #screenshots = models.ManyToManyField(ImageIGDB, blank=True, help_text='Enter screenshots of the game.')
+    url = models.URLField(help_text='Enter the IGDB website address (URL) of the game.')
 
     # Metadata
 
@@ -91,7 +136,10 @@ class Game(models.Model):
     # - Append slug field to "game/"
     def get_absolute_url(self):
         # game/metal-gear-solid-3
+        #return reverse('game-detail', kwargs={'slug': self.slug})
         return reverse('game-detail', args=[str(self.id)])
 
     def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
         super(Game, self).save(*args, **kwargs)

@@ -1,7 +1,9 @@
 import uuid # Used for unique model instances
+import re
 
 from django.db import models
 from django.urls import reverse
+from django.template.defaultfilters import slugify
 from games.models import Game
 
 '''
@@ -77,7 +79,7 @@ class Person(models.Model):
 
     full_name = models.CharField(max_length=100, verbose_name='Full Name', help_text='Enter full name (maximum 100 characters).')
     short_name = models.CharField(max_length=50, blank=True, verbose_name='Short Name', help_text='Enter optional short name variation for usage in correspondence (maximum 50 characters).')
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, null=False)
     # description = models.TextField()
     # thumbnail = models.ForeignKey(Thumbnail)
     # gallery 
@@ -100,7 +102,13 @@ class Person(models.Model):
         # staff/tim-turi
         # guests/hilary-wilton
         # people/tim-turi
+        #return reverse('person-detail', kwargs={'slug': self.slug})
         return reverse('people', args=[str(self.id)])
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.full_name)
+        return super(Person, self).save(*args, **kwargs)
 
 # TODO: Use Person as normal class for guests since there's no extra functionality for Guest over generic Person class.
 # However, do want separate detail page for guests and staff members.
@@ -187,7 +195,7 @@ class Article(models.Model):
     # Fields
 
     title = models.CharField(max_length=100, help_text='Enter article title.')
-    author = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter staff who authored the article.')
+    author = models.ForeignKey(Person, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter person who authored the article.')
     datetime = models.DateTimeField(help_text='Enter date and time article was published.')
     content = models.TextField(help_text='Enter main content of article.')
     url = models.URLField(null=True, verbose_name='URL', help_text='Enter URL of article.')
@@ -223,7 +231,7 @@ class SegmentType(models.Model):
     title = models.CharField(max_length=100, help_text='Enter title of segment.')
     abbreviation = models.CharField(max_length=10, blank=True, help_text='Enter shortened abbreviation of segment title.')
     description = models.CharField(max_length=1000, blank=True, help_text='Enter description of segment.')
-    #slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, null=False)
 
     # Metadata
 
@@ -243,7 +251,13 @@ class SegmentType(models.Model):
         # ------------------------------------
         # replay/segments/youre-doing-it-wrong
         # replay/segments/doing-it-wrong
+        #return reverse('segmenttype-detail', kwargs={'slug': self.slug})
         pass
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        return super(SegmentType, self).save(*args, **kwargs)
 
 class Segment(models.Model):
     """Model representing a single instance of a segment in an episode."""
@@ -371,12 +385,15 @@ class Episode(models.Model):
 
     # Fields
 
+    # TODO: Should UUID be primary key or is built-in primary key sufficient?
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=100, unique=True, help_text='Enter episode title.')
+    title = models.CharField(max_length=100, help_text='Enter episode title.')
     # TODO: Runtime should be in youtube_video after using YouTube API. 
     # One few videos do not have YouTube id but does have runtime (videos never on YouTube).
     # nn:nn:nn (ex. 01:35:23 for 1hr 35min 23sec)
     runtime = models.CharField(max_length=10, blank=True, help_text='Enter episode runtime in format hh:mm:ss.')
+    # NOTE: If no YouTube video, display default image in HTML. Not necessary to keep separate 'thumbnails' property
+    # unless episode has NO YouTube video but does have thumbnail from Fandom Wiki.
     #thumbnails = models.ManyToManyField(Thumbnail, blank=True, help_text='Enter thumbnail images for the episode.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
     host = models.ForeignKey(Person, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter person who hosts the episode.')
@@ -386,6 +403,7 @@ class Episode(models.Model):
     #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
     #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Other Headings', help_text='Enter heading se')
     headings = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
+    slug = models.SlugField(unique=True, null=False)
 
     # Metadata
 
@@ -469,7 +487,13 @@ class ReplayEpisode(Episode):
         # replay/378 -> Replay Episode 378
         # replay/s2/45 -> Replay Season 2 Episode 45
         # replay/metal-gear-solid-3
+        #return reverse('replay-detail', kwargs={'slug': self.slug})
         return reverse('replay-detail', args=[str(self.id)])
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(re.sub(r'Replay:\s?', '', self.title, 1, re.IGNORECASE))
+        return super(ReplayEpisode, self).save(*args, **kwargs)
 
     def get_season(self):
         # Episode numbers less than 1 are special unofficial episodes

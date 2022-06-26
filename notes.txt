@@ -2,14 +2,20 @@ TODO:
 
 6/25/22
 
+- Data Migration:
+Create Game instances from each main_segment_games property of JSON and then 
+save 'game_id' to each main_segment_games object before running through each 
+episode again to create the ReplayEpisode instance. When get to main_segment_games, 
+use 'game_id' to query the already create Game instance before saving it to the 
+episode.
+
 |- accounts
 |- config
 |- fansite
-|- games
-|- people
-|- replay
-|- ?segments (NOTE: Could be inside 'replay' app instead)
-|- ?superreplay (NOTE: Could be inside 'replay' app instead. SuperReplayEpisode 
+|- games (games/ , games/platforms/ , games/developers/ , )
+|- people (people/ , people/staff/ or staff/ , people/guests/ or guests/)
+|- replay (replay/ , replay/segments/ , )
+|- superreplay (NOTE: Could be inside 'replay' app instead. SuperReplayEpisode 
                 and ReplayEpisode can both derive from Episode which has common 
                 functionality.)
 
