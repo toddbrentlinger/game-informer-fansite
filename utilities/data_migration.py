@@ -25,82 +25,6 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
         Game: Existing or created instance of Game model
     '''
 
-    '''
-    Pseudo-Code
-
-    define platform and platform_id default initialized or initialized to None
-    if platform_name is not None:
-        if platform_name is str
-            if platform_name already exists in database
-                set platform to Platform instance
-                set platform_id
-            else platform_name does NOT exist in database
-                request platform data using IGDB and platform_name
-                if platform response is successful AND NOT empty
-                    if IGDB platform id already exists in database (name may not have matched but unique ID would match for duplicated in database)
-                        set platform to Platform model instance
-                        set platform_id
-                    else IGDB platform id does NOT already exist in database
-                        NOTE: Do not save Platform model to database since the platform and name may not return any game results on IGDB
-                        but name alone might be successful. Save to database later ONLY if it matches with the game name.
-                        set platform to new instance of Platform model (do NOT save to database yet)
-                        set platform_id
-                else platform response failed OR is empty
-                    leave platform and platform_id as None
-    '''
-    # Assign platform using platform_name parameter (initialized to None)
-    platform = None
-    # If platform_name has value
-    if platform_name:
-        # Check if platform is already in database
-        if type(platform_name) is str:
-            # If platform_name already exists in database as different name fields, assign Platform instance to platform
-            try:
-                # Regex Pattern using 'NES': r'(^NES,)|(,\sNES,)|(,\sNES$)|(^NES$)'
-                platform_alt_name_regex = r'(^' + platform_name + r',)|(,\s' + platform_name + r',)|(,\s' + platform_name + r'$)|(^' + platform_name + r'$)'
-                platform = platform_model.objects.get(
-                    Q(abbreviation=platform_name) | Q(alternate_name__regex=platform_alt_name_regex) | Q(name=platform_name)
-                )
-            # Else platform_name does NOT exist in database
-            except platform_model.DoesNotExist:
-                # Adjust name for 'PC' to 'PC Windows' before using IGDB API
-                # TODO: Move this to function that cleans JSON file
-                if platform_name == 'PC':
-                    platform_name += ' Windows'
-
-        elif type(platform_name) is int:
-            # If platform_name already exists in database as ID, assign Platform instance to platform
-            try:
-                platform = platform_model.objects.get(pk=platform_name)
-            # Else platform_name does NOT exist in database
-            except platform_model.DoesNotExist:
-                # Leaving platform value as None
-                pass
-
-        # If could not find existing platform in database (platform has value of None)
-        if platform is None:
-            # Use IGDB API to search for platform data
-            platform_data = igdb.get_platform_data(platform_name)
-            
-            # If search succeeds AND not empty
-            if platform_data is not None and len(platform_data) > 0:
-                # If platform id already exists in database, assign Platform instance to platform
-                try:
-                    platform = platform_model.objects.get(pk=platform_data[0]['id'])
-                # Else create new platform model instance using IGDB platform data and assign it to platform.
-                # Do NOT save new instance to database until confirm game name and platform search succeeds.
-                except platform_model.DoesNotExist:
-                    platform = platform_model()
-                    platform.id = platform_data[0]['id']
-                    platform.name = platform_data[0]['name']
-                    if 'abbreviation' in platform_data[0]:
-                        platform.abbreviation = platform_data[0]['abbreviation']
-                    if 'alternative_name' in platform_data[0]:
-                        platform.alternate_name = platform_data[0]['alternative_name']
-            # Else search fails or is empty
-                # Must search for game using only name
-                # Leave platform value as None so it's not used to search for game using IGDB
-
     # Inner function to get or create a Game model instance with optional platform paramter
     # From outside scope, uses IGDB instance and historical versions of models
     def create_game_model(name, platform = None, year_released = None, fields = '*'):
@@ -153,8 +77,84 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
             return game_inst
         return None
 
+    '''
+    Pseudo-Code
+
+    define platform and platform_id default initialized or initialized to None
+    if platform_name is not None:
+        if platform_name is str
+            if platform_name already exists in database
+                set platform to Platform instance
+                set platform_id
+            else platform_name does NOT exist in database
+                request platform data using IGDB and platform_name
+                if platform response is successful AND NOT empty
+                    if IGDB platform id already exists in database (name may not have matched but unique ID would match for duplicated in database)
+                        set platform to Platform model instance
+                        set platform_id
+                    else IGDB platform id does NOT already exist in database
+                        NOTE: Do not save Platform model to database since the platform and name may not return any game results on IGDB
+                        but name alone might be successful. Save to database later ONLY if it matches with the game name.
+                        set platform to new instance of Platform model (do NOT save to database yet)
+                        set platform_id
+                else platform response failed OR is empty
+                    leave platform and platform_id as None
+    '''
+    # Assign platform using platform_name parameter (initialized to None)
+    platform = None
+    # If platform_name has value
+    if platform_name:
+        # Check if platform is already in database by string OR number
+        if type(platform_name) is str:
+            # If platform_name already exists in database as different name fields, assign Platform instance to platform
+            try:
+                # Regex Pattern using 'NES': r'(^NES,)|(,\sNES,)|(,\sNES$)|(^NES$)'
+                platform_alt_name_regex = r'(^' + platform_name + r',)|(,\s' + platform_name + r',)|(,\s' + platform_name + r'$)|(^' + platform_name + r'$)'
+                platform = platform_model.objects.get(
+                    Q(abbreviation=platform_name) | Q(alternate_name__regex=platform_alt_name_regex) | Q(name=platform_name)
+                )
+            # Else platform_name does NOT exist in database
+            except platform_model.DoesNotExist:
+                # Adjust name for 'PC' to 'PC Windows' before using IGDB API
+                # TODO: Move this to function that cleans JSON file
+                if platform_name == 'PC':
+                    platform_name += ' Windows'
+
+        elif type(platform_name) is int:
+            # If platform_name already exists in database as ID, assign Platform instance to platform
+            try:
+                platform = platform_model.objects.get(pk=platform_name)
+            # Else platform_name does NOT exist in database
+            except platform_model.DoesNotExist:
+                # Leaving platform value as None
+                pass
+
+        # If could not find existing platform in database (platform has value of None)
+        if platform is None:
+            # Use IGDB API to search for platform data
+            platform_data = igdb.get_platform_data(platform_name)
+            
+            # If search succeeds AND not empty
+            if platform_data is not None and len(platform_data) > 0:
+                # If platform id already exists in database, assign Platform instance to platform
+                try:
+                    platform = platform_model.objects.get(pk=platform_data[0]['id'])
+                # Else create new platform model instance using IGDB platform data and assign it to platform.
+                # Do NOT save new instance to database until confirm game name and platform search succeeds.
+                except platform_model.DoesNotExist:
+                    platform = platform_model()
+                    platform.id = platform_data[0]['id']
+                    platform.name = platform_data[0]['name']
+                    if 'abbreviation' in platform_data[0]:
+                        platform.abbreviation = platform_data[0]['abbreviation']
+                    if 'alternative_name' in platform_data[0]:
+                        platform.alternate_name = platform_data[0]['alternative_name']
+            # Else search fails or is empty
+                # Must search for game using only name
+                # Leave platform value as None so it's not used to search for game using IGDB
+
     # Search IGDB for game based on title AND platform ID
-    fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary;'
+    fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,screenshots,slug,storyline,summary,url;'
     
     # If platform has value, search for game with both name+platform
     if platform is not None:
@@ -170,11 +170,157 @@ def get_game_inst(game_model, platform_model, igdb, name, platform_name = None, 
     if game_inst is not None:
         return game_inst
     # Else game search fails with no platform
-        # Reach here when neither name+platform nor just name has successful game search
+    # Reach here when neither name+platform nor just name has successful game search
         
     # If reach here, could not find game
     print(f'Could not find game!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
     return None
+
+def get_person_inst(Person, Staff, name):
+    try:
+        return Person.objects.get(full_name=name)
+    except Person.DoesNotExist:
+        person = Person.objects.create(
+            full_name=name,
+            slug='-'.join(name.lower().split(' '))
+        )
+        # TODO: If person is part of staff, create Staff model as well.
+        if name in STAFF:
+            Staff.objects.create(person=person)
+        return person
+
+def get_segment_inst(Segment, SegmentType, Game, Platform, platform, igdb, segmentType, segmentContent):
+    '''
+    Creates instance of Segment model, saves to database, and returns.
+
+    Parameter:
+        segmentType (str): Name or abbreviation of segment type.
+        segmentContent ([str]): List of game names or segment description.
+
+    Returns:
+        Segment
+    '''
+    segment = Segment()
+    segment_manytomany_instances_dict = {
+        'games': []
+    }
+
+    segmentTypeInst = None
+    for segmentTitle, segment_abbreviation, gameTextID in SEGMENT_TYPES:
+        if segmentType in (segment_abbreviation, segmentTitle):
+            try:
+                segmentTypeInst = SegmentType.objects.get(
+                    Q(abbreviation=segmentType) | Q(title=segmentType)
+                )
+            except SegmentType.DoesNotExist:
+                segmentTypeInst = SegmentType.objects.create(
+                    title=segmentTitle,
+                    abbreviation=segment_abbreviation if segment_abbreviation is not None else ''
+                )
+
+            # Game/Text ID: 0-game 1-text 2-game/text
+
+            if gameTextID == 0: # game
+                for game in segmentContent:
+                    # Add content to 'games', leaving 'description' empty
+                    game_title = game.rpartition(' Ad')[0] if game.endswith('Ad') else game
+                    # Get game using title and platform from main_segment_games
+                    game_inst = get_game_inst(
+                        game_model=Game, 
+                        platform_model=Platform, 
+                        igdb=igdb, 
+                        name=game_title, 
+                        platform_name=platform, 
+                        year_released=None
+                    )
+                    if game_inst is not None:
+                        #segment.games.add(game_inst)
+                        segment_manytomany_instances_dict['games'].append(game_inst)
+
+            elif gameTextID == 1: # text
+                # Add content to 'description' leaving 'games' empty
+                segment.description = ', '.join(segmentContent)
+
+            elif gameTextID == 2: # game/text
+                # Special Cases: Moments and Developer Spotlight
+                if segmentType == 'Moments':
+                    if segmentContent[0] == 'Syphone Filter\'s Cutscenes':
+                        # Add game
+                        # Get game using title and platform from main_segment_games
+                        game_inst = get_game_inst(
+                            game_model=Game, 
+                            platform_model=Platform, 
+                            igdb=igdb, 
+                            name=segmentContent[0], 
+                            platform_name=platform, 
+                            year_released=None
+                        )
+                        if game_inst is not None:
+                            #segment.games.add(game_inst)
+                            segment_manytomany_instances_dict['games'].append(game_inst)
+                        # Add description
+                        segment.description = segmentContent[0]
+                elif segmentType == 'Developer Spotlight':
+                    for index, game in enumerate(segmentContent):
+                        if index == 0:
+                            # First index of game list example: Rare Games: Slalom
+                            title_split = game.split(': ', 1)
+                            # Get game using title_split[1] and platform from main_segment_games
+                            game_inst = get_game_inst(
+                                game_model=Game, 
+                                platform_model=Platform, 
+                                igdb=igdb, 
+                                name=title_split[1], 
+                                platform_name=platform, 
+                                year_released=None
+                            )
+                            if game_inst is not None:
+                                #segment.games.add(game_inst)
+                                segment_manytomany_instances_dict['games'].append(game_inst)
+                            # Add description from title_split[0]
+                            segment.description = title_split[0]
+                        else:
+                            # Add game
+                            # Get game using title and platform from main_segment_games
+                            game_inst = get_game_inst(
+                                game_model=Game, 
+                                platform_model=Platform, 
+                                igdb=igdb, 
+                                name=game, 
+                                platform_name=platform, 
+                                year_released=None
+                            )
+                            if game_inst is not None:
+                                #segment.games.add(game_inst)
+                                segment_manytomany_instances_dict['games'].append(game_inst)
+
+            break
+    # If segmentTypeInst is still none, unknown segment type.
+    # Use value as segment title, leaving abbreviation blank.
+    if segmentTypeInst is None:
+        # If segmentType is empty string, assign to 'Other'
+        if segmentType == '':
+            segmentType = 'Other'
+        try:
+            segmentTypeInst = SegmentType.objects.get(title=segmentType)
+        except SegmentType.DoesNotExist:
+            segmentTypeInst = SegmentType.objects.create(title=segmentType)
+
+        # Add description
+        segment.description = ', '.join(segmentContent)
+
+    # Set type field in segment model instance
+    segment.type = segmentTypeInst
+
+    # Save to database
+    segment.save()
+
+    # Now that segment is saved to database, add ManyToManyFields
+    for game in segment_manytomany_instances_dict['games']:
+        game.save()
+        segment.games.add(game)
+
+    return segment
 
 def add_model_inst_list_to_field(m2m_field, model_inst_list):
     '''
@@ -220,7 +366,10 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
     # Game app
     Game = apps.get_model('games', 'Game')
+    Developer = apps.get_model('games', 'Developer')
     Platform = apps.get_model('games', 'Platform')
+    ImageIGDB = apps.get_model('games', 'ImageIGDB')
+    Genre = apps.get_model('games', 'Genre')
 
     # IGDB instance initialization creates API access_token
     igdb = IGDB()
@@ -243,7 +392,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
     # Title - replayData.episodeTitle
     replay.title = replayData['episodeTitle']
-
+    
     # Runtime - replayData.details.runtime AND replayData.videoLength
     if 'details' in replayData and 'runtime' in replayData['details']:
         replay.runtime = replayData['details']['runtime']
@@ -264,28 +413,14 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
     # Host/Featuring/Guests inside 'details'
     if 'details' in replayData:
-
-        def get_person_inst(name):
-            try:
-                return Person.objects.get(full_name=name)
-            except Person.DoesNotExist:
-                person = Person.objects.create(
-                    full_name=name,
-                    slug='-'.join(name.lower().split(' '))
-                )
-                # TODO: If person is part of staff, create Staff model as well.
-                if name in STAFF:
-                    Staff.objects.create(person=person)
-                return person
-
         # Host - replayData.details.host (ForeignKey)
         if 'host' in replayData['details'] and replayData['details']['host']:
-            replay.host = get_person_inst(replayData['details']['host'][0])
+            replay.host = get_person_inst(Person, Staff, replayData['details']['host'][0])
 
         # Featuring - replayData.details.featuring (ManyToMany)
         if 'featuring' in replayData['details'] and replayData['details']['featuring']:
             for personName in replayData['details']['featuring']:
-                person = get_person_inst(personName)
+                person = get_person_inst(Person, Staff, personName)
                 replay_manytomany_instances_dict['featuring'].append(person)
 
     # YouTube Video - replayData.youtube (OneToOne)
@@ -404,6 +539,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
                 replay_manytomany_instances_dict['main_segment_games'].append(game_inst)
     
     # Use platform from main_segment_games field to search for games in other segments
+    # TODO: Why not search all platforms?
     platform = None
     if replay.main_segment_games.exists():
         platform_count = {} # key: IGDB platform ID, value: number of games with this platform in main_segment_games
@@ -418,139 +554,6 @@ def createReplayEpisodeFromJSON(replayData, apps):
             if value > max_count:
                 max_count = value
                 platform = key
-
-    def create_segment_inst(segmentType, segmentContent):
-        '''
-        Creates instance of Segment model, saves to database, and returns.
-
-        Parameter:
-            segmentType (str): Name or abbreviation of segment type.
-            segmentContent ([str]): List of game names or segment description.
-
-        Returns:
-            Segment
-        '''
-        segment = Segment()
-        segment_manytomany_instances_dict = {
-            'games': []
-        }
-
-        segmentTypeInst = None
-        for segmentTitle, segment_abbreviation, gameTextID in SEGMENT_TYPES:
-            if segmentType in (segment_abbreviation, segmentTitle):
-                try:
-                    segmentTypeInst = SegmentType.objects.get(
-                        Q(abbreviation=segmentType) | Q(title=segmentType)
-                    )
-                except SegmentType.DoesNotExist:
-                    segmentTypeInst = SegmentType.objects.create(
-                        title=segmentTitle,
-                        abbreviation=segment_abbreviation if segment_abbreviation is not None else ''
-                    )
-
-                # Game/Text ID: 0-game 1-text 2-game/text
-
-                if gameTextID == 0: # game
-                    for game in segmentContent:
-                        # Add content to 'games', leaving 'description' empty
-                        game_title = game.rpartition(' Ad')[0] if game.endswith('Ad') else game
-                        # Get game using title and platform from main_segment_games
-                        game_inst = get_game_inst(
-                            game_model=Game, 
-                            platform_model=Platform, 
-                            igdb=igdb, 
-                            name=game_title, 
-                            platform_name=platform, 
-                            year_released=None
-                        )
-                        if game_inst is not None:
-                            #segment.games.add(game_inst)
-                            segment_manytomany_instances_dict['games'].append(game_inst)
-
-                elif gameTextID == 1: # text
-                    # Add content to 'description' leaving 'games' empty
-                    segment.description = ', '.join(segmentContent)
-
-                elif gameTextID == 2: # game/text
-                    # Special Cases: Moments and Developer Spotlight
-                    if segmentType == 'Moments':
-                        if segmentContent[0] == 'Syphone Filter\'s Cutscenes':
-                            # Add game
-                            # Get game using title and platform from main_segment_games
-                            game_inst = get_game_inst(
-                                game_model=Game, 
-                                platform_model=Platform, 
-                                igdb=igdb, 
-                                name=segmentContent[0], 
-                                platform_name=platform, 
-                                year_released=None
-                            )
-                            if game_inst is not None:
-                                #segment.games.add(game_inst)
-                                segment_manytomany_instances_dict['games'].append(game_inst)
-                            # Add description
-                            segment.description = segmentContent[0]
-                    elif segmentType == 'Developer Spotlight':
-                        for index, game in enumerate(segmentContent):
-                            if index == 0:
-                                # First index of game list example: Rare Games: Slalom
-                                title_split = game.split(': ', 1)
-                                # Get game using title_split[1] and platform from main_segment_games
-                                game_inst = get_game_inst(
-                                    game_model=Game, 
-                                    platform_model=Platform, 
-                                    igdb=igdb, 
-                                    name=title_split[1], 
-                                    platform_name=platform, 
-                                    year_released=None
-                                )
-                                if game_inst is not None:
-                                    #segment.games.add(game_inst)
-                                    segment_manytomany_instances_dict['games'].append(game_inst)
-                                # Add description from title_split[0]
-                                segment.description = title_split[0]
-                            else:
-                                # Add game
-                                # Get game using title and platform from main_segment_games
-                                game_inst = get_game_inst(
-                                    game_model=Game, 
-                                    platform_model=Platform, 
-                                    igdb=igdb, 
-                                    name=game, 
-                                    platform_name=platform, 
-                                    year_released=None
-                                )
-                                if game_inst is not None:
-                                    #segment.games.add(game_inst)
-                                    segment_manytomany_instances_dict['games'].append(game_inst)
-
-                break
-        # If segmentTypeInst is still none, unknown segment type.
-        # Use value as segment title, leaving abbreviation blank.
-        if segmentTypeInst is None:
-            # If segmentType is empty string, assign to 'Other'
-            if segmentType == '':
-                segmentType = 'Other'
-            try:
-                segmentTypeInst = SegmentType.objects.get(title=segmentType)
-            except SegmentType.DoesNotExist:
-                segmentTypeInst = SegmentType.objects.create(title=segmentType)
-
-            # Add description
-            segment.description = ', '.join(segmentContent)
-
-        # Set type field in segment model instance
-        segment.type = segmentTypeInst
-
-        # Save to database
-        segment.save()
-
-        # Now that segment is saved to database, add ManyToManyFields
-        for game in segment_manytomany_instances_dict['games']:
-            game.save()
-            segment.games.add(game)
-
-        return segment
 
     # Other Segments - replayData.details (ManyToMany)
     # replayData.middleSegment, replayData.middleSegmentContent
@@ -572,8 +575,9 @@ def createReplayEpisodeFromJSON(replayData, apps):
         segmentContent = replayData['middleSegmentContent']
         
         if segmentContent:
-            #replay.other_segments.add(create_segment_inst(segmentType, segmentContent))
-            replay_manytomany_instances_dict['other_segments'].append(create_segment_inst(segmentType, [segmentContent]))
+            replay_manytomany_instances_dict['other_segments'].append(
+                get_segment_inst(Segment, SegmentType, Game, Platform, platform, igdb, segmentType, [segmentContent])
+            )
 
     # replayData.secondSegment, replayData.secondSegmentGames
     if 'secondSegment' in replayData:
@@ -581,8 +585,9 @@ def createReplayEpisodeFromJSON(replayData, apps):
         segmentContent = replayData['secondSegmentGames']
 
         if segmentContent:
-            #replay.other_segments.add(create_segment_inst(segmentType, segmentContent))
-            replay_manytomany_instances_dict['other_segments'].append(create_segment_inst(segmentType, segmentContent))
+            replay_manytomany_instances_dict['other_segments'].append(
+                get_segment_inst(Segment, SegmentType, Game, Platform, platform, igdb, segmentType, segmentContent)
+            )
     
     # Article - replayData.article  (OneToOne)
     if 'article' in replayData:
@@ -593,14 +598,16 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
         # Author - replayData.article.author
         # TODO: Add Staff to author field
-        name = replayData['details']['host'][0]
-        try:
-            person = Person.objects.get(full_name=name)
-        except Person.DoesNotExist:
-            person = Person.objects.create(
-                full_name=name,
-                slug='-'.join(name.lower().split(' '))
-            )
+        article.author = get_person_inst(Person, Staff, replayData['article']['author'])
+
+        # try:
+        #     person = Person.objects.get(full_name=name)
+        # except Person.DoesNotExist:
+        #     person = Person.objects.create(
+        #         full_name=name,
+        #         slug='-'.join(name.lower().split(' '))
+        #     )
+
         # nameList = replayData['article']['author'].split()
         # try:
         #     person = Staff.objects.get(first_name=nameList[0], last_name__startswith=nameList[1])
