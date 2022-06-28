@@ -76,6 +76,13 @@ Reset PostgreSQL database:
 
 -------------------------------------------------------------------------------
 
+JSON file changes:
+
+.09 - Splatterhouse: Wanpaku Grafitti -> Splatterhouse: Wanpaku Graffiti
+  1 - secondSegmentGames: ["Critical Depth, Rogue Trip: Vacation 2012"] -> ["Critical Depth", "Rogue Trip: Vacation 2012"]
+
+-------------------------------------------------------------------------------
+
 - How to account for choices not having an appropriate choice?
 Create separate model for the choices where a new one can be added.
 

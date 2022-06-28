@@ -49,7 +49,7 @@ class IGDB:
             print('JSONDecodeError on response from access token request!')
             return
 
-    def get_platform_data(self, platform_name, fields = '*'):
+    def get_platform_data(self, platform_name, fields = '*', exclude = None):
         '''
         Summary line.
 
@@ -67,6 +67,10 @@ class IGDB:
             f'fields {fields};',
             f'search "{platform_name}";'
         ))
+
+        if exclude is not None:
+            data += f' exclude {exclude};'
+
         # Request game based on search
         response = requests.post(
             'https://api.igdb.com/v4/platforms', 
@@ -96,7 +100,7 @@ class IGDB:
             pass
         return response_data
 
-    def get_game_data(self, name, platform = None, year_released = None, fields='*'):
+    def get_game_data(self, name, platform = None, year_released = None, fields = '*', exclude = None):
         '''
         Requests data on video game using IGDB API.
 
@@ -128,6 +132,10 @@ class IGDB:
         #data = 'fields *;search "overblood";'
         # release_dates for matching platform OR first_release_date
         data = ' '.join((f'fields {fields};', f'search "{name}";'))
+
+        if exclude is not None:
+            data += f' exclude {exclude};'
+
         if platform is not None and year_released is not None:
             data += f' where release_dates.platform={platform} & release_dates.y={year_released};'
         elif platform is not None:
@@ -168,7 +176,8 @@ class IGDB:
 
 def main():
     igdb = IGDB()
-    fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
+    fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,screenshots.*,slug,storyline,summary,url'
+    exclude = 'involved_companies.company.published, involved_companies.company.developed'
 
     # data = 'fields {fields};', f'search "*"; where involved_companies'
     # response = requests.post(
@@ -197,13 +206,33 @@ def main():
     # pprint.pprint(platform_data, indent=2)
     # pprint.pprint(igdb.get_game_data('Pokemon Snap', None, None, fields)[0], indent=2) # é \u00e9
 
+    pprint.pprint(
+        igdb.get_game_data(
+            'Rayman', 
+            igdb.get_platform_data('PlayStation')[0]['id'],
+            fields='*, involved_companies.*, involved_companies.company.*, platforms.*'
+        )[0], 
+        indent=2
+    )
+    pprint.pprint(
+        igdb.get_game_data(
+            'Top Gun: Fire at Will', 
+            igdb.get_platform_data('PlayStation')[0]['id'],
+            fields='*, involved_companies.*, involved_companies.company.*, platforms.*'
+        )[0], 
+        indent=2
+    )
+    return
+
     platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
     pprint.pprint(igdb.get_game_data(
         'Metal Gear Solid 3: Snake Eater', 
         platform_id, 
         2004, 
-        'cover.*,first_release_date,genres.*,id,involved_companies.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,slug,summary'
-    ), indent=2)
+        fields,
+        exclude
+    )[0], indent=2)
+    pprint.pprint(igdb.get_platform_data('PS2'), indent=2)
     # igdb.get_game_data(
     #     'Metal Gear Solid 3: Snake Eater', 
     #     None, 
