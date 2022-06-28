@@ -43,7 +43,7 @@ class YouTubeVideoAdmin(admin.ModelAdmin):
 
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
-    pass
+    prepopulated_fields = {'slug': ('full_name',)}
 
 @admin.register(StaffPosition)
 class StaffPositionAdmin(admin.ModelAdmin):
@@ -69,6 +69,7 @@ class ArticleAdmin(admin.ModelAdmin):
 @admin.register(SegmentType)
 class SegmentTypeAdmin(admin.ModelAdmin):
     list_display = ('title', 'abbreviation')
+    prepopulated_fields = {'slug': ('title',)}
 
 @admin.register(Segment)
 class SegmentAdmin(admin.ModelAdmin):
@@ -100,6 +101,7 @@ class ReplayEpisodeAdmin(admin.ModelAdmin):
     list_filter = ('airdate', 'season')
     #fields = ['number', ]
     filter_horizontal = ('featuring', 'external_links', 'main_segment_games', 'other_segments')
+    prepopulated_fields = {'slug': ('title',)}
 
 @admin.register(SuperReplay)
 class SuperReplayAdmin(admin.ModelAdmin):
