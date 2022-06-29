@@ -24,7 +24,7 @@ def get_game_inst(game_model, platform_model, developer_model, genre_model, igdb
         igdb (IGDB): Reference to IGDB instance to use IGDB API
         name (str): Name of video game
         platform (str|number): Name of platform as string type OR IGDB platform ID as number type (optional)
-        year_released (number): Year the game was released (optional)
+        year_released (str|number): Year the game was released (optional)
 
     Returns:
         Game: Existing or created instance of Game model
@@ -39,7 +39,7 @@ def get_game_inst(game_model, platform_model, developer_model, genre_model, igdb
         Parameters:
             name (str): Title of video game
             platform_inst (Platform): Platform model instance for the video game
-            year_released (number): Year the video game was released
+            year_released (str|number): Year the video game was released
             fields (str): Search fields passed to IGDB API request
             exclude (str): Fields to exclude from response to IGDB API request
 
@@ -76,7 +76,7 @@ def get_game_inst(game_model, platform_model, developer_model, genre_model, igdb
                             platform_final_inst = platform_inst
                             break
                 # If platform_final_inst is still None when reaching this point, use one from the IGDB response
-                if platform_final_inst is None:
+                if platform_final_inst is None and 'release_dates' in game_data[0]:
                     # Filter release_dates by region code North America or Worldwide
                     region_codes = (2,8)
                     filtered_release_dates = [
@@ -89,7 +89,8 @@ def get_game_inst(game_model, platform_model, developer_model, genre_model, igdb
 
                     # Use platform with release date closest to the 'gamedate' JSON attribute or just year_released parameter
                     if (year_released is not None) and (len(filtered_release_dates) > 1):
-                        filtered_release_dates.sort(key=lambda release_date: abs(release_date['y'] - year_released))
+                        if (type(year_released) == str and '-' not in year_released) or type(year_released) == int:
+                            filtered_release_dates.sort(key=lambda release_date: abs(release_date['y'] - int(year_released)))
 
                     # Use first platform from top filtered_release_dates
                     if filtered_release_dates:
@@ -100,7 +101,7 @@ def get_game_inst(game_model, platform_model, developer_model, genre_model, igdb
                             platform_final_inst = platform_model.objects.create(
                                 id=platform['id'],
                                 name=platform['name'],
-                                abbreviation=platform['abbreviation'] if 'alternative_name' in platform else '',
+                                abbreviation=platform['abbreviation'] if 'abbreviation' in platform else '',
                                 alternative_name=platform['alternative_name'] if 'alternative_name' in platform else '',
                                 logo=None,
                                 slug=platform['slug'],
@@ -242,26 +243,50 @@ def get_game_inst(game_model, platform_model, developer_model, genre_model, igdb
     fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,screenshots.*,slug,storyline,summary,url'
     exclude = 'involved_companies.company.published, involved_companies.company.developed'
     
-    # If platform has value, search for game with both name+platform
-    if platform is not None:
-        game_inst = create_game_model(name, platform, year_released, fields, exclude)
+    # Search for game with name+platform+year_released
+    game_inst = create_game_model(name, platform, year_released, fields, exclude)
+    # If game search succeeds with name+platform, return the game model instance
+    if game_inst is not None:
+        return game_inst
+
+    # If no game found, search with name+platform
+    if year_released is not None:
+        game_inst = create_game_model(name, platform, None, fields, exclude)
         # If game search succeeds with name+platform, return the game model instance
         if game_inst is not None:
             return game_inst
-        print(f'get_game_inst(): Could not find game with 3 args!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
 
-    # If platform has value but reaches this point, could not find game with name+platform.
-    # Attempt search with just the name of the video game
-    game_inst = create_game_model(name, None, year_released, fields, exclude)
-    # If game search succeeds with no platform, return the game model instance
-    if game_inst is not None:
-        return game_inst
-    # Else game search fails with no platform
-    print(f'get_game_inst(): Could not find game with 2 args!: Name: {name} - Year: {year_released}')
+    # If no game found, search with only name
+    if platform is not None:
+        game_inst = create_game_model(name, None, None, fields, exclude)
+        # If game search succeeds with name only, return the game model instance
+        if game_inst is not None:
+            return game_inst
 
-    # Reach here when neither name+platform nor just name has successful game search.    
-    # If reach here, could not find game
+    # No game found if reach this point
+    print(f'get_game_inst(): Could not find game!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
     return None
+
+    # # If platform has value, search for game with both name+platform+year_released
+    # if platform is not None:
+    #     game_inst = create_game_model(name, platform, year_released, fields, exclude)
+    #     # If game search succeeds with name+platform, return the game model instance
+    #     if game_inst is not None:
+    #         return game_inst
+    #     print(f'get_game_inst(): Could not find game with 3 args!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
+
+    # # If platform has value but reaches this point, could not find game with name+platform.
+    # # Attempt search with just the name of the video game
+    # game_inst = create_game_model(name, None, year_released, fields, exclude)
+    # # If game search succeeds with no platform, return the game model instance
+    # if game_inst is not None:
+    #     return game_inst
+    # # Else game search fails with no platform
+    # print(f'get_game_inst(): Could not find game with 2 args!: Name: {name} - Year: {year_released}')
+
+    # # Reach here when neither name+platform nor just name has successful game search.    
+    # # If reach here, could not find game
+    # return None
 
 def get_person_inst(Person, Staff, name):
     try:
@@ -302,7 +327,8 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, pla
             except SegmentType.DoesNotExist:
                 segmentTypeInst = SegmentType.objects.create(
                     title=segmentTitle,
-                    abbreviation=segment_abbreviation if segment_abbreviation is not None else ''
+                    abbreviation=segment_abbreviation if segment_abbreviation is not None else '',
+                    slug=slugify(segmentTitle)
                 )
 
             # Game/Text ID: 0-game 1-text 2-game/text
@@ -406,7 +432,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, pla
         try:
             segmentTypeInst = SegmentType.objects.get(title=segmentType)
         except SegmentType.DoesNotExist:
-            segmentTypeInst = SegmentType.objects.create(title=segmentType)
+            segmentTypeInst = SegmentType.objects.create(title=segmentType, slug=slugify(segmentType))
 
         # Add description
         segment.description = ', '.join(segmentContent)
@@ -626,7 +652,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
             game_name = game['title']
 
             # Game - Year Released
-            game_year_released = int(game['yearReleased'])
+            game_year_released = game['yearReleased']
 
             # Game - Platform
             platform_name = game['system']
@@ -651,6 +677,8 @@ def createReplayEpisodeFromJSON(replayData, apps):
     if replay_manytomany_instances_dict['main_segment_games']:
         platform_count = {} # key: IGDB platform ID, value: number of games with this platform in main_segment_games
         for game in replay_manytomany_instances_dict['main_segment_games']:
+            if game.platform is None:
+                continue
             if game.platform.id in platform_count:
                 platform_count[game.platform.id] += 1
             else:
@@ -767,7 +795,7 @@ def database_init(apps):
     # Create Segment models
     SegmentType = apps.get_model('fansite', 'SegmentType')
     for title, abbreviation, gameTextID in SEGMENT_TYPES.items():
-        SegmentType.objects.create(title=title, abbreviation=abbreviation)
+        SegmentType.objects.create(title=title, abbreviation=abbreviation, slug=slugify(title))
 
     # Create Person and Staff models
 

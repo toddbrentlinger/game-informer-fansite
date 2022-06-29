@@ -41,7 +41,7 @@ class Platform(models.Model):
     abbreviation = models.CharField(max_length=20, blank=True, help_text='Enter shortened abbreviation for this system/platform.')
     alternative_name = models.CharField(max_length=1000, blank=True, help_text='Enter alternative names as list separated by commas.')
     logo = models.ForeignKey(ImageIGDB, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo of the first Version of this platform.')
-    slug = models.SlugField(unique=True, null=False, help_text='Enter a url-safe, unique, lower-case version of the platform.')
+    slug = models.SlugField(max_length=200, unique=True, null=False, help_text='Enter a url-safe, unique, lower-case version of the platform.')
     summary = models.TextField(blank=True, help_text='Enter a summary of the first Version of this platform.')
     url = models.URLField(help_text='Enter the IGDB website address (URL) of the platform.')
 
@@ -69,7 +69,7 @@ class Developer(models.Model):
     country = models.PositiveSmallIntegerField(blank=True, null=True, help_text='Enter the ISO 3166-1 country code.')
     description = models.TextField(blank=True, help_text='Enter free text description of the company.')
     logo = models.ForeignKey(ImageIGDB, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo of the company.')
-    slug = models.SlugField(unique=True, null=False, help_text='Enter a url-safe, unique, lower-case version of the company.')
+    slug = models.SlugField(max_length=200, unique=True, null=False, help_text='Enter a url-safe, unique, lower-case version of the company.')
     url = models.URLField(help_text='Enter the IGDB website address (URL) of the company.')
 
     # Metadata
@@ -103,7 +103,7 @@ class Game(models.Model):
 
     igdb_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='IGDB ID', help_text='Enter IGDB game ID to be used with API. If ID entered, other fields do NOT need to be filled out.')
     name = models.CharField(max_length=200, help_text='Enter game title.')
-    slug = models.SlugField(unique=True, null=False)
+    slug = models.SlugField(max_length=200, unique=True, null=False)
     summary = models.TextField(blank=True, help_text='Enter description of the game.')
     storyline = models.TextField(blank=True, help_text='Enter short description of the game\'s story.')
     platform = models.ForeignKey(Platform, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter game platform (ex. PC, PS4, XBox 360, etc.).')

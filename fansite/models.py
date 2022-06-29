@@ -79,7 +79,7 @@ class Person(models.Model):
 
     full_name = models.CharField(max_length=100, verbose_name='Full Name', help_text='Enter full name (maximum 100 characters).')
     short_name = models.CharField(max_length=50, blank=True, verbose_name='Short Name', help_text='Enter optional short name variation for usage in correspondence (maximum 50 characters).')
-    slug = models.SlugField(unique=True, null=False)
+    slug = models.SlugField(max_length=100, unique=True, null=False)
     # description = models.TextField()
     # thumbnail = models.ForeignKey(Thumbnail)
     # gallery 
@@ -231,7 +231,7 @@ class SegmentType(models.Model):
     title = models.CharField(max_length=100, help_text='Enter title of segment.')
     abbreviation = models.CharField(max_length=10, blank=True, help_text='Enter shortened abbreviation of segment title.')
     description = models.CharField(max_length=1000, blank=True, help_text='Enter description of segment.')
-    slug = models.SlugField(unique=True, null=False)
+    slug = models.SlugField(max_length=100, unique=True, null=False)
 
     # Metadata
 
@@ -403,7 +403,7 @@ class Episode(models.Model):
     #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
     #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Other Headings', help_text='Enter heading se')
     headings = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
-    slug = models.SlugField(unique=True, null=False)
+    slug = models.SlugField(max_length=100, unique=True, null=False)
 
     # Metadata
 

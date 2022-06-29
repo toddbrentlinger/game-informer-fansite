@@ -2,6 +2,7 @@ import requests
 import json
 import time
 import pprint
+import re
 
 from decouple import config
 
@@ -107,8 +108,9 @@ class IGDB:
         Parameters:
             name (str): Video game name to search.
             platform (str|number): Video game platform string OR IGDB ID for specific platform (optional).
-            year_released (number): Year the video game was released (optional).
+            year_released (str|number): Year the video game was released (optional).
             fields (str): Fields used for IGDB API request to retrieve specific fields only.
+            exclude (str): Fields used for IGDB API request to exclude specific fields.
 
         Returns:
             dict: 
@@ -137,11 +139,24 @@ class IGDB:
             data += f' exclude {exclude};'
 
         if platform is not None and year_released is not None:
-            data += f' where release_dates.platform={platform} & release_dates.y={year_released};'
+            if type(year_released) == str:
+                # Check if year_released is single or range of years
+                if '-' in year_released:
+                    year_range = re.split('-', year_released)
+                    data += f' where release_dates.platform={platform} & release_dates.y>={year_range[0]} & release_dates.y<={year_range[1]};'
+                else:
+                    data += f' where release_dates.platform={platform} & release_dates.y={year_released};'
+            elif type(year_released) == int:
+                data += f' where release_dates.platform={platform} & release_dates.y={year_released};'
         elif platform is not None:
             data += f' where release_dates.platform={platform};'
         elif year_released is not None:
-            data += f' where release_dates.y={year_released};'
+            # Check if year_released is single or range of years
+            if '-' in year_released:
+                year_range = re.split('-', year_released)
+                data += f' where release_dates.y>={year_range[0]} & release_dates.y<={year_range[1]};'
+            else:
+                data += f' where release_dates.y={year_released};'
         # Else both platform and year_released have value None, do nothing
 
         # Request game based on search
@@ -156,7 +171,9 @@ class IGDB:
 
         # Check status code from request
         if response.status_code != requests.codes.ok:
-            print(f'Request to IGDB API failed with status code: {response.status.code}')
+            print('Data Sent:')
+            pprint.pprint(data, indent=2)
+            print(f'Request to IGDB API failed with status code: {response.status_code}')
             return None
 
         # Set response from game request
@@ -208,21 +225,22 @@ def main():
 
     pprint.pprint(
         igdb.get_game_data(
+            'James Bond: Everything or Nothing', 
+            None,
+            fields='*, involved_companies.*, involved_companies.company.*, platforms.*'
+        )[0], 
+        indent=2
+    )
+    return
+
+    pprint.pprint(
+        igdb.get_game_data(
             'Rayman', 
             igdb.get_platform_data('PlayStation')[0]['id'],
             fields='*, involved_companies.*, involved_companies.company.*, platforms.*'
         )[0], 
         indent=2
     )
-    pprint.pprint(
-        igdb.get_game_data(
-            'Top Gun: Fire at Will', 
-            igdb.get_platform_data('PlayStation')[0]['id'],
-            fields='*, involved_companies.*, involved_companies.company.*, platforms.*'
-        )[0], 
-        indent=2
-    )
-    return
 
     platform_id = igdb.get_platform_data('Playstation 2', '*,platform_logo.*')[0]['id']
     pprint.pprint(igdb.get_game_data(
