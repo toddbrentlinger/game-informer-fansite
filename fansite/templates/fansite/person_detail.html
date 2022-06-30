@@ -12,10 +12,18 @@
     {% endif %}
 
     <h2>Replay Episodes:</h2>
-    {% for replayepisode in person.replayepisode_set.all %}
-        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
-        {% if not forloop.last %}
+    <h3>Host: </h3>
+    {% for replayepisode in person.fansite_replayepisode_host_related.all %}
         <hr>
-        {% endif %}
+        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
+    {% empty %}
+        <p>No hosted Replay episodes!</p>
+    {% endfor %}
+    <h3>Featuring: </h3>
+    {% for replayepisode in person.fansite_replayepisode_featuring_related.all %}
+        <hr>
+        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
+    {% empty %}
+        <p>No featuring Replay episodes!</p>
     {% endfor %}
 {% endblock %}
