@@ -1,0 +1,16 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <h1>Platform List View</h1>
+    {% if platform_list %}
+    <ul>
+        {% for platform in platform_list %}
+        <li>
+            <a href="{{ platform.get_absolute_url }}">{{ platform.name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>There are no video game platforms!</p>
+    {% endif %}
+{% endblock %}

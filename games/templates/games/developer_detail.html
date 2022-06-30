@@ -1,0 +1,24 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Games - Developer - {{ developer.name }}</title>
+{% endblock %}
+
+{% block content %}
+    <h1>{{ developer.name }}</h1>
+
+    <p><strong>Country: </strong>{{ developer.country }}</p>
+    {% if developer.description %}
+        <p><strong>Description: </strong>{{ developer.description }}</p>
+    {% endif %}
+    <p><strong>URL: </strong><a href="{{ developer.url }}">{{ developer.name }}</a></p>
+
+    <h2>Games By Publisher Played By Game Informer:</h2>
+
+    {% for game in developer.game_set.all %}
+        <hr>
+        <p>
+            <a href="{{ game.get_absolute_url }}">{{ game.name }}</a>
+        </p>
+    {% endfor %}
+{% endblock %}

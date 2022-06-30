@@ -1,5 +1,12 @@
 TODO:
 
+6/29/22
+
+- Save Article.content as JSON object to hold array of strings representing each 
+paragraph of article.
+
+- Account for game titles in segments with platform in parentheses at end of game title.
+
 6/25/22
 
 - Data Migration:

@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - People</title>
+{% endblock %}
+
+{% block content %}
+    <h1>People List View</h1>
+    {% if person_list %}
+    <ul>
+        {% for person in person_list %}
+        <li>
+            <a href="{{ person.get_absolute_url }}">{{ person.full_name }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>There are no people!</p>
+    {% endif %}
+{% endblock %}

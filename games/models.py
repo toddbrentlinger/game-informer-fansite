@@ -54,8 +54,7 @@ class Platform(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        #return reverse('platform-detail', kwargs={'slug': self.slug})
-        pass
+        return reverse('platform-detail-slug', kwargs={'stub': self.slug})
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -81,8 +80,7 @@ class Developer(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        #return reverse('developer-detail', kwargs={'slug': self.slug})
-        pass
+        return reverse('developer-detail-slug', kwargs={'stub': self.slug})
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -132,8 +130,8 @@ class Game(models.Model):
     # - Append slug field to "game/"
     def get_absolute_url(self):
         # game/metal-gear-solid-3
-        #return reverse('game-detail', kwargs={'slug': self.slug})
-        return reverse('game-detail', args=[str(self.id)])
+        return reverse('game-detail-slug', kwargs={'stub': self.slug})
+        #return reverse('game-detail', args=[str(self.id)])
 
     def save(self, *args, **kwargs):
         if not self.slug:

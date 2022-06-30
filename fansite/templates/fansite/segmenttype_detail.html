@@ -1,0 +1,24 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Replay - Segment Type - {{ segmenttype.title }}</title>
+{% endblock %}
+
+{% block content %}
+    <h1>{{ segmenttype.title }}</h1>
+
+    {% if segmenttype.abbreviation %}
+        <p><strong>Abbreviation: </strong>{{ segmenttype.abbreviation }}</p>
+    {% endif %}
+    {% if segmenttype.description %}
+        <p><strong>Description: </strong>{{ segmenttype.description }}</p>
+    {% endif %}
+
+    <h2>Replay Episodes:</h2>
+    {% for segment in segmenttype.segment_set.all %}
+        {% for replayepisode in segment.replayepisode_set.all %}
+            <hr>
+            <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
+        {% endfor %}
+    {% endfor %}
+{% endblock %}

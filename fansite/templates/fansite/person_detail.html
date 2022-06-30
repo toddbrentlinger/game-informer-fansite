@@ -1,0 +1,21 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Person - {{ person.full_name }}</title>
+{% endblock %}
+
+{% block content %}
+    <h1>{{ person.full_name }}</h1>
+
+    {% if person.short_name %}
+        <p><strong>Short Name: </strong>{{ person.short_name }}</p>
+    {% endif %}
+
+    <h2>Replay Episodes:</h2>
+    {% for replayepisode in person.replayepisode_set.all %}
+        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
+        {% if not forloop.last %}
+        <hr>
+        {% endif %}
+    {% endfor %}
+{% endblock %}

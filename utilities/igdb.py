@@ -225,7 +225,7 @@ def main():
 
     pprint.pprint(
         igdb.get_game_data(
-            'James Bond: Everything or Nothing', 
+            'Splatterhouse: Wanpaku Grafitti', 
             None,
             fields='*, involved_companies.*, involved_companies.company.*, platforms.*'
         )[0], 

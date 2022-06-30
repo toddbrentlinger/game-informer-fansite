@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Replay - Segment Types</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Segment Type List View</h1>
+    {% if segmenttype_list %}
+    <ul>
+        {% for segmenttype in segmenttype_list %}
+        <li>
+            <a href="{{ segmenttype.get_absolute_url }}">{{ segmenttype.title }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>There are no Replay segment types!</p>
+    {% endif %}
+{% endblock %}

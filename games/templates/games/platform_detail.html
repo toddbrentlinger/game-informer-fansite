@@ -1,0 +1,25 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Games - Platform - {{ platform.name }}</title>
+{% endblock %}
+
+{% block content %}
+    <h1>{{ platform.name }}</h1>
+
+    <p><strong>Abbreviation: </strong>{{ platform.abbreviation }}</p>
+    <p><strong>Alternative Name: </strong>{{ platform.alternative_name }}</p>
+    {% if platform.summary %}
+        <p><strong>Summary: </strong>{{ platform.summary }}</p>
+    {% endif %}
+    <p><strong>IGDB URL: </strong><a href="{{ platform.url }}">{{ platform.name }}</a></p>
+
+    <h2>Games By Platform Played By Game Informer:</h2>
+
+    {% for game in platform.game_set.all %}
+        <hr>
+        <p>
+            <a href="{{ game.get_absolute_url }}">{{ game.name }}</a>
+        </p>
+    {% endfor %}
+{% endblock %}

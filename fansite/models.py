@@ -102,8 +102,8 @@ class Person(models.Model):
         # staff/tim-turi
         # guests/hilary-wilton
         # people/tim-turi
-        #return reverse('person-detail', kwargs={'slug': self.slug})
-        return reverse('people', args=[str(self.id)])
+        return reverse('person-detail-slug', kwargs={'stub': self.slug})
+        #return reverse('people', args=[str(self.id)])
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -251,8 +251,7 @@ class SegmentType(models.Model):
         # ------------------------------------
         # replay/segments/youre-doing-it-wrong
         # replay/segments/doing-it-wrong
-        #return reverse('segmenttype-detail', kwargs={'slug': self.slug})
-        pass
+        return reverse('segment-type-detail-slug', kwargs={'stub': self.slug})
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -487,8 +486,8 @@ class ReplayEpisode(Episode):
         # replay/378 -> Replay Episode 378
         # replay/s2/45 -> Replay Season 2 Episode 45
         # replay/metal-gear-solid-3
-        #return reverse('replay-detail', kwargs={'slug': self.slug})
-        return reverse('replay-detail', args=[str(self.id)])
+        return reverse('replay-detail-slug', kwargs={'stub': self.slug})
+        #return reverse('replay-detail', args=[str(self.id)])
 
     def save(self, *args, **kwargs):
         if not self.slug:
