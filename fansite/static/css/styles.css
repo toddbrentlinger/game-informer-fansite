@@ -37,13 +37,15 @@ body {
         "footer footer";
 }
 
-header, #sidenav, main, footer {
+header, #sidenav-header, #sidenav-content, main, footer {
     padding: 1.2rem;
 }
 
-header {
+header, #sidenav-header {
     border-bottom: 2px solid white;
+}
 
+header {
     background-image: url('../img/Game_Informer_logo_(2010-present)_512(dark_mode).png');
     background-position: center;
     background-repeat: no-repeat;
@@ -67,12 +69,16 @@ header img {
     height: 100vh;
     overflow: hidden;
     z-index: 1;
-    background-color: gray;
+    background-color: var(--base-black);
     transition: left 300ms ease;
 }
 
 #sidenav.open {
     left: 0;
+}
+
+#sidenav-header {
+
 }
 
 #sidenav-content {
@@ -125,10 +131,19 @@ footer {
 
 /* Remove Default Styling */
 
-/* a {
-    text-decoration: none;
-    color: inherit;
-} */
+a {
+    /* text-decoration: none;
+    color: inherit; */
+    color: rgb(125 125 194);
+}
+
+a:focus, a:hover {
+    color: rgb(188 138 147);
+}
+
+a:active {
+    color: var(--base-white);
+}
 
 /* Thumbnail */
 
@@ -173,8 +188,7 @@ footer {
 
 .hamburger-icon {
     cursor: pointer;
-    height: var(--header-height);
-    width: var(--header-height);
+    display: inline-block;
     padding: 0.5rem;
     border-radius: 50%;
 }
@@ -184,7 +198,14 @@ footer {
 }
 
 .hamburger-icon i {
+    height: var(--header-height);
+    width: var(--header-height);
+    display: grid;
+    place-items: center;
+}
 
+.hamburger-icon i::before {
+    
 }
 
 /* Media Queries */

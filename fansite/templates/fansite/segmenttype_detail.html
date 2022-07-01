@@ -18,7 +18,20 @@
     {% for segment in segmenttype.segment_set.all %}
         {% for replayepisode in segment.replayepisode_set.all %}
             <hr>
-            <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
+            <p>
+                <a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a>
+                {% if segment.games.all %}
+                    <span>
+                         - 
+                        {% for game in segment.games.all %}
+                            <a href="{{ game.get_absolute_url }}">{{ game }}</a>
+                            {% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </span>
+                {% elif segment.description %}
+                    <span> - {{ segment.description }}</span>
+                {% endif %}
+            </p>
         {% endfor %}
     {% endfor %}
 {% endblock %}

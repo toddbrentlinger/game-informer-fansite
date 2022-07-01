@@ -31,9 +31,11 @@
 
     {% block sidenav %}
     <nav id="sidenav">
-        <span class="hamburger-icon sidenav-expand-btn">
-            <i class="fas fa-bars"></i>
-        </span>
+        <div id="sidenav-header">
+            <span class="hamburger-icon sidenav-expand-btn">
+                <i class="fas fa-bars"></i>
+            </span>
+        </div>
         <div id="sidenav-content">
             <a href="{% url 'index' %}">Home</a>
             <a href="{% url 'replay' %}">All Replay Episodes</a>

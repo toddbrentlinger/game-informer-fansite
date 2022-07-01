@@ -10,12 +10,12 @@
     <p><strong>Platform: </strong><a href="{{ game.platform.get_absolute_url }}">{{ game.platform.name }}</a></p>
     <p><strong>Developer: </strong><a href="{{ game.developer.get_absolute_url }}">{{ game.developer.name }}</a></p>
     <p><strong>Genres: </strong>{{ game.genres.all|join:", " }}</p>
-    <p><strong>Release Date: </strong>{{ game.release_date }}</p>
+    <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
     {% if game.summary %}
-        <p><strong>Summary: </strong>{{ game.summary }}</p>
+        <p><strong>Summary: </strong>{{ game.summary|linebreaks }}</p>
     {% endif %}
     {% if game.storyline %}
-        <p><strong>Storyline: </strong>{{ game.storyline }}</p>
+        <p><strong>Storyline: </strong>{{ game.storyline|linebreaks }}</p>
     {% endif %}
     <p><strong>IGDB URL: </strong><a href="{{ game.url }}" target="_blank">{{ game.name }}</a></p>
     <p><strong>Slug: </strong>{{ game.slug }}</p>
