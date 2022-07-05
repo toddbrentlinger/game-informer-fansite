@@ -2,12 +2,15 @@
 
 (function() {
     const videoPlayerElement = document.getElementById('video-player-container');
-    if (videoPlayerElement) {
+    const headerElement = document.querySelector('header');
+    if (videoPlayerElement && headerElement) {
         //const videoIframe = videoPlayerElement.querySelector('iframe');
         window.addEventListener('resize', () => {
             console.log(`Dist: ${document.documentElement.clientHeight - videoPlayerElement.getBoundingClientRect().bottom}`);
+            console.log(`Max Height: ${document.documentElement.clientHeight - headerElement.offsetHeight}px`);
             if ((document.documentElement.clientHeight - videoPlayerElement.getBoundingClientRect().bottom) > 0) {
                 //videoPlayerElement.style.height = `${videoPlayerElement.getBoundingClientRect().height}px`;
+                videoPlayerElement.style.maxHeight = `${document.documentElement.clientHeight - headerElement.offsetHeight}px`;
             }
         }, false);
     }

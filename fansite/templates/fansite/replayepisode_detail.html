@@ -10,21 +10,25 @@
     <link rel="stylesheet" href="{% static 'css/replayepisode_detail.css' %}">
 {% endblock %}
 
-{% block content %}
+{% block videoplayer %}
     <div id="video-player-container">
         <div id="video-player">
-            <iframe
-                frameborder="0"
-                allowfullscreen="1"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                title="YouTube video player"
-                width="640"
-                height="360"
-                src="https://www.youtube.com/embed/{{ replayepisode.youtube_video.youtube_id }}"
-            ></iframe>
+            <div id="video-player-set-aspect-ratio">
+                <iframe
+                    frameborder="0"
+                    allowfullscreen="1"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    title="YouTube video player"
+                    width="640"
+                    height="360"
+                    src="https://www.youtube.com/embed/{{ replayepisode.youtube_video.youtube_id }}"
+                ></iframe>
+            </div>
         </div>
     </div>
+{% endblock %}
 
+{% block content %}
     <div id="primary-info">
         <div id="primary-info-header">
             <h1>{{ replayepisode.title }}</h1>

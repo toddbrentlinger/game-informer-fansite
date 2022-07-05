@@ -23,7 +23,7 @@
 <body>
     <header>
         <span class="hamburger-icon sidenav-expand-btn">
-            <i class="fas fa-bars"></i>
+            <i class="fas fa-bars fa-lg"></i>
         </span>
         <!-- <img src="{% static 'img/Game_Informer_logo_(2010-present)_512(dark_mode).png' %}" alt="Game Informer logo"> -->
         <!-- <nav id="topnav">Top Nav</nav> -->
@@ -33,7 +33,7 @@
     <nav id="sidenav">
         <div id="sidenav-header">
             <span class="hamburger-icon sidenav-expand-btn">
-                <i class="fas fa-bars"></i>
+                <i class="fas fa-bars fa-lg"></i>
             </span>
         </div>
         <div id="sidenav-content">
@@ -50,7 +50,29 @@
     </nav>
     {% endblock %}
 
-    <main>{% block content %}{% endblock %}</main>
+    <main>
+        {% block videoplayer %}{% endblock %}
+        <div id="main-content">
+            {% block content %}{% endblock %}
+            {% block pagination %}
+                {% if is_paginated %}
+                    <div class="pagination">
+                        <span class="page-links">
+                            {% if page_obj.has_previous %}
+                                <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}">previous</a>
+                            {% endif %}
+                            <span class="page-current">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                            </span>
+                            {% if page_obj.has_next %}
+                                <a href="{{ request.path }}?page={{ page_obj.next_page_number }}">next</a>
+                            {% endif %}
+                        </span>
+                    </div>        
+                {% endif %}
+            {% endblock %}
+        </div>
+    </main>
 
     <footer>
         <p>

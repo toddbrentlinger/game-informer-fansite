@@ -2,15 +2,19 @@
 
 }
 
-#primary-info-header {
+#primary-info-header, #primary-info-details {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 1em;
+}
+
+#primary-info-header {
+    
 }
 
 #primary-info-details {
-    display: flex;
-    justify-content: space-between;
-    gap: 1em;
+
 }
 
 #primary-info-details-counts {

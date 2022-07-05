@@ -37,7 +37,7 @@ body {
         "footer footer";
 }
 
-header, #sidenav-header, #sidenav-content, main, footer {
+header, #sidenav-header, #sidenav-content, #main-content, footer {
     padding: 1.2rem;
 }
 
@@ -170,7 +170,17 @@ a:active {
 
 /* Video Player */
 
+/* max-height set in code */
+#video-player-container {
+    margin: 0;
+    padding: 0;
+}
+
 #video-player {
+    
+}
+
+#video-player-set-aspect-ratio {
     position: relative;
     width: 100%;
     padding-top: 56.25%;
@@ -206,6 +216,12 @@ a:active {
 
 .hamburger-icon i::before {
     
+}
+
+/* Misc */
+
+p {
+    margin: 1em 0;
 }
 
 /* Media Queries */

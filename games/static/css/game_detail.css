@@ -1,0 +1,8 @@
+#game-cover {
+    width: 25vw;
+}
+
+#game-cover img {
+    width: 100%;
+    height: auto;
+}
