@@ -6,6 +6,7 @@ from .models import Developer, Game, Platform, Developer
 
 class GameListView(generic.ListView):
     model = Game
+    paginate_by = 20
 
 class GameDetailView(generic.DetailView):
     model = Game
@@ -16,6 +17,7 @@ def game_detail_slug_view(request, stub):
 
 class PlatformListView(generic.ListView):
     model = Platform
+    paginate_by = 20
 
 class PlatformDetailView(generic.DetailView):
     model = Platform
@@ -26,6 +28,7 @@ def platform_detail_slug_view(request, stub):
 
 class DeveloperListView(generic.ListView):
     model = Developer
+    paginate_by = 20
 
 class DeveloperDetailView(generic.DetailView):
     model = Developer

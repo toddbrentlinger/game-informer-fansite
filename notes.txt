@@ -2,6 +2,10 @@ TODO:
 
 6/29/22
 
+- Add 'collection' or 'franchise' field to Game and in game detail page, show same series games.
+
+- Show related Games played in game detail page using fields genres, etc.
+
 - Save Article.content as JSON object to hold array of strings representing each 
 paragraph of article.
 

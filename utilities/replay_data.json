@@ -8014,7 +8014,7 @@
     "fandomWikiURL": "/wiki/Replay:_Toy_Story_1,_2_%26_3",
     "mainSegmentGamesAdv": [
       {
-        "title": "Toy Story 1",
+        "title": "Toy Story",
         "system": "Supers NES",
         "yearReleased": "1995"
       },
@@ -12445,7 +12445,7 @@
         "yearReleased": "1990-1996"
       },
       {
-        "title": "Vampire: Master of Darkness",
+        "title": "Master of Darkness",
         "system": "Game Gear",
         "yearReleased": "1990-1996"
       },
@@ -21286,7 +21286,7 @@
         "yearReleased": "1998"
       },
       {
-        "title": "The Adventures of Batman & Robin (RR)",
+        "title": "The Adventures of Batman & Robin",
         "system": "Super NES",
         "yearReleased": "1994"
       }
@@ -25957,7 +25957,7 @@
     "airDate": "8/22/15",
     "videoLength": "1:04:19",
     "middleSegment": "AD",
-    "middleSegmentContent": "Battletankx Ad",
+    "middleSegmentContent": "BattleTanx Ad",
     "secondSegment": "RR",
     "secondSegmentGames": [
       "Escape From Bug Island!"
@@ -34574,11 +34574,11 @@
   },
   {
     "episodeNumber": 199,
-    "episodeTitle": "Replay: Omicron: The Nomad Soul",
+    "episodeTitle": "Replay: Omikron: The Nomad Soul",
     "fandomWikiURL": "/wiki/Replay:_Omicron:_The_Nomad_Soul",
     "mainSegmentGamesAdv": [
       {
-        "title": "Omicron: The Nomad Soul",
+        "title": "Omikron: The Nomad Soul",
         "system": "Dreamcast",
         "yearReleased": "2000"
       }
@@ -44735,7 +44735,7 @@
     "videoLength": "38:51",
     "secondSegment": "RR",
     "secondSegmentGames": [
-      "Power Rangers: Light Speed Rescue"
+      "Power Rangers: Lightspeed Rescue"
     ],
     "season": 1,
     "details": {
@@ -46535,12 +46535,12 @@
     "videoLength": "41:23",
     "secondSegment": "RR",
     "secondSegmentGames": [
-      "DinoCity"
+      "Dino City"
     ],
     "season": 1,
     "details": {
       "description": [
-        "Donkey Kong Country is the featured game in the 75th episode of Replay. The Replay Roulette for this episode features DinoCity.",
+        "Donkey Kong Country is the featured game in the 75th episode of Replay. The Replay Roulette for this episode features Dino City.",
         "This episode is hosted by Dan Ryckert, and features Andrew Reiner, Tim Turi, and Jeff Cork."
       ],
       "external_links": [
@@ -49998,12 +49998,12 @@
     "videoLength": "41:41",
     "secondSegment": "RR",
     "secondSegmentGames": [
-      "Firefighter F.D. 18"
+      "Firefighter F.D.18"
     ],
     "season": 1,
     "details": {
       "description": [
-        "ObsCure is the title game for the forty-first episode of Replay. The Replay Roulette for this episode is Firefighter F.D. 18.",
+        "ObsCure is the title game for the forty-first episode of Replay. The Replay Roulette for this episode is Firefighter F.D.18.",
         "The host for this episode is Tim Turi and features Andrew Reiner, Jeff Cork, and Jeff Marchiafava."
       ],
       "external_links": [
@@ -50021,7 +50021,7 @@
         },
         {
           "href": "http://en.wikipedia.org/wiki/Firefighter_F.D.18",
-          "title": "Firefighter F.D. 18"
+          "title": "Firefighter F.D.18"
         }
       ],
       "system": [

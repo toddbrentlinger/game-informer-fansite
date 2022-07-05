@@ -225,11 +225,16 @@ def main():
 
     pprint.pprint(
         igdb.get_game_data(
-            'Splatterhouse: Wanpaku Grafitti', 
+            'Uncharted 2: Among Thieves',
             None,
-            fields='*, involved_companies.*, involved_companies.company.*, platforms.*'
+            fields='cover.*,first_release_date,genres.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,screenshots.*,slug,storyline,summary,url',
+            exclude='involved_companies.company.published, involved_companies.company.developed'
         )[0], 
         indent=2
+    )
+
+    pprint.pprint(
+        igdb.get_platform_data('Nintendo 64', '*,platform_logo.*')[0]
     )
     return
 
