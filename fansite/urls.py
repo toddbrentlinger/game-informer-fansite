@@ -14,12 +14,7 @@ urlpatterns = [
     path('replay/segments/', views.SegmentTypeListView.as_view(), name='segments'),
     path('replay/segments/<int:pk>', views.SegmentTypeDetailView.as_view(), name='segment-type-detail'),
 
-    # People
-    path('people/', views.PersonListView.as_view(), name='people'),
-    path('people/<int:pk>/', views.PersonDetailView.as_view(), name='person-detail'),
-
     # Regex
     re_path(r'replay/segments/(?P<stub>[-\w]+)/$', views.segment_type_detail_slug_view, name='segment-type-detail-slug'),
     re_path(r'replay/(?P<stub>[-\w]+)/$', views.replay_episode_detail_slug_view, name='replay-detail-slug'),
-    re_path(r'people/(?P<stub>[-\w]+)/$', views.person_detail_slug_view, name='person-detail-slug'),
 ]

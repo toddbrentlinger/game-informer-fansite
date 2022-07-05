@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'games.apps.GamesConfig',
     'fansite.apps.FansiteConfig',
+    'people.apps.PeopleConfig',
 ]
 
 MIDDLEWARE = [

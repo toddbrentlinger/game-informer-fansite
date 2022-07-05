@@ -23,6 +23,7 @@ def index(request):
 
 class ReplayEpisodeListView(generic.ListView):
     model = ReplayEpisode
+    paginate_by = 20
 
 class ReplayEpisodeDetailView(generic.DetailView):
     model = ReplayEpisode
@@ -49,6 +50,7 @@ def replay_episode_detail_slug_view(request, stub):
 
 class SegmentTypeListView(generic.ListView):
     model = SegmentType
+    paginate_by = 20
 
 class SegmentTypeDetailView(generic.DetailView):
     model = SegmentType
@@ -56,13 +58,3 @@ class SegmentTypeDetailView(generic.DetailView):
 def segment_type_detail_slug_view(request, stub):
     segmenttype = get_object_or_404(SegmentType, slug=stub)
     return render(request, 'fansite/segmenttype_detail.html', context={'segmenttype': segmenttype})
-
-class PersonListView(generic.ListView):
-    model = Person
-
-class PersonDetailView(generic.DetailView):
-    model = Person
-
-def person_detail_slug_view(request, stub):
-    person = get_object_or_404(Person, slug=stub)
-    return render(request, 'fansite/person_detail.html', context={'person': person})

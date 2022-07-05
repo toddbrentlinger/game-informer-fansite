@@ -1,12 +1,8 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import Thumbnail, YouTubeVideo, Person, Staff, StaffPosition, StaffPositionInstance, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
+from .models import Thumbnail, YouTubeVideo, Article, SegmentType, Segment, ExternalLink, Heading, HeadingInstance, ReplaySeason, ReplayEpisode, SuperReplay, SuperReplayEpisode
 
 # Inlines
-
-class StaffPositionInstanceInline(admin.TabularInline):
-    model = StaffPositionInstance
-    extra = 0
 
 class HeadingInstanceInline(admin.TabularInline):
     model = HeadingInstance
@@ -30,35 +26,6 @@ class ThumbnailAdmin(admin.ModelAdmin):
 class YouTubeVideoAdmin(admin.ModelAdmin):
     list_display = ('title', 'youtube_id', 'views', 'likes', 'dislikes')
     search_fields = ['title']
-
-# @admin.register(Game)
-# class GameAdmin(admin.ModelAdmin):
-#     list_display = ('title', 'system', 'release_year')
-#     list_filter = ('system', 'release_year')
-#     search_fields = ['title']
-
-# @admin.register(Guest)
-# class GuestAdmin(admin.ModelAdmin):
-#     search_fields = ['first_name', 'last_name']
-
-@admin.register(Person)
-class PersonAdmin(admin.ModelAdmin):
-    prepopulated_fields = {'slug': ('full_name',)}
-
-@admin.register(StaffPosition)
-class StaffPositionAdmin(admin.ModelAdmin):
-    search_fields = ['title']
-    inlines = [StaffPositionInstanceInline,]
-
-@admin.register(StaffPositionInstance)
-class StaffPositionInstanceAdmin(admin.ModelAdmin):
-    list_filter = ('position__title',)
-    search_fields = ['staff__person__full_name', 'staff__person__short_name', 'position__title']
-
-@admin.register(Staff)
-class StaffAdmin(admin.ModelAdmin):
-    search_fields = ['person__full_name']
-    inlines = [StaffPositionInstanceInline,]
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
