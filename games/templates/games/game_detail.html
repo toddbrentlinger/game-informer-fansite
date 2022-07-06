@@ -1,31 +1,61 @@
 {% extends "base_generic.html" %}
 
+{% load static %}
+
 {% block title %}
     <title>Game Informer Fansite - Game - {{ game.name }}</title>
 {% endblock %}
 
+{% block custom-css %}
+    <link rel="stylesheet" href="{% static 'css/game_detail.css' %}">
+{% endblock %}
+
 {% block content %}
-    <h1>{{ game.name }}</h1>
+    <h1 id="game-name">{{ game.name }}</h1>
 
-    {% if game.cover %}
-        <div id="game-cover">
-            <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" height="{{ game.cover.height }}" width="{{ game.cover.width }}" alt="Cover image of video game {{ game.name }}">
+    <div id="cover-and-details-container">
+        {% if game.cover %}
+            <div id="game-cover">
+                <img 
+                    src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" 
+                    width="{{ game.cover.width }}" height="{{ game.cover.height }}"
+                    alt="Cover image of video game {{ game.name }}">
+            </div>
+        {% endif %}
+        <div id="game-details">
+            <p><strong>Platform: </strong><a href="{{ game.platform.get_absolute_url }}">{{ game.platform.name }}</a></p>
+            <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
+            <p><strong>Developer: </strong><a href="{{ game.developer.get_absolute_url }}">{{ game.developer.name }}</a></p>
+            <p><strong>Genres: </strong>{{ game.genres.all|join:", " }}</p>
         </div>
-    {% endif %}
+    </div>
 
-    <p><strong>Platform: </strong><a href="{{ game.platform.get_absolute_url }}">{{ game.platform.name }}</a></p>
-    <p><strong>Developer: </strong><a href="{{ game.developer.get_absolute_url }}">{{ game.developer.name }}</a></p>
-    <p><strong>Genres: </strong>{{ game.genres.all|join:", " }}</p>
-    <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
     {% if game.summary %}
         <p><strong>Summary: </strong>{{ game.summary|linebreaks }}</p>
     {% endif %}
+
     {% if game.storyline %}
         <p><strong>Storyline: </strong>{{ game.storyline|linebreaks }}</p>
     {% endif %}
+
     <p><strong>IGDB URL: </strong><a href="{{ game.url }}" target="_blank">{{ game.name }}</a></p>
-    <p><strong>Slug: </strong>{{ game.slug }}</p>
-    <p><strong>IGDB ID: </strong>{{ game.igdb_id }}</p>
+    <!-- <p><strong>Slug: </strong>{{ game.slug }}</p>
+    <p><strong>IGDB ID: </strong>{{ game.igdb_id }}</p> -->
+
+    {% if game.screenshot_set.all %}
+        <h2>Screenshots:</h2>
+        <div id="screenshot-gallery">
+            {% for screenshot in game.screenshot_set.all %}
+            <div class="screenshot">
+                <img 
+                    src="https://images.igdb.com/igdb/image/upload/t_thumb_widescreen_large/{{ screenshot.image.image_id }}.jpg" 
+                    width="{{ screenshot.image.width }}" height="{{ screenshot.image.height }}" 
+                    alt="Screenshot #{{ forloop.counter }} for video game {{ game.name }}"
+                >
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     <h2>Replay Episodes:</h2>
 

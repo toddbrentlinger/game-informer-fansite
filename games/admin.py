@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Genre, Developer, ImageIGDB, Platform, Game
+from .models import Genre, Developer, ImageIGDB, Platform, Game, Screenshot
 
 # Register your models here.
 
@@ -26,3 +26,7 @@ class GameAdmin(admin.ModelAdmin):
     list_filter = ('platform__abbreviation', 'release_date')
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
+
+@admin.register(Screenshot)
+class ScreenshotAdmin(admin.ModelAdmin):
+    pass
