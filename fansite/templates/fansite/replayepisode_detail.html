@@ -62,28 +62,21 @@
         </p>
     </div>
 
-    <!-- <hr>
-
-    <div class="thumbnail-container">
-        <div class="thumbnail">
-            <img
-                srcset="
-                    {% for thumbnail in replayepisode.youtube_video.thumbnails.all %}
-                        {{ thumbnail.create_srcset_entry }}{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                "
-                src="{{ replayepisode.youtube_video.thumbnails }}"
-                alt="Thumbnail image for Replay episode titled '{{ replayepisode.title }}'"
-            >
-        </div>
-    </div> -->
-
     <hr>
 
     <h2>Main Segment Games:</h2>
-    <ul>
+    <ul id="main-segment-games">
         {% for game in replayepisode.main_segment_games.all %}
-            <li><a href="{{ game.get_absolute_url }}">{{ game.name }}</a></li>
+            <li>
+                <a href="{{ game.get_absolute_url }}">
+                    {% if game.cover %}
+                        <div id="game-cover">
+                            <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" height="{{ game.cover.height }}" width="{{ game.cover.width }}" alt="Cover image of video game {{ game.name }}">
+                        </div>
+                    {% endif %}
+                    {{ game.name }}
+                </a>
+            </li>
         {% endfor %}
     </ul>
 
