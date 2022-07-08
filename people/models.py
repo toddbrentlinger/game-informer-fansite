@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.template.defaultfilters import slugify
+from fansite.models import Thumbnail
 
 # Create your models here.
 
@@ -25,8 +26,11 @@ class Person(models.Model):
     full_name = models.CharField(max_length=100, verbose_name='Full Name', help_text='Enter full name (maximum 100 characters).')
     short_name = models.CharField(max_length=50, blank=True, verbose_name='Short Name', help_text='Enter optional short name variation for usage in correspondence (maximum 50 characters).')
     slug = models.SlugField(max_length=100, unique=True, null=False)
-    # description = models.TextField()
-    # thumbnail = models.ForeignKey(Thumbnail)
+    description = models.TextField(blank=True)
+    headings = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
+    thumbnail = models.ForeignKey(Thumbnail, blank=True, null=True, on_delete=models.SET_NULL)
+    infobox_details = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
+
     # gallery 
     # trivia
     # social_media: Inside SocialMediaInst, person = models.ForeignKey(Person)
