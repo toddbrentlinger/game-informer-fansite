@@ -24,8 +24,8 @@ class Thumbnail(models.Model):
 
     # Fields
 
-    quality = models.CharField(choices=QualityType.choices, max_length=20, help_text='Enter quality of thumbnail.')
-    url = models.URLField(verbose_name='URL', help_text='Enter URL of thumbnail.')
+    quality = models.CharField(choices=QualityType.choices, default=QualityType.DEFAULT, max_length=20, help_text='Enter quality of thumbnail.')
+    url = models.URLField(unique=True, verbose_name='URL', help_text='Enter URL of thumbnail.')
     width = models.PositiveSmallIntegerField(help_text='Enter width of thumbnail')
     height = models.PositiveSmallIntegerField(help_text='Enter height of thumbnail')
     

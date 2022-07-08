@@ -8,12 +8,14 @@
     <h1>{{ developer.name }}</h1>
 
     <p><strong>Country: </strong>{{ developer.country }}</p>
+
     {% if developer.description %}
         <p><strong>Description: </strong>{{ developer.description }}</p>
     {% endif %}
+
     <p><strong>URL: </strong><a href="{{ developer.url }}">{{ developer.name }}</a></p>
 
-    <h2>Games By Publisher Played By Game Informer:</h2>
+    <h2>{{ developer.name }} Games Played By Game Informer:</h2>
 
     {% for game in developer.game_set.all %}
         <hr>

@@ -14,7 +14,7 @@
     {% endif %}
     <p><strong>IGDB URL: </strong><a href="{{ platform.url }}">{{ platform.name }}</a></p>
 
-    <h2>Games By Platform Played By Game Informer:</h2>
+    <h2>{{ platform.name }} Games Played By Game Informer:</h2>
 
     {% for game in platform.game_set.all %}
         <hr>

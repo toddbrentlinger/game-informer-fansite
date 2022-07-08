@@ -11,8 +11,6 @@
 {% endblock %}
 
 {% block content %}
-    <h1 id="game-name">{{ game.name }}</h1>
-
     <div id="cover-and-details-container">
         {% if game.cover %}
             <div id="game-cover">
@@ -23,6 +21,7 @@
             </div>
         {% endif %}
         <div id="game-details">
+            <h1 id="game-name">{{ game.name }}</h1>
             <p><strong>Platform: </strong><a href="{{ game.platform.get_absolute_url }}">{{ game.platform.name }}</a></p>
             <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
             <p><strong>Developer: </strong><a href="{{ game.developer.get_absolute_url }}">{{ game.developer.name }}</a></p>
