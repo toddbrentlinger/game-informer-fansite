@@ -1,7 +1,13 @@
 {% extends "base_generic.html" %}
 
+{% load static %}
+
 {% block title %}
     <title>Game Informer Fansite - Person - {{ person.full_name }}</title>
+{% endblock %}
+
+{% block custom-css %}
+    <link rel="stylesheet" href="{% static 'css/person_detail.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -11,19 +17,59 @@
         <p><strong>Short Name: </strong>{{ person.short_name }}</p>
     {% endif %}
 
+    <div id="description">
+        {% if person.thumbnail %}
+            <img
+                src="{{ person.thumbnail.url }}"
+                width="{{ person.thumbnail.width }}"
+                height="{{ person.thumbnail.height }}"
+                alt="Thumbnail image of {{ person.full_name }}"
+            >
+        {% endif %}
+        {% if person.description %}
+            <p>{{ person.description|linebreaks }}</p>
+        {% endif %}
+    </div>
+
+    {% if person.headings %}
+        <hr>
+
+        {% for key, value in person.headings.items %}
+            <h2>{{ key }}:</h2>
+            {% for item in value %}
+                <p>{{ item }}</p>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+    <hr>
+
     <h2>Replay Episodes:</h2>
-    <h3>Host: </h3>
+    <p>All Episodes Length: {{ replay_episodes|length }}</p>
+    {% for replayepisode in replay_episodes %}
+        <hr>
+        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a> - {{ replayepisode.airdate }}</p>
+    {% empty %}
+        <p>No Replay episodes!</p>
+    {% endfor %}
+
+    <hr>
+
+    <!-- <h3>Host ({{ person.fansite_replayepisode_host_related.all|length }}): </h3>
     {% for replayepisode in person.fansite_replayepisode_host_related.all %}
         <hr>
         <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
     {% empty %}
         <p>No hosted Replay episodes!</p>
     {% endfor %}
-    <h3>Featuring: </h3>
+
+    <hr>
+
+    <h3>Featuring ({{ person.fansite_replayepisode_featuring_related.all|length }}): </h3>
     {% for replayepisode in person.fansite_replayepisode_featuring_related.all %}
         <hr>
         <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
     {% empty %}
         <p>No featuring Replay episodes!</p>
-    {% endfor %}
+    {% endfor %} -->
 {% endblock %}
