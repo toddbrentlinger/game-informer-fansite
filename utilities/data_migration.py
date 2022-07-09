@@ -14,7 +14,7 @@ from utilities.data_migration_constants import SEGMENT_TYPES, STAFF # Separate f
 from utilities.misc import create_total_time_message # misc utility functions
 from django.template.defaultfilters import slugify
 
-def get_game_inst(Game, Platform, Developer, Genre, ImageIGDB, Screenshot, igdb, name, platform_name = None, year_released = None):
+def get_game_inst(Game, Platform, Developer, Genre, ImageIGDB, Screenshot, Thumbnail, igdb, name, platform_name = None, year_released = None):
     ''' 
     Returns specific instance of Game model.
 
@@ -276,15 +276,15 @@ def get_game_inst(Game, Platform, Developer, Genre, ImageIGDB, Screenshot, igdb,
                     # inside create_game_model()
                     except Platform.DoesNotExist:
                         image_igdb_inst = None
-                        if 'platform_logo' in platform:
+                        if 'platform_logo' in platform_data[0]:
                             try:
-                                image_igdb_inst = ImageIGDB.objects.get(pk=platform_data[0]['id'])
+                                image_igdb_inst = ImageIGDB.objects.get(pk=platform_data[0]['platform_logo']['id'])
                             except ImageIGDB.DoesNotExist:
                                 image_igdb_inst = ImageIGDB.objects.create(
-                                    id=platform_data[0]['id'],
-                                    image_id=platform_data[0]['image_id'],
-                                    width=platform_data[0]['width'] if 'width' in platform_data[0] else None,
-                                    height=platform_data[0]['height'] if 'height' in platform_data[0] else None
+                                    id=platform_data[0]['platform_logo']['id'],
+                                    image_id=platform_data[0]['platform_logo']['image_id'],
+                                    width=platform_data[0]['platform_logo']['width'] if 'width' in platform_data[0]['platform_logo'] else None,
+                                    height=platform_data[0]['platform_logo']['height'] if 'height' in platform_data[0]['platform_logo'] else None
                                 )
 
                         platform = Platform()
@@ -391,13 +391,14 @@ def get_game_inst(Game, Platform, Developer, Genre, ImageIGDB, Screenshot, igdb,
     # # If reach here, could not find game
     # return None
 
-def get_person_inst(Person, Staff, person_data):
+def get_person_inst(Person, Staff, Thumbnail, person_data):
     '''
     Get existing Person model from database or add a new model instance if not in database.
 
     Parameters:
         Person (Person): Historic version of Person model
         Staff (Staff): Historic version of Staff model
+        Thumbnail (Thumbnail): Historic version of Thumbnail model
         person_data (dict): Dictionary of data about specific person
         person_data.name (str): Name of person
 
@@ -417,11 +418,11 @@ def get_person_inst(Person, Staff, person_data):
         return Person.objects.get(full_name=person_data['name'])
     except Person.DoesNotExist:
         try:
-            thumbnail = Thumbnail.objects.get(url=person_data['image']['srcset'][0])
+            thumbnail_inst = Thumbnail.objects.get(url=person_data['image']['srcset'][0])
         except KeyError:
-            thumbnail = None
+            thumbnail_inst = None
         except Thumbnail.DoesNotExist:
-            thumbnail = Thumbnail.objects.create(
+            thumbnail_inst = Thumbnail.objects.create(
                 url=person_data['image']['srcset'][0],
                 width=int(person_data['image']['width']),
                 height=int(person_data['image']['height'])
@@ -430,8 +431,8 @@ def get_person_inst(Person, Staff, person_data):
         person = Person.objects.create(
             full_name=person_data['name'],
             slug=slugify(person_data['name']),
-            thumbnail=thumbnail,
-            description=person_data['description'] if 'description' in person_data else None,
+            thumbnail=thumbnail_inst,
+            description='\n\n'.join(person_data['description']) if 'description' in person_data else '',
             headings=person_data['headings'] if 'headings' in person_data else None,
             infobox_details=person_data['info_box_details'] if 'info_box_details' in person_data else None
         )
@@ -440,7 +441,7 @@ def get_person_inst(Person, Staff, person_data):
             Staff.objects.create(person=person)
         return person
 
-def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, ImageIGDB, Screenshot, platform, igdb, segmentType, segmentContent):
+def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, ImageIGDB, Screenshot, Thumbnail, platform, igdb, segmentType, segmentContent):
     '''
     Creates instance of Segment model, saves to database, and returns.
 
@@ -485,6 +486,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                         Genre=Genre,
                         ImageIGDB=ImageIGDB,
                         Screenshot=Screenshot,
+                        Thumbnail=Thumbnail,
                         igdb=igdb, 
                         name=game_title, 
                         platform_name=platform, 
@@ -513,6 +515,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                             Genre=Genre,
                             ImageIGDB=ImageIGDB,
                             Screenshot=Screenshot,
+                            Thumbnail=Thumbnail,
                             igdb=igdb, 
                             name='Syphone Filter',
                             platform_name=platform, 
@@ -538,6 +541,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                                 Genre=Genre,
                                 ImageIGDB=ImageIGDB,
                                 Screenshot=Screenshot,
+                                Thumbnail=Thumbnail,
                                 igdb=igdb, 
                                 name=title_split[1], 
                                 platform_name=platform, 
@@ -560,6 +564,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                                 Genre=Genre,
                                 ImageIGDB=ImageIGDB,
                                 Screenshot=Screenshot,
+                                Thumbnail=Thumbnail,
                                 igdb=igdb, 
                                 name=game, 
                                 platform_name=platform, 
@@ -697,12 +702,12 @@ def createReplayEpisodeFromJSON(replayData, apps):
     if 'details' in replayData:
         # Host - replayData.details.host (ForeignKey)
         if 'host' in replayData['details'] and replayData['details']['host']:
-            replay.host = get_person_inst(Person, Staff, {'name': replayData['details']['host'][0]})
+            replay.host = get_person_inst(Person, Staff, Thumbnail, {'name': replayData['details']['host'][0]})
 
         # Featuring - replayData.details.featuring (ManyToMany)
         if 'featuring' in replayData['details'] and replayData['details']['featuring']:
             for personName in replayData['details']['featuring']:
-                person = get_person_inst(Person, Staff, {'name': personName})
+                person = get_person_inst(Person, Staff, Thumbnail, {'name': personName})
                 replay_manytomany_instances_dict['featuring'].append(person)
 
     # YouTube Video - replayData.youtube (OneToOne)
@@ -815,6 +820,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
                 Genre=Genre,
                 ImageIGDB=ImageIGDB,
                 Screenshot=Screenshot,
+                Thumbnail=Thumbnail,
                 igdb=igdb, 
                 name=game_name, 
                 platform_name=platform_name, 
@@ -868,7 +874,21 @@ def createReplayEpisodeFromJSON(replayData, apps):
         
         if segmentContent:
             replay_manytomany_instances_dict['other_segments'].append(
-                get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, ImageIGDB, Screenshot, platform, igdb, segmentType, [segmentContent])
+                get_segment_inst(
+                    Segment, 
+                    SegmentType, 
+                    Game, 
+                    Platform, 
+                    Developer, 
+                    Genre, 
+                    ImageIGDB, 
+                    Screenshot, 
+                    Thumbnail,
+                    platform, 
+                    igdb, 
+                    segmentType, 
+                    [segmentContent]
+                )
             )
 
     # replayData.secondSegment, replayData.secondSegmentGames
@@ -878,7 +898,21 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
         if segmentContent:
             replay_manytomany_instances_dict['other_segments'].append(
-                get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, ImageIGDB, Screenshot, platform, igdb, segmentType, segmentContent)
+                get_segment_inst(
+                    Segment, 
+                    SegmentType, 
+                    Game, 
+                    Platform, 
+                    Developer, 
+                    Genre, 
+                    ImageIGDB, 
+                    Screenshot, 
+                    Thumbnail,
+                    platform, 
+                    igdb, 
+                    segmentType, 
+                    segmentContent
+                )
             )
     
     # Article - replayData.article  (OneToOne)
@@ -890,7 +924,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
 
         # Author - replayData.article.author
         # TODO: Add Staff to author field
-        article.author = get_person_inst(Person, Staff, {'name': replayData['article']['author']})
+        article.author = get_person_inst(Person, Staff, Thumbnail, {'name': replayData['article']['author']})
 
         # Datetime - replayData.article.date
         # " on Sep 26, 2015 at 03:00 AM"
@@ -952,14 +986,14 @@ def create_person_from_json(person_data, apps):
     # Cannot import models directly as it may be a newer version
     # than this migration expects. Use historical versions instead.
     
-    # Fansite app
+    Thumbnail = apps.get_model('fansite', 'Thumbnail')
     Person = apps.get_model('people', 'Person')
     SocialMediaInst = apps.get_model('people', 'SocialMediaInst')
     Staff = apps.get_model('people', 'Staff')
     StaffPosition = apps.get_model('people', 'StaffPosition')
     StaffPositionInstance = apps.get_model('people', 'StaffPositionInstance')
 
-    get_person_inst(Person, Staff, person_data)
+    get_person_inst(Person, Staff, Thumbnail, person_data)
 
 def initialize_people_database(apps, schema_editor):
     '''
@@ -980,12 +1014,12 @@ def initialize_people_database(apps, schema_editor):
         for person_data in reversed(people_data):
             create_person_from_json(person_data, apps)
 
-            curr_people_count += 1
+            curr_count += 1
 
-            avg_seconds_per_replay = (time.time() - start_time) / curr_count
-            est_seconds_remaining = math.floor(avg_seconds_per_replay * (total_count - curr_people_count))
+            avg_seconds_per_item = (time.time() - start_time) / curr_count
+            est_seconds_remaining = math.floor(avg_seconds_per_item * (total_count - curr_count))
 
-            print(f'Person: {person_data["name"]} - {curr_people_count}/{total_count} Completed! - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}')
+            print(f'Person: {person_data["name"]} - {curr_count}/{total_count} Completed! - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}')
 
 def initialize_database(apps, schema_editor):
     initialize_people_database(apps, schema_editor)
@@ -1022,9 +1056,10 @@ def initialize_database(apps, schema_editor):
     class Migration(migrations.Migration):
 
         dependencies = [
-            ('fansite', '0002_remove_replayepisode_thumbnails_and_more'),
-            # added dependency to enable models from 'game' app to initialize_database method
-            ('games', '0003_alter_game_release_date'),
+            ('fansite', '0001_initial'),
+            # added dependencies to enable models from other apps to be available initialize_database method
+            ('games', '0001_initial'),
+            ('people', '0001_initial'),
         ]
 
         operations = [
