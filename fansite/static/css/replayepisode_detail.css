@@ -10,11 +10,11 @@
 }
 
 #primary-info-header {
-
+    font-size: 2.6rem;
 }
 
 #primary-info-details {
-
+    margin-top: 1em;
 }
 
 #primary-info-details-counts {
@@ -32,22 +32,108 @@
     justify-content: space-between;
 }
 
-#main-segment-games {
+#replay-episode-segments {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 10em);
+    grid-auto-flow: column;
+    justify-items: center;
 }
 
-#main-segment-games li {
-    
+#replay-episode-segment-main {
+
 }
 
-#main-segment-games li a {
+.replay-episode-segment-inst {
+    display: inline-block;
+    border: 2px solid var(--base-white);
+}
+
+.replay-episode-segment-inst h2 {
+    text-align: center;
+}
+
+.segment-games {
+    display: flex;
+}
+
+.segment-games li {
+    width: 12em;
+}
+
+.segment-games li a {
     display: flex;
     flex-direction: column;
     text-align: center;
 }
 
-#main-segment-games li a img {
+.segment-games li a img {
     width: 100%;
     height: auto;
+}
+
+/* Gallery */
+
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 180px);
+    justify-content: space-around;
+}
+
+.gallery figure {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.gallery figure img {
+    width: 100%;
+    height: auto;
+}
+
+.gallery figure figcaption {
+    text-align: center;
+}
+
+/* Article */
+
+.replay-episode-article {
+    
+}
+
+.replay-episode-article > * {
+    margin: 1rem 0;
+}
+
+.replay-episode-article > h2 {
+    font-size: 150%;
+    display: inline-block;
+}
+
+.replay-episode-article > span {
+    font-size: 90%;
+    display: inline-block;
+    margin-left: 1em;
+}
+
+.replay-episode-article > p {
+    text-indent: 5ch;
+}
+
+/* Heading */
+
+.replay-episode-heading {
+
+}
+
+.replay-episode-heading h2 {
+    font-size: 2rem;
+}
+
+.replay-episode-heading p {
+    
+}
+
+/* Misc */
+
+#main-content {
+    margin-top: 0;
 }

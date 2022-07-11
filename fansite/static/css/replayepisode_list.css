@@ -1,0 +1,18 @@
+.replay-episode {
+    display: grid;
+    grid-template-columns: 20vw 1fr;
+}
+
+.replay-episode-thumbnail {
+    width: 100%;
+    height: auto;
+}
+
+.replay-episode-details {
+
+}
+
+.replay-episode-details-header {
+    display: flex;
+    justify-content: space-between;
+}

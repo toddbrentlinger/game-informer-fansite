@@ -32,17 +32,17 @@
     <div id="primary-info">
         <div id="primary-info-header">
             <h1>{{ replayepisode.title }}</h1>
-            <p>S{{ season_num }} E{{ season_episode_num }} (#{{ replayepisode.number }})</p>
+            <span>S{{ season_num }} E{{ season_episode_num }} (#{{ replayepisode.number }})</span>
         </div>
 
         <div id="primary-info-details">
             <div id="primary-info-details-time">
-                <p><i class="fas fa-calendar-alt"></i> {{ replayepisode.airdate }}</p>
-                <p><i class="fas fa-clock"></i> {{ replayepisode.runtime }}</p>
+                <span><i class="fas fa-calendar-alt"></i> {{ replayepisode.airdate }}</span>
+                <span><i class="fas fa-clock"></i> {{ replayepisode.runtime }}</span>
             </div>
             <div id="primary-info-details-counts">
-                <p><i class="fas fa-eye"></i> {{ replayepisode.youtube_video.views }} views</p>
-                <p><i class="fas fa-thumbs-up"></i> {{ replayepisode.youtube_video.likes }}</p>
+                <span><i class="fas fa-eye"></i> {{ replayepisode.youtube_video.views }} views</span>
+                <span><i class="fas fa-thumbs-up"></i> {{ replayepisode.youtube_video.likes }}</span>
             </div>
         </div>
     </div>
@@ -64,68 +64,112 @@
 
     <hr>
 
-    <h2>Main Segment Games:</h2>
-    <ul id="main-segment-games">
-        {% for game in replayepisode.main_segment_games.all %}
-            <li>
-                <a href="{{ game.get_absolute_url }}">
-                    {% if game.cover %}
-                        <div id="game-cover">
-                            <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" height="{{ game.cover.height }}" width="{{ game.cover.width }}" alt="Cover image of video game {{ game.name }}">
-                        </div>
-                    {% endif %}
-                    {{ game.name }}
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
+    <div id="replay-episode-segments">
+        <div class="replay-episode-segment-inst" id="replay-episode-segment-main">
+            <h2>Main Segment</h2>
+            <ul class="segment-games">
+                {% for game in replayepisode.main_segment_games.all %}
+                    <li>
+                        <a href="{{ game.get_absolute_url }}">
+                            {% if game.cover %}
+                                <div class="game-cover">
+                                    <img 
+                                        src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" 
+                                        width="{{ game.cover.width }}" 
+                                        height="{{ game.cover.height }}"
+                                        alt="Cover image of video game {{ game.name }}"
+                                        loading="lazy"
+                                    >
+                                </div>
+                            {% endif %}
+                            {{ game.name }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
 
-    {% if replayepisode.other_segments.all %}
-        <hr>
-
-        <h2>Other Segments:</h2>
-        <ul>
+        {% if replayepisode.other_segments.all %}
             {% for segment in replayepisode.other_segments.all %}
-                <li>
-                    <p><strong>Type: </strong><a href="{{ segment.type.get_absolute_url }}">{{ segment.type }}</a></p>
-                    <p>
-                        <strong>Games: </strong>
-                        {% for game in segment.games.all %}
-                            <a href="{{ game.get_absolute_url }}">{{ game }}</a>{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </p>
-                    {% if segment.description %}
-                        <p><strong>Description: </strong>{{ segment.description }}</p>
+                <div class="replay-episode-segment-inst" >
+                    <h2>
+                        <a href="{{ segment.type.get_absolute_url }}">{{ segment.type }}</a>
+                    </h2>
+                    {% if segment.games.all %}
+                        <ul class="segment-games">
+                            {% for game in segment.games.all %}
+                                <li>
+                                    <a href="{{ game.get_absolute_url }}">
+                                        {% if game.cover %}
+                                            <div id="game-cover">
+                                                <img src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" height="{{ game.cover.height }}" width="{{ game.cover.width }}" alt="Cover image of video game {{ game.name }}" loading="lazy">
+                                            </div>
+                                        {% endif %}
+                                        {{ game.name }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
-                </li>
+                    {% if segment.description %}
+                        <p>{{ segment.description }}</p>
+                    {% endif %}
+                </div>
             {% endfor %}
-        </ul>
-    {% endif %}
+        {% endif %}
+    </div>
 
     {% if replayepisode.article %}
         <hr>
 
-        <h2>{{ replayepisode.article.title }}</h2>
-        <span>by <a href="{{ replayepisode.article.author.get_absolute_url }}">{{ replayepisode.article.author }}</a> on {{ replayepisode.article.datetime }}</span>
-        <p>{{ replayepisode.article.content }}</p>
+        <div class="replay-episode-article">
+            <h2>{{ replayepisode.article.title }}</h2>
+            <span>by <a href="{{ replayepisode.article.author.get_absolute_url }}">{{ replayepisode.article.author }}</a> on {{ replayepisode.article.datetime }}</span>
+            <p>{{ replayepisode.article.content }}</p>
+        </div>
     {% endif %}
 
     {% if replayepisode.headings %}
-        <hr>
-
         {% if replayepisode.headings.description %}
-            <h2>Description:</h2>
-            {% for entry in replayepisode.headings.description %}
-                <p>{{ entry }}</p>
-            {% endfor %}
+            <hr>
+            <div class="replay-episode-heading">
+                <h2>Description:</h2>
+                {% for entry in replayepisode.headings.description %}
+                    <p>{{ entry }}</p>
+                {% endfor %}
+            </div>
         {% endif %}
 
         {% for key, value in replayepisode.headings.items %}
             {% if key != 'description' %}
-                <h2>{{ key }}:</h2>
-                {% for item in value %}
-                    <p>{{ item }}</p>
-                {% endfor %}
+                <hr>
+                <div class="replay-episode-heading">
+                    <h2>{{ key }}:</h2>
+                    {% if key == "quotes" %}
+                        {% for item in value %}
+                            <p>{{ item }}</p>
+                        {% endfor %}
+                    {% elif key == "gallery" %}
+                        <div class="gallery">
+                            {% for image in value %}
+                                <figure>
+                                    <img
+                                        src="{{ image.src }}"
+                                        width="{{ image.width }}"
+                                        height="{{ image.height }}"
+                                        alt="{{ image.title }}"
+                                        loading="lazy"
+                                    >
+                                    <figcaption>{{ image.caption }}</figcaption>
+                                </figure>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {% for item in value %}
+                            <p>{{ item }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
             {% endif %}
         {% endfor %}
     {% endif %}

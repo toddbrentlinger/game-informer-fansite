@@ -1,7 +1,13 @@
 {% extends "base_generic.html" %}
 
+{% load static %}
+
 {% block title %}
     <title>Game Informer Fansite - Replay</title>
+{% endblock %}
+
+{% block custom-css %}
+    <link rel="stylesheet" href="{% static 'css/replayepisode_list.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -9,8 +15,33 @@
     {% if replayepisode_list %}
     <ul>
         {% for replayepisode in replayepisode_list %}
-        <li>
-            <a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a> ({{ replayepisode.airdate }})
+        <li class="replay-episode">
+            {% if replayepisode.youtube_video and replayepisode.youtube_video.thumbnails %}
+                <img
+                    class="replay-episode-thumbnail"
+                    srcset="{% for thumbnail in replayepisode.youtube_video.thumbnails.all %}{{ thumbnail.create_srcset_entry }}, {% endfor %}"
+                    alt="Thumbnail image for Replay Episode: {{ replayepisode.title }}"
+                    loading="lazy"
+                >
+            {% else %}
+                <p>Default Replay Episode Thumbnail</p>
+            {% endif %}
+            <div class="replay-episode-details">
+                <div class="replay-episode-details-header">
+                    <h2><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></h2>
+                </div>
+                <div class="replay-episode-details-content">
+                    <p><span>Air Date: </span>{{ replayepisode.airdate }}</p>
+                    <p><span>Host: </span><a href="{{ replayepisode.host.get_absolute_url }}">{{ replayepisode.host }}</a></p>
+                    <p>
+                        <span>Featuring: </span>
+                        {% for person in replayepisode.featuring.all %}
+                            <a href="{{ person.get_absolute_url }}">{{ person }}</a>
+                            {% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                </div>
+            </div>
         </li>
         {% endfor %}
     </ul>
