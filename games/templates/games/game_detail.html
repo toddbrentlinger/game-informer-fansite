@@ -12,26 +12,25 @@
 
 {% block content %}
     <div id="cover-and-details-container">
-        {% if game.cover %}
-            <div id="game-cover">
-                <img 
-                    src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" 
-                    width="{{ game.cover.width }}" height="{{ game.cover.height }}"
-                    alt="Cover image of video game {{ game.name }}">
-            </div>
-        {% endif %}
         <div id="game-details">
+            {% if game.cover %}
+                <div id="game-cover">
+                    <img 
+                        src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" 
+                        width="{{ game.cover.width }}" height="{{ game.cover.height }}"
+                        alt="Cover image of video game {{ game.name }}">
+                </div>
+            {% endif %}
             <h1 id="game-name">{{ game.name }}</h1>
             <p><strong>Platform: </strong><a href="{{ game.platform.get_absolute_url }}">{{ game.platform.name }}</a></p>
             <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
             <p><strong>Developer: </strong><a href="{{ game.developer.get_absolute_url }}">{{ game.developer.name }}</a></p>
             <p><strong>Genres: </strong>{{ game.genres.all|join:", " }}</p>
+            {% if game.summary %}
+                <p>{{ game.summary|linebreaks }}</p>
+            {% endif %}
         </div>
     </div>
-
-    {% if game.summary %}
-        <p><strong>Summary: </strong>{{ game.summary|linebreaks }}</p>
-    {% endif %}
 
     {% if game.storyline %}
         <p><strong>Storyline: </strong>{{ game.storyline|linebreaks }}</p>

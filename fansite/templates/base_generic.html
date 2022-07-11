@@ -27,6 +27,13 @@
         </span>
         <!-- <img src="{% static 'img/Game_Informer_logo_(2010-present)_512(dark_mode).png' %}" alt="Game Informer logo"> -->
         <!-- <nav id="topnav">Top Nav</nav> -->
+        <span id="header-search-bar">
+            <i class="fas fa-search fa-lg"></i>
+            <label for="header-search-input">
+                <input type="search" placeholder="Search..." id="header-search-input">
+                <!-- <span>Search</span> -->
+            </label>
+        </span>
     </header>
 
     {% block sidenav %}
@@ -52,8 +59,10 @@
 
     <main>
         {% block videoplayer %}{% endblock %}
+
         <div id="main-content">
             {% block content %}{% endblock %}
+
             {% block pagination %}
                 {% if is_paginated %}
                     <div class="pagination">
