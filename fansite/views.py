@@ -30,11 +30,8 @@ class ReplayEpisodeDetailView(generic.DetailView):
 
 def replay_episode_detail_view(request, pk):
     replayepisode = get_object_or_404(ReplayEpisode, pk=pk)
-    (season_num, season_episode_num) = replayepisode.get_season()
     context = {
-        'replayepisode': replayepisode,
-        'season_num': season_num,
-        'season_episode_num': season_episode_num
+        'replayepisode': replayepisode
     }
     return render(request, 'fansite/replayepisode_detail.html', context=context)
 
