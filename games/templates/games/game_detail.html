@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% load static %}
+{% load replayepisode_tags %}
 
 {% block title %}
     <title>Game Informer Fansite - Game - {{ game.name }}</title>
@@ -59,14 +60,13 @@
 
     {% for replayepisode in game.replayepisode_set.all %}
         <hr>
-        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
-        {% if not forloop.last %},{% endif %}
+        {% replayepisode_basic_display replayepisode %}
     {% endfor %}
 
     {% for segment in game.segment_set.all %}
         {% for replayepisode in segment.replayepisode_set.all %}
-        <hr>
-        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
+            <hr>
+            {% replayepisode_basic_display replayepisode %}
         {% endfor %}
     {% endfor %}
 {% endblock %}

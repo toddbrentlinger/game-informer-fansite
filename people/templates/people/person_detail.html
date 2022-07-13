@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% load static %}
+{% load replayepisode_tags %}
 
 {% block title %}
     <title>Game Informer Fansite - Person - {{ person.full_name }}</title>
@@ -48,7 +49,7 @@
     <p>All Episodes Length: {{ replay_episodes|length }}</p>
     {% for replayepisode in replay_episodes %}
         <hr>
-        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a> - {{ replayepisode.airdate }}</p>
+        {% replayepisode_basic_display replayepisode %}
     {% empty %}
         <p>No Replay episodes!</p>
     {% endfor %}

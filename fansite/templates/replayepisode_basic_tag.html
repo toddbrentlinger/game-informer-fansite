@@ -1,0 +1,124 @@
+{% load static %}
+
+<div class="replay-episode-basic">
+    <div class="replay-episode-basic-header">
+        <h2><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></h2>
+        {% with season_tuple=replayepisode.get_season %}
+            <span title="Season {{ season_tuple.0 }} Episode {{ season_tuple.1 }}">
+                S{{ season_tuple.0 }} E{{ season_tuple.1 }} (#{{ replayepisode.number }})
+            </span>
+        {% endwith %}
+    </div>
+
+    {% if replayepisode.youtube_video and replayepisode.youtube_video.thumbnails %}
+        <div class="replay-episode-basic-thumbnail">
+            <div class="thumbnail-aspect-ratio">
+                <div class="thumbnail-img-container">
+                    <img
+                        srcset="{% for thumbnail in replayepisode.youtube_video.thumbnails.all %}{{ thumbnail.create_srcset_entry }}, {% endfor %}"
+                        alt="Thumbnail image for Replay Episode: {{ replayepisode.title }}"
+                        loading="lazy"
+                    >
+                    <time class="replay-episode-runtime" datetime="">{{ replayepisode.runtime }}</time>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="replay-episode-basic-thumbnail">
+            <div class="thumbnail-aspect-ratio">
+                <div class="thumbnail-img-container">
+                    <img
+                        src="{% static 'img/Replay_new_logo_orig_300x169.png' %}"
+                        alt="Default thumbnail image for Replay Episode: {{ replayepisode.title }}"
+                        loading="lazy"
+                    >
+                    <time class="replay-episode-runtime" datetime="">{{ replayepisode.runtime }}</time>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="replay-episode-basic-details">
+        <div class="replay-episode-basic-details-video">
+            <p><span>Air Date: </span>{{ replayepisode.airdate }}</p>
+
+            <div id="replay-episode-basic-details-video-counts">
+                <span><i class="fas fa-eye"></i> {{ replayepisode.youtube_video.views }} views</span>
+                <span><i class="fas fa-thumbs-up"></i> {{ replayepisode.youtube_video.likes }}</span>
+            </div>
+        </div>
+
+        <div class="replay-episode-basic-details-people">
+            <p><span>Host: </span><a href="{{ replayepisode.host.get_absolute_url }}">{{ replayepisode.host }}</a></p>
+
+            <p>
+                <span>Featuring: </span>
+                {% for person in replayepisode.featuring.all %}
+                    <a href="{{ person.get_absolute_url }}">{{ person }}</a>
+                    {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+        </div>
+
+        <div class="replay-episode-basic-details-segments">
+            <div class="replay-episode-segment-inst">
+                <h2>Main Segment</h2>
+                <ul class="segment-games">
+                    {% for game in replayepisode.main_segment_games.all %}
+                        <li>
+                            <a href="{{ game.get_absolute_url }}">
+                                {% if game.cover %}
+                                    <div class="game-cover">
+                                        <img 
+                                            src="https://images.igdb.com/igdb/image/upload/t_cover_small/{{ game.cover.image_id }}.png" 
+                                            width="{{ game.cover.width }}" 
+                                            height="{{ game.cover.height }}"
+                                            alt="Cover image of video game {{ game.name }}"
+                                            loading="lazy"
+                                        >
+                                    </div>
+                                {% endif %}
+                                {{ game.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+    
+            {% if replayepisode.other_segments.all %}
+                {% for segment in replayepisode.other_segments.all %}
+                    <div class="replay-episode-segment-inst" >
+                        <h2>
+                            <a href="{{ segment.type.get_absolute_url }}">{{ segment.type }}</a>
+                        </h2>
+                        {% if segment.games.all %}
+                            <ul class="segment-games">
+                                {% for game in segment.games.all %}
+                                    <li>
+                                        <a href="{{ game.get_absolute_url }}">
+                                            {% if game.cover %}
+                                                <div class="game-cover">
+                                                    <img 
+                                                        src="https://images.igdb.com/igdb/image/upload/t_cover_small/{{ game.cover.image_id }}.png" 
+                                                        height="{{ game.cover.height }}" 
+                                                        width="{{ game.cover.width }}" 
+                                                        alt="Cover image of video game {{ game.name }}" 
+                                                        loading="lazy"
+                                                    >
+                                                </div>
+                                            {% endif %}
+                                            {{ game.name }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        {% if segment.description %}
+                            <p>{{ segment.description }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
