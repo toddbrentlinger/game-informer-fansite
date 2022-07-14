@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views import generic
 from django.db.models import Q
 from .models import Person
-from fansite.models import ReplayEpisode
+from replay.models import ReplayEpisode
 
 # Create your views here.
 

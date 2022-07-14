@@ -17,6 +17,10 @@
     margin-top: 1em;
 }
 
+#primary-info-details span {
+    
+}
+
 #primary-info-details-counts {
     display: flex;
     gap: 1em;
@@ -111,7 +115,7 @@
 .replay-episode-article > span {
     font-size: 90%;
     display: inline-block;
-    margin-left: 1em;
+    margin-left: 0.5em;
 }
 
 .replay-episode-article > p {

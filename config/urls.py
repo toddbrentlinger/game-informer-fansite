@@ -25,4 +25,5 @@ urlpatterns = [
     path('', RedirectView.as_view(url='fansite/', permanent=True)),
     path('games/', include('games.urls')),
     path('people/', include('people.urls')),
+    path('replay/', include('replay.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

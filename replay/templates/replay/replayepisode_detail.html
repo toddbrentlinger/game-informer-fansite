@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% load static %}
+{% load replayepisode_tags %}
 
 {% block title %}
     <title>Game Informer Fansite - Replay - {{ replayepisode.title }}</title>
@@ -54,16 +55,16 @@
     <hr>
 
     <div id="people-in-episode">
-        <p>
+        <span>
             <strong>Host: </strong>
             <a href="{{ replayepisode.host.get_absolute_url }}">{{ replayepisode.host }}</a>
-        </p>
-        <p>
+        </span>
+        <span>
             <strong>Featuring: </strong>
             {% for person in replayepisode.featuring.all %}
                 <a href="{{ person.get_absolute_url }}">{{ person }}</a>{% if not forloop.last %}, {% endif %}
             {% endfor %}
-        </p>
+        </span>
     </div>
 
     <hr>
@@ -147,33 +148,7 @@
         {% for key, value in replayepisode.headings.items %}
             {% if key != 'description' %}
                 <hr>
-                <div class="replay-episode-heading">
-                    <h2>{{ key }}:</h2>
-                    {% if key == "quotes" %}
-                        {% for item in value %}
-                            <p>{{ item }}</p>
-                        {% endfor %}
-                    {% elif key == "gallery" %}
-                        <div class="gallery">
-                            {% for image in value %}
-                                <figure>
-                                    <img
-                                        src="{{ image.src }}"
-                                        width="{{ image.width }}"
-                                        height="{{ image.height }}"
-                                        alt="{{ image.title }}"
-                                        loading="lazy"
-                                    >
-                                    <figcaption>{{ image.caption }}</figcaption>
-                                </figure>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {% for item in value %}
-                            <p>{{ item }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
+                {% display_heading_json key value %}
             {% endif %}
         {% endfor %}
     {% endif %}
@@ -184,7 +159,9 @@
         <h2>External Links:</h2>
         <ul>
             {% for external_link in replayepisode.external_links.all %}
-                <li><a href="{{ external_link.url }}" target="_blank">{{ external_link.title }}</a> on {{ external_link.getLinkSource }}</li>
+                <li>
+                    <p><a href="{{ external_link.url }}" target="_blank">{{ external_link.title }}</a> on {{ external_link.getLinkSource }}</p>
+                </li>
             {% endfor %}
         </ul>
     {% endif %}

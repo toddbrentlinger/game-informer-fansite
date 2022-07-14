@@ -14,7 +14,7 @@
     {% endif %}
     
     {% if segmenttype.description %}
-        <p><strong>Description: </strong>{{ segmenttype.description }}</p>
+        <p><strong>Description: </strong>{{ segmenttype.description|linebreaks }}</p>
     {% endif %}
 
     <h2>Replay Episodes:</h2>

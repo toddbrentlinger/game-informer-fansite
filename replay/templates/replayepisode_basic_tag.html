@@ -40,7 +40,7 @@
 
     <div class="replay-episode-basic-details">
         <div class="replay-episode-basic-details-video">
-            <p><span>Air Date: </span>{{ replayepisode.airdate }}</p>
+            <div><span>Air Date: </span>{{ replayepisode.airdate }}</div>
 
             <div id="replay-episode-basic-details-video-counts">
                 <span><i class="fas fa-eye"></i> {{ replayepisode.youtube_video.views }} views</span>
@@ -49,15 +49,15 @@
         </div>
 
         <div class="replay-episode-basic-details-people">
-            <p><span>Host: </span><a href="{{ replayepisode.host.get_absolute_url }}">{{ replayepisode.host }}</a></p>
+            <div><span>Host: </span><a href="{{ replayepisode.host.get_absolute_url }}">{{ replayepisode.host }}</a></div>
 
-            <p>
+            <div>
                 <span>Featuring: </span>
                 {% for person in replayepisode.featuring.all %}
                     <a href="{{ person.get_absolute_url }}">{{ person }}</a>
                     {% if not forloop.last %}, {% endif %}
                 {% endfor %}
-            </p>
+            </div>
         </div>
 
         <div class="replay-episode-basic-details-segments">

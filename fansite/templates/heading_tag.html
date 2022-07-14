@@ -1,0 +1,27 @@
+<div class="replay-episode-heading">
+    <h2>{{ key }}:</h2>
+    {% if key == "quotes" %}
+        {% for item in value %}
+            <p>{{ item }}</p>
+        {% endfor %}
+    {% elif key == "gallery" %}
+        <div class="gallery">
+            {% for image in value %}
+                <figure>
+                    <img
+                        src="{{ image.src }}"
+                        width="{{ image.width }}"
+                        height="{{ image.height }}"
+                        alt="{{ image.title }}"
+                        loading="lazy"
+                    >
+                    <figcaption>{{ image.caption }}</figcaption>
+                </figure>
+            {% endfor %}
+        </div>
+    {% else %}
+        {% for item in value %}
+            <p>{{ item }}</p>
+        {% endfor %}
+    {% endif %}
+</div>
