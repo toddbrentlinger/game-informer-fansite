@@ -11,6 +11,47 @@ from utilities.data_migration_constants import SEGMENT_TYPES, STAFF # Separate f
 from utilities.misc import create_total_time_message # misc utility functions
 from django.template.defaultfilters import slugify
 
+class Models:
+    def __init__(self, apps):
+        # Cannot import models directly as it may be a newer version
+        # than this migration expects. Use historical versions instead.
+        
+        # Fansite app
+        # self.SuperReplay = apps.get_model('fansite', 'SuperReplay')
+        # self.SuperReplayEpisode = apps.get_model('fansite', 'SuperReplayEpisode')
+
+        # People app
+        self.Person = apps.get_model('people', 'Person')
+        # self.Guest = apps.get_model('people', 'Guest')
+        # self.StaffPosition = apps.get_model('people', 'StaffPosition')
+        # self.StaffPositionInstance = apps.get_model('people', 'StaffPositionInstance')
+        self.Staff = apps.get_model('people', 'Staff')
+
+        # Game app
+        self.Artwork = apps.get_model('games', 'Artwork')
+        self.Collection = apps.get_model('games', 'Collection')
+        self.Developer = apps.get_model('games', 'Developer')
+        self.Franchise = apps.get_model('games', 'Franchise')
+        self.Game = apps.get_model('games', 'Game')
+        self.GameVideo = apps.get_model('games', 'GameVideo')
+        self.Genre = apps.get_model('games', 'Genre')
+        self.ImageIGDB = apps.get_model('games', 'ImageIGDB')
+        self.Platform = apps.get_model('games', 'Platform')
+        self.Screenshot = apps.get_model('games', 'Screenshot')
+        self.Website = apps.get_model('games', 'Website')
+
+        # Replay app
+        self.Article = apps.get_model('replay', 'Article')
+        self.ExternalLink = apps.get_model('replay', 'ExternalLink')
+        # self.Heading = apps.get_model('replay', 'Heading')
+        # self.HeadingInstance = apps.get_model('replay', 'HeadingInstance')
+        self.ReplayEpisode = apps.get_model('replay', 'ReplayEpisode')
+        self.ReplaySeason = apps.get_model('replay', 'ReplaySeason')
+        self.Segment = apps.get_model('replay', 'Segment')
+        self.SegmentType = apps.get_model('replay', 'SegmentType')
+        self.Thumbnail = apps.get_model('replay', 'Thumbnail')
+        self.YouTubeVideo = apps.get_model('replay', 'YouTubeVideo')
+
 def is_franchise_in_list(franchise, franchise_list):
     '''
     Returns True if franchise object already exists in list, else returns False.
@@ -27,22 +68,391 @@ def is_franchise_in_list(franchise, franchise_list):
             return True
     return False
 
-def get_game_inst(Game, Platform, Developer, Genre, ImageIGDB, Screenshot, Artwork, GameVideo, Collection, Franchise, Website, igdb, name, platform_name = None, year_released = None):
+def create_game_model(models, igdb, name, platform_inst = None, year_released = None, fields = '*', exclude = None):
+    '''
+    Returns Game model instance from database if it already exists OR needs to be created.
+
+    Parameters:
+        models (Models): 
+        igdb (): 
+        name (str): Title of video game
+        platform_inst (Platform): Platform model instance for the video game (NOTE: Will be saved to database if game search succeeds)
+        year_released (str|int): Year the video game was released
+        fields (str): Search fields passed to IGDB API request
+        exclude (str): Fields to exclude from response to IGDB API request
+
+    Returns:
+        Game|None: Game model instance OR None if could not be found in database and could not be created using IGDB API
+    '''
+    # Get game data from IGDB API
+    game_data = igdb.get_game_data(name, platform_inst.id if platform_inst is not None else None, year_released, fields, exclude)
+    
+    # If game search succeeds with given platform AND NOT empty
+    if game_data is not None and len(game_data) > 0:
+        # Check if game ID already exists in database
+        try:
+            game_inst = models.Game.objects.get(igdb_id=game_data[0]['id'])
+        except models.Game.DoesNotExist:
+            # TODO: Is this responsible for final value not being correct
+            # Make release date (Unix Timestamp) timezone aware
+            if 'first_release_date' in game_data[0]:
+                # release_date = timezone.make_aware(
+                #     datetime.datetime.utcfromtimestamp(game_data[0]['first_release_date']),
+                #     timezone=timezone.utc
+                # )
+                release_date = datetime.datetime.fromtimestamp(
+                    game_data[0]['first_release_date'], 
+                    timezone.utc
+                )
+            else:
+                release_date = None
+
+            # Platform
+            platform_final_inst = None
+            if platform_inst is not None:
+                for platform in game_data[0]['platforms']:
+                    # If platform id from IGDB response matches parameter platform id model
+                    if platform_inst.id == platform['id']:
+                        platform_final_inst = platform_inst
+                        break
+
+                # Save or remove model instances if platform_inst was successful
+                if platform_final_inst is None:
+                    # Do NOT save platform_inst
+                    # Delete ImageIGDB instance in 'logo' field
+                    platform_inst.logo.delete()
+                else: # Else platform_final_inst is not None
+                    # Save platform in case it was created for this game and not yet inside database.
+                    # Did NOT save new instance to database until now to confirm game name and platform search succeeded.
+                    platform_inst.save()
+            
+            # If platform_final_inst is still None when reaching this point, use one from the IGDB response
+            if platform_final_inst is None and 'release_dates' in game_data[0]:
+                # Filter release_dates by region code North America or Worldwide
+                region_codes = (2,8)
+                filtered_release_dates = [
+                    release_date for release_date in game_data[0]['release_dates'] if release_date['region'] in region_codes
+                ]
+
+                # If filter leaves empty list, use original unfiltered release dates list
+                if not filtered_release_dates:
+                    filtered_release_dates = game_data[0]['release_dates']
+
+                # Use platform with release date closest to the 'gamedate' JSON attribute or just year_released parameter
+                if (year_released is not None) and (len(filtered_release_dates) > 1):
+                    if (type(year_released) == str and '-' not in year_released) or type(year_released) == int:
+                        filtered_release_dates.sort(key=lambda release_date: abs(release_date['y'] - int(year_released)))
+
+                # Use first platform from top filtered_release_dates
+                if filtered_release_dates:
+                    platform = filtered_release_dates[0]['platform']
+                    try:
+                        platform_final_inst = models.Platform.objects.get(pk=platform['id'])
+                    except models.Platform.DoesNotExist:
+                        image_igdb_inst = None
+                        if 'platform_logo' in platform:
+                            try:
+                                image_igdb_inst = models.ImageIGDB.objects.get(pk=platform['platform_logo']['id'])
+                            except models.ImageIGDB.DoesNotExist:
+                                image_igdb_inst = models.ImageIGDB.objects.create(
+                                    id=platform['platform_logo']['id'],
+                                    image_id=platform['platform_logo']['image_id'],
+                                    width=platform['platform_logo']['width'] if 'width' in platform['platform_logo'] else None,
+                                    height=platform['platform_logo']['height'] if 'height' in platform['platform_logo'] else None
+                                )
+
+                        platform_final_inst = models.Platform.objects.create(
+                            id=platform['id'],
+                            name=platform['name'],
+                            abbreviation=platform['abbreviation'] if 'abbreviation' in platform else '',
+                            alternative_name=platform['alternative_name'] if 'alternative_name' in platform else '',
+                            logo=image_igdb_inst,
+                            slug=platform['slug'],
+                            summary=platform['summary'] if 'summary' in platform else '',
+                            url=platform['url']
+                        )
+
+            # Developer
+            developer_inst = None
+            if 'involved_companies' in game_data[0]:
+                for involved_company in game_data[0]['involved_companies']:
+                    if involved_company['developer']:
+                        developer = involved_company['company']
+                        try:
+                            developer_inst = models.Developer.objects.get(pk=developer['id'])
+                        except models.Developer.DoesNotExist:
+                            try:
+                                image_igdb_inst = models.ImageIGDB.objects.get(pk=developer['logo']['id'])
+                            except models.ImageIGDB.DoesNotExist:
+                                image_igdb_inst = models.ImageIGDB.objects.create(
+                                    id=developer['logo']['id'],
+                                    image_id=developer['logo']['image_id'],
+                                    width=developer['logo']['width'] if 'width' in developer['logo'] else None,
+                                    height=developer['logo']['height'] if 'height' in developer['logo'] else None
+                                )
+                            except KeyError:
+                                image_igdb_inst = None
+
+                            developer_inst = models.Developer.objects.create(
+                                id=developer['id'],
+                                name=developer['name'],
+                                country=developer['country'] if 'country' in developer else None,
+                                description=developer['description'] if 'description' in developer else '',
+                                logo=image_igdb_inst,
+                                slug=developer['slug'],
+                                url=developer['url']
+                            )
+                        break
+
+            # Images - Cover
+            image_igdb_inst = None
+            if 'cover' in game_data[0]:
+                cover = game_data[0]['cover']
+                try:
+                    image_igdb_inst = models.ImageIGDB.objects.get(pk=cover['id'])
+                except:
+                    image_igdb_inst = models.ImageIGDB.objects.create(
+                        id=cover['id'],
+                        image_id=cover['image_id'],
+                        width=cover['width'] if 'width' in cover else None,
+                        height=cover['height'] if 'height' in cover else None
+                    )
+
+            game_inst = models.Game.objects.create(
+                igdb_id=game_data[0]['id'],
+                name=game_data[0]['name'],
+                slug=game_data[0]['slug'],
+                summary=game_data[0]['summary'] if 'summary' in game_data[0] else '',
+                storyline=game_data[0]['storyline'] if 'storyline' in game_data[0] else '',
+                platform=platform_final_inst,
+                developer=developer_inst,
+                release_date=release_date,
+                cover=image_igdb_inst,
+                url=game_data[0]['url'] if 'url' in game_data[0] else None
+            )
+
+            # Images - Screenshots
+            if 'screenshots' in game_data[0]:
+                for screenshot in game_data[0]['screenshots']:
+                    # Get or create ImageIGDB inst
+                    try:
+                        image_igdb_inst = models.ImageIGDB.objects.get(pk=screenshot['id'])
+                    except models.ImageIGDB.DoesNotExist:
+                        image_igdb_inst = models.ImageIGDB.objects.create(
+                            id=screenshot['id'],
+                            image_id=screenshot['image_id'],
+                            width=screenshot['width'] if 'width' in screenshot else None,
+                            height=screenshot['height'] if 'height' in screenshot else None
+                        )
+                    
+                    # Create screenshot inst with ImageIGDB and Game from above
+                    models.Screenshot.objects.create(
+                        image=image_igdb_inst,
+                        game=game_inst
+                    )
+
+            # Images - Artworks
+            if 'artworks' in game_data[0]:
+                for artwork in game_data[0]['artworks']:
+                    # Get or create ImageIGDB inst
+                    try:
+                        image_igdb_inst = models.ImageIGDB.objects.get(pk=artwork['id'])
+                    except models.ImageIGDB.DoesNotExist:
+                        image_igdb_inst = models.ImageIGDB.objects.create(
+                            id=artwork['id'],
+                            image_id=artwork['image_id'],
+                            width=artwork['width'] if 'width' in artwork else None,
+                            height=artwork['height'] if 'height' in artwork else None
+                        )
+
+                    # Create artwork inst with ImageIGDB and Game from above
+                    models.Artwork.objects.create(
+                        image=image_igdb_inst,
+                        game=game_inst
+                    )
+
+            # Videos
+            if 'videos' in game_data[0]:
+                for video in game_data[0]['videos']:
+                    # Get or create GameVideo inst
+                    try:
+                        game_video_inst = models.GameVideo.objects.get(pk=video['id'])
+                    except models.GameVideo.DoesNotExist:
+                        game_video_inst = models.GameVideo.objects.create(
+                            id=video['id'],
+                            name=video['name'] if 'name' in video else '',
+                            video_id=video['video_id'],
+                            game=game_inst
+                        )
+
+            # Collections/Series
+            if 'collection' in game_data[0]:
+                collection = game_data[0]['collection']
+                # Get or create Collection inst
+                try: 
+                    collection_inst = models.Collection.objects.get(pk=collection['id'])
+                except models.Collection.DoesNotExist:
+                    collection_inst = models.Collection(
+                        id=collection['id'],
+                        name=collection['name'],
+                        slug=collection['slug'],
+                        url=collection['url'],
+                    )
+
+                # Save Collection model in case it was just created
+                collection_inst.save()
+
+                # Add game to Collection ManyToManyField
+                collection_inst.games.add(game_inst)
+
+            # Franchises
+            franchises_all = []
+            if 'franchises' in game_data[0]:
+                franchises_all = game_data[0]['franchises']
+            if 'franchise' in game_data[0]:
+                # Check that 'franchise' id NOT already in 'franchises' list
+                if not is_franchise_in_list(game_data[0]['franchise'], franchises_all):
+                    franchises_all.append(game_data[0]['franchise'])
+
+            for franchise in franchises_all:
+                # Get or create Franchise inst
+                try: 
+                    franchise_inst = models.Franchise.objects.get(pk=franchise['id'])
+                except models.Franchise.DoesNotExist:
+                    franchise_inst = models.Franchise(
+                        id=franchise['id'],
+                        name=franchise['name'],
+                        slug=franchise['slug'],
+                        url=franchise['url'],
+                    )
+
+                # Save Franchise model in case it was just created
+                franchise_inst.save()
+
+                # Add game to Franchise ManyToManyField
+                franchise_inst.games.add(game_inst)
+
+            # Genre is ManyToManyField, use game.genres.add(new_genre)
+            if 'genres' in game_data[0]:
+                for genre in game_data[0]['genres']:
+                    genre_inst = None
+                    try:
+                        genre_inst = models.Genre.objects.get(pk=genre['id'])
+                    except models.Genre.DoesNotExist:
+                        genre_inst = models.Genre.objects.create(
+                            id=genre['id'],
+                            name=genre['name']
+                        )
+                    if genre_inst is not None:
+                        game_inst.genres.add(genre_inst)
+
+            # Websites is ManyToManyField
+            if 'websites' in game_data[0]:
+                for website in game_data[0]['websites']:
+                    website_inst = None
+                    try:
+                        website_inst = models.Website.objects.get(url=website['url'])
+                    except models.Website.DoesNotExist:
+                        website_inst = models.Website.objects.create(
+                            category=website['category'],
+                            trusted=website['trusted'],
+                            url=website['url']
+                        )
+                    if website_inst is not None:
+                        game_inst.websites.add(website_inst)
+        return game_inst
+    return None
+
+def get_platform_inst(models, igdb, platform_name):
+    '''
+    Returns specific instance of Platform model.
+
+    Parameters:
+        models (Models): 
+        igdb (): 
+        platform_name (str|int): String name or IGDB ID of video game platform
+
+    Returns:
+        Platform|None: Platform instance matching platform_name or None if not found
+    '''
+    # Assign platform using platform_name parameter (initialized to None)
+    platform = None
+    # If platform_name has value
+    if platform_name:
+        # Check if platform is already in database by string OR number
+        if type(platform_name) is str:
+            # If platform_name already exists in database as different name fields, assign Platform instance to platform
+            try:
+                # Regex Pattern using 'NES': r'(^NES,)|(,\sNES,)|(,\sNES$)|(^NES$)'
+                platform_alt_name_regex = r'(^' + platform_name + r',)|(,\s' + platform_name + r',)|(,\s' + platform_name + r'$)|(^' + platform_name + r'$)'
+                platform = models.Platform.objects.get(
+                    Q(abbreviation=platform_name) | Q(alternative_name__regex=platform_alt_name_regex) | Q(name=platform_name)
+                )
+            # Else platform_name does NOT exist in database
+            except models.Platform.DoesNotExist:
+                # Adjust name for 'PC' to 'PC Windows' before using IGDB API
+                # TODO: Move this to function that cleans JSON file
+                if platform_name == 'PC':
+                    platform_name += ' Windows'
+
+        elif type(platform_name) is int:
+            # If platform_name already exists in database as ID, assign Platform instance to platform
+            try:
+                platform = models.Platform.objects.get(pk=platform_name)
+            # Else platform_name does NOT exist in database
+            except models.Platform.DoesNotExist:
+                # Leaving platform value as None
+                pass
+
+        # If could not find existing platform in database (platform has value of None)
+        if platform is None:
+            # Use IGDB API to search for platform data
+            platform_data = igdb.get_platform_data(platform_name, '*,platform_logo.*')
+            
+            # If search succeeds AND not empty
+            if platform_data is not None and len(platform_data) > 0:
+                # If platform id already exists in database, assign Platform instance to platform
+                try:
+                    platform = models.Platform.objects.get(pk=platform_data[0]['id'])
+                # Else create new platform model instance using IGDB platform data and assign it to platform.
+                # IMPORTANT: Do NOT save new instance to database until confirm game name and platform search succeeds
+                # inside create_game_model()
+                except models.Platform.DoesNotExist:
+                    image_igdb_inst = None
+                    if 'platform_logo' in platform_data[0]:
+                        try:
+                            image_igdb_inst = models.ImageIGDB.objects.get(pk=platform_data[0]['platform_logo']['id'])
+                        except models.ImageIGDB.DoesNotExist:
+                            image_igdb_inst = models.ImageIGDB.objects.create(
+                                id=platform_data[0]['platform_logo']['id'],
+                                image_id=platform_data[0]['platform_logo']['image_id'],
+                                width=platform_data[0]['platform_logo']['width'] if 'width' in platform_data[0]['platform_logo'] else None,
+                                height=platform_data[0]['platform_logo']['height'] if 'height' in platform_data[0]['platform_logo'] else None
+                            )
+
+                    platform = models.Platform()
+                    platform.id = platform_data[0]['id']
+                    platform.name = platform_data[0]['name']
+                    if 'abbreviation' in platform_data[0]:
+                        platform.abbreviation = platform_data[0]['abbreviation']
+                    if 'alternative_name' in platform_data[0]:
+                        platform.alternative_name = platform_data[0]['alternative_name']
+                    platform.logo = image_igdb_inst
+                    platform.slug = platform_data[0]['slug']
+                    if 'summary' in platform_data[0]:
+                        platform.summary = platform_data[0]['summary']
+                    platform.url = platform_data[0]['url']
+            # Else search fails or is empty
+                # Must search for game using only name
+                # Leave platform value as None so it's not used to search for game using IGDB
+    return platform
+
+def get_game_inst(models, igdb, name, platform_name = None, year_released = None):
     ''' 
     Returns specific instance of Game model.
 
     Parameters:
-        Game (Game): Reference to historic version of Game model
-        Platform (Platform): Reference to historic version of Platform model
-        Developer (Developer): Reference to historic version of Developer model
-        Genre (Genre): Reference to historic version of Genre model
-        ImageIGDB (ImageIGDB): Reference to historic version of ImageIGDB model
-        Screenshot (Screenshot): Reference to historic version of Screenshot model
-        Artwork (Artwork): Reference to historic version of Artwork model
-        GameVideo (GameVideo): Reference to historic version of GameVideo model
-        Collection (Collection): Reference to historic version of Collection model
-        Franchise (Franchise): Reference to historic version of Franchise model
-        Website (Website): Reference to historic version of Website model
+        models (Models): 
         igdb (IGDB): Reference to IGDB instance to use IGDB API
         name (str): Name of video game
         platform (str|int): Name of platform as string type OR IGDB platform ID as number type (optional)
@@ -51,384 +461,6 @@ def get_game_inst(Game, Platform, Developer, Genre, ImageIGDB, Screenshot, Artwo
     Returns:
         Game: Existing or created instance of Game model
     '''
-
-    # Inner function to get or create a Game model instance with optional platform paramter
-    # From outside scope, uses IGDB instance and historical versions of models
-    def create_game_model(name, platform_inst = None, year_released = None, fields = '*', exclude = None):
-        '''
-        Returns Game model instance from database if it already exists OR needs to be created.
-
-        Parameters:
-            name (str): Title of video game
-            platform_inst (Platform): Platform model instance for the video game (NOTE: Will be saved to database if game search succeeds)
-            year_released (str|int): Year the video game was released
-            fields (str): Search fields passed to IGDB API request
-            exclude (str): Fields to exclude from response to IGDB API request
-
-        Returns:
-            Game|None: Game model instance OR None if could not be found in database and could not be created using IGDB API
-        '''
-        # Get game data from IGDB API
-        game_data = igdb.get_game_data(name, platform_inst.id if platform_inst is not None else None, year_released, fields, exclude)
-        
-        # If game search succeeds with given platform AND NOT empty
-        if game_data is not None and len(game_data) > 0:
-            # Check if game ID already exists in database
-            try:
-                game_inst = Game.objects.get(igdb_id=game_data[0]['id'])
-            except Game.DoesNotExist:
-                # TODO: Is this responsible for final value not being correct
-                # Make release date (Unix Timestamp) timezone aware
-                if 'first_release_date' in game_data[0]:
-                    # release_date = timezone.make_aware(
-                    #     datetime.datetime.utcfromtimestamp(game_data[0]['first_release_date']),
-                    #     timezone=timezone.utc
-                    # )
-                    release_date = datetime.datetime.fromtimestamp(
-                        game_data[0]['first_release_date'], 
-                        timezone.utc
-                    )
-                else:
-                    release_date = None
-
-                # Platform
-                platform_final_inst = None
-                if platform_inst is not None:
-                    for platform in game_data[0]['platforms']:
-                        # If platform id from IGDB response matches parameter platform id model
-                        if platform_inst.id == platform['id']:
-                            platform_final_inst = platform_inst
-                            break
-
-                    # Save or remove model instances if platform_inst was successful
-                    if platform_final_inst is None:
-                        # Do NOT save platform_inst
-                        # Delete ImageIGDB instance in 'logo' field
-                        platform_inst.logo.delete()
-                    else: # Else platform_final_inst is not None
-                        # Save platform in case it was created for this game and not yet inside database.
-                        # Did NOT save new instance to database until now to confirm game name and platform search succeeded.
-                        platform_inst.save()
-                
-                # If platform_final_inst is still None when reaching this point, use one from the IGDB response
-                if platform_final_inst is None and 'release_dates' in game_data[0]:
-                    # Filter release_dates by region code North America or Worldwide
-                    region_codes = (2,8)
-                    filtered_release_dates = [
-                        release_date for release_date in game_data[0]['release_dates'] if release_date['region'] in region_codes
-                    ]
-
-                    # If filter leaves empty list, use original unfiltered release dates list
-                    if not filtered_release_dates:
-                        filtered_release_dates = game_data[0]['release_dates']
-
-                    # Use platform with release date closest to the 'gamedate' JSON attribute or just year_released parameter
-                    if (year_released is not None) and (len(filtered_release_dates) > 1):
-                        if (type(year_released) == str and '-' not in year_released) or type(year_released) == int:
-                            filtered_release_dates.sort(key=lambda release_date: abs(release_date['y'] - int(year_released)))
-
-                    # Use first platform from top filtered_release_dates
-                    if filtered_release_dates:
-                        platform = filtered_release_dates[0]['platform']
-                        try:
-                            platform_final_inst = Platform.objects.get(pk=platform['id'])
-                        except Platform.DoesNotExist:
-                            image_igdb_inst = None
-                            if 'platform_logo' in platform:
-                                try:
-                                    image_igdb_inst = ImageIGDB.objects.get(pk=platform['platform_logo']['id'])
-                                except ImageIGDB.DoesNotExist:
-                                    image_igdb_inst = ImageIGDB.objects.create(
-                                        id=platform['platform_logo']['id'],
-                                        image_id=platform['platform_logo']['image_id'],
-                                        width=platform['platform_logo']['width'] if 'width' in platform['platform_logo'] else None,
-                                        height=platform['platform_logo']['height'] if 'height' in platform['platform_logo'] else None
-                                    )
-
-                            platform_final_inst = Platform.objects.create(
-                                id=platform['id'],
-                                name=platform['name'],
-                                abbreviation=platform['abbreviation'] if 'abbreviation' in platform else '',
-                                alternative_name=platform['alternative_name'] if 'alternative_name' in platform else '',
-                                logo=image_igdb_inst,
-                                slug=platform['slug'],
-                                summary=platform['summary'] if 'summary' in platform else '',
-                                url=platform['url']
-                            )
-
-                # Developer
-                developer_inst = None
-                if 'involved_companies' in game_data[0]:
-                    for involved_company in game_data[0]['involved_companies']:
-                        if involved_company['developer']:
-                            developer = involved_company['company']
-                            try:
-                                developer_inst = Developer.objects.get(pk=developer['id'])
-                            except Developer.DoesNotExist:
-                                try:
-                                    image_igdb_inst = ImageIGDB.objects.get(pk=developer['logo']['id'])
-                                except ImageIGDB.DoesNotExist:
-                                    image_igdb_inst = ImageIGDB.objects.create(
-                                        id=developer['logo']['id'],
-                                        image_id=developer['logo']['image_id'],
-                                        width=developer['logo']['width'] if 'width' in developer['logo'] else None,
-                                        height=developer['logo']['height'] if 'height' in developer['logo'] else None
-                                    )
-                                except KeyError:
-                                    image_igdb_inst = None
-
-                                developer_inst = Developer.objects.create(
-                                    id=developer['id'],
-                                    name=developer['name'],
-                                    country=developer['country'] if 'country' in developer else None,
-                                    description=developer['description'] if 'description' in developer else '',
-                                    logo=image_igdb_inst,
-                                    slug=developer['slug'],
-                                    url=developer['url']
-                                )
-                            break
-
-                # Images - Cover
-                image_igdb_inst = None
-                if 'cover' in game_data[0]:
-                    cover = game_data[0]['cover']
-                    try:
-                        image_igdb_inst = ImageIGDB.objects.get(pk=cover['id'])
-                    except:
-                        image_igdb_inst = ImageIGDB.objects.create(
-                            id=cover['id'],
-                            image_id=cover['image_id'],
-                            width=cover['width'] if 'width' in cover else None,
-                            height=cover['height'] if 'height' in cover else None
-                        )
-
-                game_inst = Game.objects.create(
-                    igdb_id=game_data[0]['id'],
-                    name=game_data[0]['name'],
-                    slug=game_data[0]['slug'],
-                    summary=game_data[0]['summary'] if 'summary' in game_data[0] else '',
-                    storyline=game_data[0]['storyline'] if 'storyline' in game_data[0] else '',
-                    platform=platform_final_inst,
-                    developer=developer_inst,
-                    release_date=release_date,
-                    cover=image_igdb_inst,
-                    url=game_data[0]['url'] if 'url' in game_data[0] else None
-                )
-
-                # Images - Screenshots
-                if 'screenshots' in game_data[0]:
-                    for screenshot in game_data[0]['screenshots']:
-                        # Get or create ImageIGDB inst
-                        try:
-                            image_igdb_inst = ImageIGDB.objects.get(pk=screenshot['id'])
-                        except ImageIGDB.DoesNotExist:
-                            image_igdb_inst = ImageIGDB.objects.create(
-                                id=screenshot['id'],
-                                image_id=screenshot['image_id'],
-                                width=screenshot['width'] if 'width' in screenshot else None,
-                                height=screenshot['height'] if 'height' in screenshot else None
-                            )
-                        
-                        # Create screenshot inst with ImageIGDB and Game from above
-                        Screenshot.objects.create(
-                            image=image_igdb_inst,
-                            game=game_inst
-                        )
-
-                # Images - Artworks
-                if 'artworks' in game_data[0]:
-                    for artwork in game_data[0]['artworks']:
-                        # Get or create ImageIGDB inst
-                        try:
-                            image_igdb_inst = ImageIGDB.objects.get(pk=artwork['id'])
-                        except ImageIGDB.DoesNotExist:
-                            image_igdb_inst = ImageIGDB.objects.create(
-                                id=artwork['id'],
-                                image_id=artwork['image_id'],
-                                width=artwork['width'] if 'width' in artwork else None,
-                                height=artwork['height'] if 'height' in artwork else None
-                            )
-
-                        # Create artwork inst with ImageIGDB and Game from above
-                        Artwork.objects.create(
-                            image=image_igdb_inst,
-                            game=game_inst
-                        )
-
-                # Videos
-                if 'videos' in game_data[0]:
-                    for video in game_data[0]['videos']:
-                        # Get or create GameVideo inst
-                        try:
-                            game_video_inst = GameVideo.objects.get(pk=video['id'])
-                        except GameVideo.DoesNotExist:
-                            game_video_inst = GameVideo.objects.create(
-                                id=video['id'],
-                                name=video['name'] if 'name' in video else '',
-                                video_id=video['video_id'],
-                                game=game_inst
-                            )
-
-                # Collections/Series
-                if 'collection' in game_data[0]:
-                    collection = game_data[0]['collection']
-                    # Get or create Collection inst
-                    try: 
-                        collection_inst = Collection.objects.get(pk=collection['id'])
-                    except Collection.DoesNotExist:
-                        collection_inst = Collection(
-                            id=collection['id'],
-                            name=collection['name'],
-                            slug=collection['slug'],
-                            url=collection['url'],
-                        )
-
-                    # Save Collection model in case it was just created
-                    collection_inst.save()
-
-                    # Add game to Collection ManyToManyField
-                    collection_inst.games.add(game_inst)
-
-                # Franchises
-                franchises_all = []
-                if 'franchises' in game_data[0]:
-                    franchises_all = game_data[0]['franchises']
-                if 'franchise' in game_data[0]:
-                    # Check that 'franchise' id NOT already in 'franchises' list
-                    if not is_franchise_in_list(game_data[0]['franchise'], franchises_all):
-                        franchises_all.append(game_data[0]['franchise'])
-
-                for franchise in franchises_all:
-                    # Get or create Franchise inst
-                    try: 
-                        franchise_inst = Franchise.objects.get(pk=franchise['id'])
-                    except Franchise.DoesNotExist:
-                        franchise_inst = Franchise(
-                            id=franchise['id'],
-                            name=franchise['name'],
-                            slug=franchise['slug'],
-                            url=franchise['url'],
-                        )
-
-                    # Save Franchise model in case it was just created
-                    franchise_inst.save()
-
-                    # Add game to Franchise ManyToManyField
-                    franchise_inst.games.add(game_inst)
-
-                # Genre is ManyToManyField, use game.genres.add(new_genre)
-                if 'genres' in game_data[0]:
-                    for genre in game_data[0]['genres']:
-                        genre_inst = None
-                        try:
-                            genre_inst = Genre.objects.get(pk=genre['id'])
-                        except Genre.DoesNotExist:
-                            genre_inst = Genre.objects.create(
-                                id=genre['id'],
-                                name=genre['name']
-                            )
-                        if genre_inst is not None:
-                            game_inst.genres.add(genre_inst)
-
-                # Websites is ManyToManyField
-                if 'websites' in game_data[0]:
-                    for website in game_data[0]['websites']:
-                        website_inst = None
-                        try:
-                            website_inst = Website.objects.get(url=website['url'])
-                        except Website.DoesNotExist:
-                            website_inst = Website.objects.create(
-                                category=website['category'],
-                                trusted=website['trusted'],
-                                url=website['url']
-                            )
-                        if website_inst is not None:
-                            game_inst.websites.add(website_inst)
-            return game_inst
-        return None
-
-    # From outside scope, uses IGDB instance and historical versions of models
-    def get_platform_inst(platform_name):
-        '''
-        Returns specific instance of Platform model.
-
-        Parameters:
-            platform_name (str|int): String name or IGDB ID of video game platform
-
-        Returns:
-            Platform|None: Platform instance matching platform_name or None if not found
-        '''
-        # Assign platform using platform_name parameter (initialized to None)
-        platform = None
-        # If platform_name has value
-        if platform_name:
-            # Check if platform is already in database by string OR number
-            if type(platform_name) is str:
-                # If platform_name already exists in database as different name fields, assign Platform instance to platform
-                try:
-                    # Regex Pattern using 'NES': r'(^NES,)|(,\sNES,)|(,\sNES$)|(^NES$)'
-                    platform_alt_name_regex = r'(^' + platform_name + r',)|(,\s' + platform_name + r',)|(,\s' + platform_name + r'$)|(^' + platform_name + r'$)'
-                    platform = Platform.objects.get(
-                        Q(abbreviation=platform_name) | Q(alternative_name__regex=platform_alt_name_regex) | Q(name=platform_name)
-                    )
-                # Else platform_name does NOT exist in database
-                except Platform.DoesNotExist:
-                    # Adjust name for 'PC' to 'PC Windows' before using IGDB API
-                    # TODO: Move this to function that cleans JSON file
-                    if platform_name == 'PC':
-                        platform_name += ' Windows'
-
-            elif type(platform_name) is int:
-                # If platform_name already exists in database as ID, assign Platform instance to platform
-                try:
-                    platform = Platform.objects.get(pk=platform_name)
-                # Else platform_name does NOT exist in database
-                except Platform.DoesNotExist:
-                    # Leaving platform value as None
-                    pass
-
-            # If could not find existing platform in database (platform has value of None)
-            if platform is None:
-                # Use IGDB API to search for platform data
-                platform_data = igdb.get_platform_data(platform_name, '*,platform_logo.*')
-                
-                # If search succeeds AND not empty
-                if platform_data is not None and len(platform_data) > 0:
-                    # If platform id already exists in database, assign Platform instance to platform
-                    try:
-                        platform = Platform.objects.get(pk=platform_data[0]['id'])
-                    # Else create new platform model instance using IGDB platform data and assign it to platform.
-                    # IMPORTANT: Do NOT save new instance to database until confirm game name and platform search succeeds
-                    # inside create_game_model()
-                    except Platform.DoesNotExist:
-                        image_igdb_inst = None
-                        if 'platform_logo' in platform_data[0]:
-                            try:
-                                image_igdb_inst = ImageIGDB.objects.get(pk=platform_data[0]['platform_logo']['id'])
-                            except ImageIGDB.DoesNotExist:
-                                image_igdb_inst = ImageIGDB.objects.create(
-                                    id=platform_data[0]['platform_logo']['id'],
-                                    image_id=platform_data[0]['platform_logo']['image_id'],
-                                    width=platform_data[0]['platform_logo']['width'] if 'width' in platform_data[0]['platform_logo'] else None,
-                                    height=platform_data[0]['platform_logo']['height'] if 'height' in platform_data[0]['platform_logo'] else None
-                                )
-
-                        platform = Platform()
-                        platform.id = platform_data[0]['id']
-                        platform.name = platform_data[0]['name']
-                        if 'abbreviation' in platform_data[0]:
-                            platform.abbreviation = platform_data[0]['abbreviation']
-                        if 'alternative_name' in platform_data[0]:
-                            platform.alternative_name = platform_data[0]['alternative_name']
-                        platform.logo = image_igdb_inst
-                        platform.slug = platform_data[0]['slug']
-                        if 'summary' in platform_data[0]:
-                            platform.summary = platform_data[0]['summary']
-                        platform.url = platform_data[0]['url']
-                # Else search fails or is empty
-                    # Must search for game using only name
-                    # Leave platform value as None so it's not used to search for game using IGDB
-        return platform
 
     '''
     Pseudo-Code
@@ -454,28 +486,28 @@ def get_game_inst(Game, Platform, Developer, Genre, ImageIGDB, Screenshot, Artwo
                     leave platform and platform_id as None
     '''
     # Assign platform using platform_name parameter (initialized to None)
-    platform = get_platform_inst(platform_name)
+    platform = get_platform_inst(models, igdb, platform_name)
 
     # Search IGDB for game based on title AND platform ID
     fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,url,videos.*,websites.*'
     exclude = 'collection.games,franchise.games,franchises.games,involved_companies.company.published, involved_companies.company.developed'
     
     # Search for game with name+platform+year_released
-    game_inst = create_game_model(name, platform, year_released, fields, exclude)
+    game_inst = create_game_model(models, igdb, name, platform, year_released, fields, exclude)
     # If game search succeeds with name+platform, return the game model instance
     if game_inst is not None:
         return game_inst
 
     # If no game found, search with name+platform
     if year_released is not None:
-        game_inst = create_game_model(name, platform, None, fields, exclude)
+        game_inst = create_game_model(models, igdb, name, platform, None, fields, exclude)
         # If game search succeeds with name+platform, return the game model instance
         if game_inst is not None:
             return game_inst
 
     # If no game found, search with only name
     if platform is not None:
-        game_inst = create_game_model(name, None, None, fields, exclude)
+        game_inst = create_game_model(models, igdb, name, None, None, fields, exclude)
         # If game search succeeds with name only, return the game model instance
         if game_inst is not None:
             return game_inst
@@ -486,45 +518,43 @@ def get_game_inst(Game, Platform, Developer, Genre, ImageIGDB, Screenshot, Artwo
         # Name: match.group(1)
         # Platform: match.group(2)
         # Note: exclude 'demo' in parentheses since 'demo' platform search would return PS2
-        platform = get_platform_inst(match.group(2)) if match.group(2) not in ('demo','JPN', 'The High Road level') else None
-        game_inst = create_game_model(match.group(1), platform, None, fields, exclude)
+        platform = get_platform_inst(models, igdb, match.group(2)) if match.group(2) not in ('demo','JPN', 'The High Road level') else None
+        game_inst = create_game_model(models, igdb, match.group(1), platform, None, fields, exclude)
         # If game search succeeds with name+platform, return the game model instance
         if game_inst is not None:
             return game_inst
 
     # No game found if reach this point
-    print(f'get_game_inst(): Could not find game!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
+    print(f'Get Game Inst: Could not find game!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
     return None
 
     # # If platform has value, search for game with both name+platform+year_released
     # if platform is not None:
-    #     game_inst = create_game_model(name, platform, year_released, fields, exclude)
+    #     game_inst = create_game_model(models, igdb, name, platform, year_released, fields, exclude)
     #     # If game search succeeds with name+platform, return the game model instance
     #     if game_inst is not None:
     #         return game_inst
-    #     print(f'get_game_inst(): Could not find game with 3 args!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
+    #     print(f'Game Game Inst: Could not find game with 3 args!: Name: {name} - Platform: {platform_name} - Year: {year_released}')
 
     # # If platform has value but reaches this point, could not find game with name+platform.
     # # Attempt search with just the name of the video game
-    # game_inst = create_game_model(name, None, year_released, fields, exclude)
+    # game_inst = create_game_model(models, igdb, name, None, year_released, fields, exclude)
     # # If game search succeeds with no platform, return the game model instance
     # if game_inst is not None:
     #     return game_inst
     # # Else game search fails with no platform
-    # print(f'get_game_inst(): Could not find game with 2 args!: Name: {name} - Year: {year_released}')
+    # print(f'Get Game Inst: Could not find game with 2 args!: Name: {name} - Year: {year_released}')
 
     # # Reach here when neither name+platform nor just name has successful game search.    
     # # If reach here, could not find game
     # return None
 
-def get_person_inst(Person, Staff, Thumbnail, person_data):
+def get_person_inst(models, person_data):
     '''
     Get existing Person model from database or add a new model instance if not in database.
 
     Parameters:
-        Person (Person): Historic version of Person model
-        Staff (Staff): Historic version of Staff model
-        Thumbnail (Thumbnail): Historic version of Thumbnail model
+        models (Models): 
         person_data (dict): Dictionary of data about specific person
         person_data.name (str): Name of person
 
@@ -541,20 +571,20 @@ def get_person_inst(Person, Staff, Thumbnail, person_data):
         ...
     '''
     try:
-        return Person.objects.get(full_name=person_data['name'])
-    except Person.DoesNotExist:
+        return models.Person.objects.get(full_name=person_data['name'])
+    except models.Person.DoesNotExist:
         try:
-            thumbnail_inst = Thumbnail.objects.get(url=person_data['image']['srcset'][0])
+            thumbnail_inst = models.Thumbnail.objects.get(url=person_data['image']['srcset'][0])
         except KeyError:
             thumbnail_inst = None
-        except Thumbnail.DoesNotExist:
-            thumbnail_inst = Thumbnail.objects.create(
+        except models.Thumbnail.DoesNotExist:
+            thumbnail_inst = models.Thumbnail.objects.create(
                 url=person_data['image']['srcset'][0],
                 width=int(person_data['image']['width']),
                 height=int(person_data['image']['height'])
             )
 
-        person = Person.objects.create(
+        person = models.Person.objects.create(
             full_name=person_data['name'],
             slug=slugify(person_data['name']),
             thumbnail=thumbnail_inst,
@@ -564,10 +594,10 @@ def get_person_inst(Person, Staff, Thumbnail, person_data):
         )
         # TODO: If person is part of staff, create Staff model as well.
         if person_data['name'] in STAFF:
-            Staff.objects.create(person=person)
+            models.Staff.objects.create(person=person)
         return person
 
-def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, ImageIGDB, Screenshot, Artwork, GameVideo, Collection, Franchise, Website, platform, igdb, segmentType, segmentContent):
+def get_segment_inst(models, platform, igdb, segmentType, segmentContent):
     '''
     Creates instance of Segment model, saves to database, and returns.
 
@@ -578,7 +608,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
     Returns:
         Segment
     '''
-    segment = Segment()
+    segment = models.Segment()
     segment_manytomany_instances_dict = {
         'games': []
     }
@@ -587,11 +617,11 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
     for segmentTitle, segment_abbreviation, gameTextID, segment_content_dict in SEGMENT_TYPES:
         if segmentType in (segment_abbreviation, segmentTitle):
             try:
-                segmentTypeInst = SegmentType.objects.get(
+                segmentTypeInst = models.SegmentType.objects.get(
                     Q(abbreviation=segmentType) | Q(title=segmentType)
                 )
-            except SegmentType.DoesNotExist:
-                segmentTypeInst = SegmentType.objects.create(
+            except models.SegmentType.DoesNotExist:
+                segmentTypeInst = models.SegmentType.objects.create(
                     title=segmentTitle,
                     abbreviation=segment_abbreviation if segment_abbreviation is not None else '',
                     slug=slugify(segmentTitle),
@@ -607,17 +637,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                     game_title = game.rpartition(' Ad')[0] if game.endswith('Ad') else game
                     # Get game using title and platform from main_segment_games
                     game_inst = get_game_inst(
-                        Game=Game, 
-                        Platform=Platform, 
-                        Developer=Developer,
-                        Genre=Genre,
-                        ImageIGDB=ImageIGDB,
-                        Screenshot=Screenshot, 
-                        Artwork=Artwork, 
-                        GameVideo=GameVideo,
-                        Collection=Collection,
-                        Franchise=Franchise,
-                        Website=Website,
+                        models=models,
                         igdb=igdb, 
                         name=game_title, 
                         platform_name=platform, 
@@ -626,7 +646,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                     if game_inst is not None:
                         segment_manytomany_instances_dict['games'].append(game_inst)
                     else:
-                        print(f'get_segment_inst(): Could not find game in segment type 0!: Name: {game_title} - Platform: {platform}')
+                        print(f'Get Segment Inst: Could not find game in segment type 0!: Name: {game_title} - Platform: {platform}')
 
             elif gameTextID == 1: # text
                 # Add content to 'description' leaving 'games' empty
@@ -639,17 +659,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                         # Add game
                         # Get game using title and platform from main_segment_games
                         game_inst = get_game_inst(
-                            Game=Game, 
-                            Platform=Platform, 
-                            Developer=Developer,
-                            Genre=Genre,
-                            ImageIGDB=ImageIGDB,
-                            Screenshot=Screenshot,
-                            Artwork=Artwork,
-                            GameVideo=GameVideo,
-                            Collection=Collection,
-                            Franchise=Franchise,
-                            Website=Website,
+                            models=models,
                             igdb=igdb, 
                             name='Syphone Filter',
                             platform_name=platform, 
@@ -659,7 +669,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                             #segment.games.add(game_inst)
                             segment_manytomany_instances_dict['games'].append(game_inst)
                         else:
-                            print(f'get_segment_inst(): Could not find game in segment type 2!: Name: Syphone Filter - Platform: {platform}')
+                            print(f'Get Segment Inst: Could not find game in segment type 2!: Name: Syphone Filter - Platform: {platform}')
                         # Add description
                         segment.description = segmentContent[0]
                 elif segmentType == 'Developer Spotlight':
@@ -669,17 +679,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                             title_split = game.split(': ', 1)
                             # Get game using title_split[1] and platform from main_segment_games
                             game_inst = get_game_inst(
-                                Game=Game, 
-                                Platform=Platform, 
-                                Developer=Developer,
-                                Genre=Genre,
-                                ImageIGDB=ImageIGDB,
-                                Screenshot=Screenshot,
-                                Artwork=Artwork,
-                                GameVideo=GameVideo,
-                                Collection=Collection,
-                                Franchise=Franchise,
-                                Website=Website,
+                                models=models,
                                 igdb=igdb, 
                                 name=title_split[1], 
                                 platform_name=platform, 
@@ -689,24 +689,14 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                                 #segment.games.add(game_inst)
                                 segment_manytomany_instances_dict['games'].append(game_inst)
                             else:
-                                print(f'get_segment_inst(): Could not find game in segment type 2!: Name: {title_split[1]} - Platform: {platform}')
+                                print(f'Get Segment Inst: Could not find game in segment type 2!: Name: {title_split[1]} - Platform: {platform}')
                             # Add description from title_split[0]
                             segment.description = title_split[0]
                         else:
                             # Add game
                             # Get game using title and platform from main_segment_games
                             game_inst = get_game_inst(
-                                Game=Game, 
-                                Platform=Platform, 
-                                Developer=Developer,
-                                Genre=Genre,
-                                ImageIGDB=ImageIGDB,
-                                Screenshot=Screenshot,
-                                Artwork=Artwork,
-                                GameVideo=GameVideo,
-                                Collection=Collection,
-                                Franchise=Franchise,
-                                Website=Website,
+                                models=models,
                                 igdb=igdb, 
                                 name=game, 
                                 platform_name=platform, 
@@ -716,7 +706,7 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
                                 #segment.games.add(game_inst)
                                 segment_manytomany_instances_dict['games'].append(game_inst)
                             else:
-                                print(f'get_segment_inst(): Could not find game in segment type 2!: Name: {game} - Platform: {platform}')
+                                print(f'Get Segment Inst: Could not find game in segment type 2!: Name: {game} - Platform: {platform}')
             # Break loop to find matching segment type in SEGMENT_TYPES
             break
     # If segmentTypeInst is still none, unknown segment type.
@@ -726,9 +716,9 @@ def get_segment_inst(Segment, SegmentType, Game, Platform, Developer, Genre, Ima
         if segmentType == '':
             segmentType = 'Other'
         try:
-            segmentTypeInst = SegmentType.objects.get(title=segmentType)
-        except SegmentType.DoesNotExist:
-            segmentTypeInst = SegmentType.objects.create(title=segmentType, slug=slugify(segmentType))
+            segmentTypeInst = models.SegmentType.objects.get(title=segmentType)
+        except models.SegmentType.DoesNotExist:
+            segmentTypeInst = models.SegmentType.objects.create(title=segmentType, slug=slugify(segmentType))
 
         # Add description
         segment.description = ', '.join(segmentContent)
@@ -758,58 +748,20 @@ def add_model_inst_list_to_field(m2m_field, model_inst_list):
         model_inst.save()
         m2m_field.add(model_inst)
 
-def createReplayEpisodeFromJSON(replayData, apps):
+def createReplayEpisodeFromJSON(replayData, models):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
 
     Parameters:
         replayData (dict):
-        app ():
+        models (Models):
     '''
-    # Cannot import models directly as it may be a newer version
-    # than this migration expects. Use historical versions instead.
-    
-    # Fansite app
-    # SuperReplay = apps.get_model('fansite', 'SuperReplay')
-    # SuperReplayEpisode = apps.get_model('fansite', 'SuperReplayEpisode')
-
-    # People app
-    Person = apps.get_model('people', 'Person')
-    # Guest = apps.get_model('people', 'Guest')
-    # StaffPosition = apps.get_model('people', 'StaffPosition')
-    # StaffPositionInstance = apps.get_model('people', 'StaffPositionInstance')
-    Staff = apps.get_model('people', 'Staff')
-
-    # Game app
-    Artwork = apps.get_model('games', 'Artwork')
-    Collection = apps.get_model('games', 'Collection')
-    Developer = apps.get_model('games', 'Developer')
-    Franchise = apps.get_model('games', 'Franchise')
-    Game = apps.get_model('games', 'Game')
-    GameVideo = apps.get_model('games', 'GameVideo')
-    Genre = apps.get_model('games', 'Genre')
-    ImageIGDB = apps.get_model('games', 'ImageIGDB')
-    Platform = apps.get_model('games', 'Platform')
-    Screenshot = apps.get_model('games', 'Screenshot')
-    Website = apps.get_model('games', 'Website')
-
-    # Replay app
-    Article = apps.get_model('replay', 'Article')
-    ExternalLink = apps.get_model('replay', 'ExternalLink')
-    # Heading = apps.get_model('replay', 'Heading')
-    # HeadingInstance = apps.get_model('replay', 'HeadingInstance')
-    ReplayEpisode = apps.get_model('replay', 'ReplayEpisode')
-    ReplaySeason = apps.get_model('replay', 'ReplaySeason')
-    Segment = apps.get_model('replay', 'Segment')
-    SegmentType = apps.get_model('replay', 'SegmentType')
-    Thumbnail = apps.get_model('replay', 'Thumbnail')
-    YouTubeVideo = apps.get_model('replay', 'YouTubeVideo')
 
     # IGDB instance initialization creates API access_token
     igdb = IGDB()
 
     # Create Replay episode object
-    replay = ReplayEpisode()
+    replay = models.ReplayEpisode()
 
     # Dictionary to hold model instances for ManyToManyFields.
     # Key is field name and value is list of model instances.
@@ -852,17 +804,17 @@ def createReplayEpisodeFromJSON(replayData, apps):
     if 'details' in replayData:
         # Host - replayData.details.host (ForeignKey)
         if 'host' in replayData['details'] and replayData['details']['host']:
-            replay.host = get_person_inst(Person, Staff, Thumbnail, {'name': replayData['details']['host'][0]})
+            replay.host = get_person_inst(models, {'name': replayData['details']['host'][0]})
 
         # Featuring - replayData.details.featuring (ManyToMany)
         if 'featuring' in replayData['details'] and replayData['details']['featuring']:
             for personName in replayData['details']['featuring']:
-                person = get_person_inst(Person, Staff, Thumbnail, {'name': personName})
+                person = get_person_inst(models, {'name': personName})
                 replay_manytomany_instances_dict['featuring'].append(person)
 
     # YouTube Video - replayData.youtube (OneToOne)
     if 'youtube' in replayData and 'views' in replayData['youtube']:
-        youtubeVideo = YouTubeVideo()
+        youtubeVideo = models.YouTubeVideo()
 
         # ID - replayData.details.external_links
         # Title
@@ -887,9 +839,9 @@ def createReplayEpisodeFromJSON(replayData, apps):
         # Thumbnails
         for key, value in replayData['youtube']['thumbnails'].items():
             try:
-                thumbnail = Thumbnail.objects.get(url=value['url'])
-            except Thumbnail.DoesNotExist:
-                thumbnail = Thumbnail.objects.create(
+                thumbnail = models.Thumbnail.objects.get(url=value['url'])
+            except models.Thumbnail.DoesNotExist:
+                thumbnail = models.Thumbnail.objects.create(
                     quality=key.upper(),
                     url=value['url'],
                     width=value['width'],
@@ -912,7 +864,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
                 # Skip links containing 'youtube.com'
                 # if 'youtube.com' in link['href']:
                 #     continue
-                externalLink = ExternalLink.objects.create(
+                externalLink = models.ExternalLink.objects.create(
                     url=link['href'],
                     title=link['title']
                 )
@@ -920,7 +872,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
             
             # Fandom Link - replayData.fandomWikiURL (ManyToMany)
             if 'fandomWikiURL' in replayData and replayData['fandomWikiURL']:
-                externalLink = ExternalLink.objects.create(
+                externalLink = models.ExternalLink.objects.create(
                     url=f'https://replay.fandom.com{replayData["fandomWikiURL"]}',
                     title=replay.title
                 )
@@ -949,9 +901,9 @@ def createReplayEpisodeFromJSON(replayData, apps):
         # Season - calculate using replayData.episodeNumber (ForeignKey)
         season = get_season(replay)[0]
         try:
-            replay.season = ReplaySeason.objects.get(pk=season)
-        except ReplaySeason.DoesNotExist:
-            replay.season = ReplaySeason.objects.create(
+            replay.season = models.ReplaySeason.objects.get(pk=season)
+        except models.ReplaySeason.DoesNotExist:
+            replay.season = models.ReplaySeason.objects.create(
                 number=get_season(replay)[0]
             )
     
@@ -971,17 +923,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
             platform_name = game['system']
 
             game_inst = get_game_inst(
-                Game=Game, 
-                Platform=Platform, 
-                Developer=Developer,
-                Genre=Genre,
-                ImageIGDB=ImageIGDB,
-                Screenshot=Screenshot,
-                Artwork=Artwork,
-                GameVideo=GameVideo,
-                Collection=Collection,
-                Franchise=Franchise,
-                Website=Website,
+                models,
                 igdb=igdb, 
                 name=game_name, 
                 platform_name=platform_name, 
@@ -1036,19 +978,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
         if segmentContent:
             replay_manytomany_instances_dict['other_segments'].append(
                 get_segment_inst(
-                    Segment, 
-                    SegmentType, 
-                    Game, 
-                    Platform, 
-                    Developer, 
-                    Genre, 
-                    ImageIGDB, 
-                    Screenshot,
-                    Artwork,
-                    GameVideo,
-                    Collection,
-                    Franchise,
-                    Website,
+                    models,
                     platform, 
                     igdb, 
                     segmentType, 
@@ -1064,19 +994,7 @@ def createReplayEpisodeFromJSON(replayData, apps):
         if segmentContent:
             replay_manytomany_instances_dict['other_segments'].append(
                 get_segment_inst(
-                    Segment, 
-                    SegmentType, 
-                    Game, 
-                    Platform, 
-                    Developer, 
-                    Genre, 
-                    ImageIGDB, 
-                    Screenshot, 
-                    Artwork,
-                    GameVideo,
-                    Collection,
-                    Franchise,
-                    Website,
+                    models,
                     platform, 
                     igdb, 
                     segmentType, 
@@ -1086,14 +1004,14 @@ def createReplayEpisodeFromJSON(replayData, apps):
     
     # Article - replayData.article  (OneToOne)
     if 'article' in replayData:
-        article = Article()
+        article = models.Article()
 
         # Title - replayData.article.title
         article.title = replayData['article']['title']
 
         # Author - replayData.article.author
         # TODO: Add Staff to author field
-        article.author = get_person_inst(Person, Staff, Thumbnail, {'name': replayData['article']['author']})
+        article.author = get_person_inst(models, {'name': replayData['article']['author']})
 
         # Datetime - replayData.article.date
         # " on Sep 26, 2015 at 03:00 AM"
@@ -1144,29 +1062,24 @@ def database_init(apps):
 
     # Create Person and Staff models
 
-def create_person_from_json(person_data, apps):
+def create_person_from_json(person_data, models):
     '''
     Converts dictionary of key/value pairs of Game Informer staff/guest into defined models inside database for data migration.
 
     Parameters:
         person_data (dict):
-        apps ():
+        models (Models):
     '''
-    # Cannot import models directly as it may be a newer version
-    # than this migration expects. Use historical versions instead.
-    
-    Thumbnail = apps.get_model('replay', 'Thumbnail')
-    Person = apps.get_model('people', 'Person')
-    SocialMediaInst = apps.get_model('people', 'SocialMediaInst')
-    Staff = apps.get_model('people', 'Staff')
-    StaffPosition = apps.get_model('people', 'StaffPosition')
-    StaffPositionInstance = apps.get_model('people', 'StaffPositionInstance')
 
-    get_person_inst(Person, Staff, Thumbnail, person_data)
+    get_person_inst(models, person_data)
 
-def initialize_people_database(apps, schema_editor):
+def initialize_people_database(models):
     '''
     Adds models to database for Game Informer staff/guests from JSON file.
+
+    Parameters:
+        models (Models): Models instance holding historic versions of each model
+
     '''
     with open('utilities/gi_people.json', 'r', encoding='utf-8') as data_file:
 
@@ -1181,7 +1094,7 @@ def initialize_people_database(apps, schema_editor):
         start_time = time.time()
 
         for person_data in reversed(people_data):
-            create_person_from_json(person_data, apps)
+            create_person_from_json(person_data, models)
 
             curr_count += 1
 
@@ -1191,7 +1104,9 @@ def initialize_people_database(apps, schema_editor):
             print(f'Person: {person_data["name"]} - {curr_count}/{total_count} Completed! - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}')
 
 def initialize_database(apps, schema_editor):
-    initialize_people_database(apps, schema_editor)
+    models = Models(apps)
+
+    initialize_people_database(models)
 
     with open('utilities/replay_data.json', 'r', encoding='utf-8') as dataFile:
 
@@ -1204,7 +1119,7 @@ def initialize_database(apps, schema_editor):
             curr_replay_count = 0
             start_time = time.time()
             for replayData in reversed(allReplayData):
-                createReplayEpisodeFromJSON(replayData, apps)
+                createReplayEpisodeFromJSON(replayData, models)
 
                 curr_replay_count += 1
                 avg_seconds_per_replay = (time.time() - start_time) / curr_replay_count
@@ -1217,25 +1132,6 @@ def initialize_database(apps, schema_editor):
             # individually when YouTubeVideo model is first created.
 
         #createReplayEpisodeFromJSON(allReplayData[0], apps)
-
-    '''
-    from django.db import migrations
-    from utilities.data_migration import initialize_database
-
-    class Migration(migrations.Migration):
-
-        dependencies = [
-            ('fansite', '0001_initial'),
-            # added dependencies to enable models from other apps to be available initialize_database method
-            ('games', '0001_initial'),
-            ('people', '0001_initial'),
-            ('replay', '0001_initial'),
-        ]
-
-        operations = [
-            migrations.RunPython(initialize_database),
-        ]
-    '''
 
 def get_season(replayEpisode):
     # Episode numbers less than 1 are special unofficial episodes
@@ -1266,3 +1162,22 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+'''
+from django.db import migrations
+from utilities.data_migration import initialize_database
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('fansite', '0001_initial'),
+        # added dependencies to enable models from other apps to be available initialize_database method
+        ('games', '0001_initial'),
+        ('people', '0001_initial'),
+        ('replay', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.RunPython(initialize_database),
+    ]
+'''
