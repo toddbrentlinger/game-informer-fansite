@@ -336,6 +336,13 @@ p {
     height: auto;
 }
 
+/* Game */
+
+#game-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 20%));
+}
+
 /* Media Queries */
 
 /* Extra small devices (phones, 600px and down) */

@@ -1,20 +1,28 @@
 {% extends "base_generic.html" %}
 
+{% load static %}
+{% load game_tags %}
+
 {% block title %}
     <title>Game Informer Fansite - Games</title>
+{% endblock %}
+
+{% block custom-css %}
+    <link rel="stylesheet" href="{% static 'css/game_list.css' %}">
 {% endblock %}
 
 {% block content %}
     <h1>Game List View</h1>
     {% if game_list %}
-    <ul>
-        {% for game in game_list %}
-        <li>
-            <a href="{{ game.get_absolute_url }}">{{ game.name }}</a> ({{ game.platform.name }})
-        </li>
-        {% endfor %}
-    </ul>
+        <ul id="game-list">
+            {% for game in game_list %}
+            <li>
+                {% game_basic_display game %}
+                <!-- <a href="{{ game.get_absolute_url }}">{{ game.name }}</a> ({{ game.platform.name }}) -->
+            </li>
+            {% endfor %}
+        </ul>
     {% else %}
-    <p>There are no video games!</p>
+        <p>There are no video games!</p>
     {% endif %}
 {% endblock %}

@@ -1,5 +1,7 @@
 {% extends "base_generic.html" %}
 
+{% load game_tags %}
+
 {% block title %}
     <title>Game Informer Fansite - Games - Developer - {{ developer.name }}</title>
 {% endblock %}
@@ -28,10 +30,15 @@
 
     <h2>{{ developer.name }} Games Played By Game Informer:</h2>
 
-    {% for game in developer.game_set.all %}
-        <hr>
-        <p>
-            <a href="{{ game.get_absolute_url }}">{{ game.name }}</a>
-        </p>
-    {% endfor %}
+    {% if developer.game_set.all %}
+        <ul id="game-list">
+            {% for game in developer.game_set.all %}
+            <li>
+                {% game_basic_display game %}
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>There are no video games!</p>
+    {% endif %}
 {% endblock %}
