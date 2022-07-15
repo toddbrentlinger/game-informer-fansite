@@ -7,6 +7,17 @@
 {% block content %}
     <h1>{{ platform.name }}</h1>
 
+    {% if platform.logo %}
+        <div id="platform-logo">
+            <img
+                src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ platform.logo.image_id }}.png"
+                width="{{ platform.logo.width }}"
+                height="{{ platform.logo.height }}"
+                alt="Logo of video game platform {{ platform.name }}"
+            >
+        </div>
+    {% endif %}
+
     <p><strong>Abbreviation: </strong>{{ platform.abbreviation }}</p>
     <p><strong>Alternative Name: </strong>{{ platform.alternative_name }}</p>
     {% if platform.summary %}

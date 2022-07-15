@@ -193,9 +193,9 @@ class IGDB:
 
 def main():
     igdb = IGDB()
-    fields = 'cover.*,first_release_date,genres.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,screenshots.*,slug,storyline,summary,url'
-    exclude = 'involved_companies.company.published, involved_companies.company.developed'
-
+    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,url,videos.*,websites.*'
+    exclude = 'collection.games,franchise.games,franchises.games,involved_companies.company.published, involved_companies.company.developed'
+    
     # data = 'fields {fields};', f'search "*"; where involved_companies'
     # response = requests.post(
     #     'https://api.igdb.com/v4/games', 
@@ -225,18 +225,18 @@ def main():
 
     pprint.pprint(
         igdb.get_game_data(
-            'Uncharted 2: Among Thieves',
+            'Overlord',
             None,
-            fields='cover.*,first_release_date,genres.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,screenshots.*,slug,storyline,summary,url',
-            exclude='involved_companies.company.published, involved_companies.company.developed'
+            fields=fields,
+            exclude=exclude
         )[0], 
         indent=2
     )
+    return
 
     pprint.pprint(
         igdb.get_platform_data('Nintendo 64', '*,platform_logo.*')[0]
     )
-    return
 
     pprint.pprint(
         igdb.get_game_data(

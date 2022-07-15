@@ -2,7 +2,6 @@ import json
 import pprint
 import re
 import datetime
-from turtle import title
 from youtube import YouTube
 
 # (<show_title(str)>, <regex_pattern(raw_str)> <check_description(bool)>)

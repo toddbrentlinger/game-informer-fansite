@@ -7,6 +7,17 @@
 {% block content %}
     <h1>{{ developer.name }}</h1>
 
+    {% if developer.logo %}
+        <div id="developer-logo">
+            <img
+                src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ developer.logo.image_id }}.png"
+                width="{{ developer.logo.width }}"
+                height="{{ developer.logo.height }}"
+                alt="Logo of video game developer {{ developer.name }}"
+            >
+        </div>
+    {% endif %}
+
     <p><strong>Country: </strong>{{ developer.country }}</p>
 
     {% if developer.description %}
