@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load replayepisode_tags %}
+{% load fansite_tags %}
 
 {% block title %}
     <title>Game Informer Fansite - Replay - {{ replayepisode.title }}</title>
@@ -46,8 +47,8 @@
                 <span><i class="fas fa-clock"></i> {{ replayepisode.runtime }}</span>
             </div>
             <div id="primary-info-details-counts">
-                <span><i class="fas fa-eye"></i> {{ replayepisode.youtube_video.views }} views</span>
-                <span><i class="fas fa-thumbs-up"></i> {{ replayepisode.youtube_video.likes }}</span>
+                <span><i class="fas fa-eye"></i> {{ replayepisode.youtube_video.views|add_commas_to_num }} views</span>
+                <span><i class="fas fa-thumbs-up"></i> {{ replayepisode.youtube_video.likes|add_commas_to_num }}</span>
             </div>
         </div>
     </div>
