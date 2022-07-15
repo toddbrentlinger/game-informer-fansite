@@ -2,10 +2,85 @@ from django.db import models
 from django.urls import reverse
 from django.template.defaultfilters import slugify
 
+# Abstract Models
+
+# TODO: If game is deleted, screenshot is deleted, but ImageIGDB remains in database. Add method to handle
+# removing the ImageIGDB from the database if screenshot is deleted.
+class ImageType(models.Model):
+    """Abstract model representing a type of ImageIGDB (ex. screenshot, artwork, etc.)."""
+
+    # Fields
+
+    # id = models.PositiveIntegerField(primary_key=True, help_text='Enter IGDB ID of the IGDB image.')
+    image = models.OneToOneField('ImageIGDB', on_delete=models.CASCADE, help_text='Enter the IGDB Image.')
+    game = models.ForeignKey('Game', on_delete=models.CASCADE, help_text='Enter the game.')
+
+    # Metadata
+
+    class Meta:
+        #ordering = ['game.name']
+        abstract = True
+
+    # Methods
+
+    def __str__(self):
+        return f'{self.image.image_id} - {self.game.name}'
+
+class SeriesBase(models.Model):
+    """Abstract model representing a video game collection/series/franchise."""
+
+    # Fields
+
+    id = models.PositiveIntegerField(primary_key=True, help_text='Enter IGDB ID of the %(class).')
+    name = models.CharField(max_length=200, help_text='Enter name of the %(class).')
+    slug = models.SlugField(max_length=200, unique=True, null=False, help_text='Enter a url-safe, unique, lower-case version of the %(class).')
+    games = models.ManyToManyField('Game', help_text='Enter games part of the %(class).')
+    url = models.URLField(help_text='Enter the IGDB website address (URL) of the %(class).')
+
+    # Metadata
+
+    class Meta:
+        abstract = True
+        ordering = ['name']
+
+    # Methods
+
+    def __str__(self):
+        return
+
 # Create your models here.
 
-class Developer(models.Model):
+class Artwork(ImageType):
+    """Model representing a video game artwork."""
+
     # Fields
+
+    # Metadata
+
+    class Meta(ImageType.Meta):
+        pass
+
+    # Methods
+
+class Collection(SeriesBase):
+    """Model representing a video game collection."""
+
+    # Fields
+
+    # Metadata
+    class Meta(SeriesBase.Meta):
+        pass
+
+    # Methods
+
+    def get_absolute_url(self):
+        return reverse('collection-detail-slug', kwargs={'stub': self.slug})
+
+class Developer(models.Model):
+    """Model representing a video game developer."""
+
+    # Fields
+
     id = models.PositiveIntegerField(primary_key=True, help_text='Enter IGDB ID of the company.')
     name = models.CharField(max_length=200, help_text='Enter name of the company.')
     country = models.PositiveSmallIntegerField(blank=True, null=True, help_text='Enter the ISO 3166-1 country code.')
@@ -15,10 +90,12 @@ class Developer(models.Model):
     url = models.URLField(help_text='Enter the IGDB website address (URL) of the company.')
 
     # Metadata
+
     class Meta:
         ordering = ['name']
 
     # Methods
+
     def __str__(self):
         return self.name
 
@@ -29,6 +106,20 @@ class Developer(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         return super(Developer, self).save(*args, **kwargs)
+
+class Franchise(SeriesBase):
+    """Model representing a video game franchise."""
+
+    # Fields
+
+    # Metadata
+    class Meta(SeriesBase.Meta):
+        pass
+
+    # Methods
+
+    def get_absolute_url(self):
+        return reverse('franchise-detail-slug', kwargs={'stub': self.slug})
 
 # TODO: Use VGDB (Video Game Database API)
 # - *Could use API to fill a few basic fields to be stored on custom database and 
@@ -52,8 +143,8 @@ class Game(models.Model):
     developer = models.ForeignKey(Developer, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter developer of the game.')
     release_date = models.DateTimeField(blank=True, null=True, verbose_name='Release Date', help_text='Enter date the game was released.')
     cover = models.OneToOneField('ImageIGDB', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter the cover of the game.')
-    #screenshots = models.ManyToManyField(ImageIGDB, blank=True, help_text='Enter screenshots of the game.')
     url = models.URLField(blank=True, help_text='Enter the IGDB website address (URL) of the game.')
+    websites = models.ManyToManyField('Website', blank=True, help_text='Enter websites associated with the game.')
 
     # Metadata
 
@@ -81,21 +172,49 @@ class Game(models.Model):
             self.slug = slugify(self.name)
         super(Game, self).save(*args, **kwargs)
 
-class Genre(models.Model):
+class GameVideo(models.Model):
+    """Model representing a video game video."""
+
     # Fields
-    id = models.PositiveSmallIntegerField(primary_key=True, help_text='Enter IGDB ID for this genre.')
-    name = models.CharField(max_length=200, help_text='Enter name of this genre.')
+
+    id = models.PositiveIntegerField(primary_key=True, help_text='Enter IGDB ID of the video.')
+    name = models.CharField(max_length=200, blank=True, help_text='Enter the name of the video.')
+    video_id = models.CharField(max_length=50, help_text='Enter the external ID of the video (usually YouTube).')
+    game = models.ForeignKey('Game', on_delete=models.CASCADE, help_text='Enter the game.')
+
+    # Metadata
+
+    class Meta:
+        pass
+
+    # Methods
+
+    def __str__(self):
+        return f'{self.name} [ID: {self.video_id} - Game: {self.game.name}]'
+
+class Genre(models.Model):
+    """Model representing a video game genre."""
+
+    # Fields
+
+    id = models.PositiveSmallIntegerField(primary_key=True, help_text='Enter IGDB ID for the genre.')
+    name = models.CharField(max_length=200, help_text='Enter name of the genre.')
     
     # Metadata
+
     class Meta:
         ordering = ['id']
     
     # Methods
+
     def __str__(self):
         return self.name
 
 class ImageIGDB(models.Model):
+    """Model representing a video game image from IGDB."""
+
     # Fields
+
     id = models.PositiveIntegerField(primary_key=True, help_text='Enter IGDB ID of the image.')
     image_id = models.CharField(max_length=100, help_text='Enter the ID of the image used to construct an IGDB image link.')
     width = models.PositiveSmallIntegerField(blank=True, null=True, help_text='Enter the width of the image in pixels.')
@@ -109,11 +228,15 @@ class ImageIGDB(models.Model):
         verbose_name = 'Image'
 
     # Methods
+
     def __str__(self):
         return self.image_id
 
 class Platform(models.Model):
+    """Model representing a video game platform."""
+
     # Fields
+
     id = models.PositiveSmallIntegerField(primary_key=True, help_text='Enter IGDB ID of the system/platform.')
     name = models.CharField(max_length=200, help_text='Enter name of this system/platform.')
     abbreviation = models.CharField(max_length=20, blank=True, help_text='Enter shortened abbreviation for this system/platform.')
@@ -124,10 +247,12 @@ class Platform(models.Model):
     url = models.URLField(help_text='Enter the IGDB website address (URL) of the platform.')
 
     # Metadata
+
     class Meta:
         ordering = ['name']
 
     # Methods
+
     def __str__(self):
         return self.name
 
@@ -139,23 +264,50 @@ class Platform(models.Model):
             self.slug = slugify(self.name)
         return super(Platform, self).save(*args, **kwargs)
 
-# TODO: If game is deleted, screenshot is deleted, but ImageIGDB remains in database. Add method to handle
-# removing the ImageIGDB from the database if screenshot is deleted.
-class Screenshot(models.Model):
+class Screenshot(ImageType):
     """Model representing a video game screenshot."""
 
     # Fields
 
-    image = models.OneToOneField(ImageIGDB, on_delete=models.CASCADE, help_text='Enter the IGDB Image for the screenshot.')
-    game = models.ForeignKey(Game, on_delete=models.CASCADE, help_text='Enter the game of the screenshot.')
-
     # Metadata
 
-    class Meta:
-        #ordering = ['game.name']
+    class Meta(ImageType.Meta):
         pass
 
     # Methods
 
+class Website(models.Model):
+    """Model representing a video game website."""
+
+    class WebsiteType(models.IntegerChoices):
+        OFFICIAL = 1
+        WIKIA = 2
+        WIKIPEDIA = 3
+        FACEBOOK = 4
+        TWITTER = 5
+        TWITCH = 6
+        INSTAGRAM = 8
+        YOUTUBE = 9
+        IPHONE = 10
+        IPAD = 11
+        ANDROID = 12
+        STEAM = 13
+        REDDIT = 14
+        ITCH = 15
+        EPICGAMES = 16
+        GOG = 17
+        DISCORD = 18
+
+    # Fields
+
+    category = models.PositiveSmallIntegerField(choices=WebsiteType.choices)
+    trusted = models.BooleanField(default=False)
+    url = models.URLField(help_text='Enter the IGDB website address (URL) of the item.')
+
+
+    # Metadata
+
+    # Methods
+
     def __str__(self):
-        return f'{self.image.image_id} - {self.game.name}'
+        return f'{self.category} - {self.url}'

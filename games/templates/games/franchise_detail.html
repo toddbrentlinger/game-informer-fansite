@@ -1,0 +1,18 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Games - Franchise - {{ franchise.name }}</title>
+{% endblock %}
+
+{% block content %}
+    <h1>{{ franchise.name }}</h1>
+
+    <h2>{{ franchise.name }} Games Played By Game Informer:</h2>
+
+    {% for game in franchise.games.all %}
+        <hr>
+        <p>
+            <a href="{{ game.get_absolute_url }}">{{ game.name }}</a>
+        </p>
+    {% endfor %}
+{% endblock %}

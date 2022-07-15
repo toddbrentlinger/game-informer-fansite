@@ -1,0 +1,18 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Games - Collection - {{ collection.name }}</title>
+{% endblock %}
+
+{% block content %}
+    <h1>{{ collection.name }}</h1>
+
+    <h2>{{ collection.name }} Games Played By Game Informer:</h2>
+
+    {% for game in collection.games.all %}
+        <hr>
+        <p>
+            <a href="{{ game.get_absolute_url }}">{{ game.name }}</a>
+        </p>
+    {% endfor %}
+{% endblock %}

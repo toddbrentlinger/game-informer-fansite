@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from games.models import Game, Platform, Developer
+from games.models import Game, Platform, Developer, Collection, Franchise
 from replay.models import ReplayEpisode, SegmentType
 from people.models import Person
 
@@ -15,7 +15,9 @@ def index(request):
         'num_replay_segment_types': SegmentType.objects.count(),
         'num_game_platforms': Platform.objects.count(),
         'num_game_developers': Developer.objects.count(),
-        'num_people': Person.objects.count()
+        'num_people': Person.objects.count(),
+        'num_game_collections': Collection.objects.count(),
+        'num_game_franchises': Franchise.objects.count(),
     }
 
     # Render the HTML template index.html with the data in the context variable

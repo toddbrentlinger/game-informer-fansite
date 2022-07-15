@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Games - Franchises</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Franchise List View</h1>
+    {% if franchise_list %}
+        <ul>
+            {% for franchise in franchise_list %}
+                <li>
+                    <a href="{{ franchise.get_absolute_url }}">{{ franchise.name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>There are no video game franchises!</p>
+    {% endif %}
+{% endblock %}

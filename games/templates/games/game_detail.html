@@ -22,11 +22,59 @@
                         alt="Cover image of video game {{ game.name }}">
                 </div>
             {% endif %}
+
             <h1 id="game-name">{{ game.name }}</h1>
-            <p><strong>Platform: </strong><a href="{{ game.platform.get_absolute_url }}">{{ game.platform.name }}</a></p>
+
+            <span class="game-logo">
+                <strong>Platform: </strong>
+                <a href="{{ game.platform.get_absolute_url }}">
+                    <img
+                        src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ game.platform.logo.image_id }}.png"
+                        width="{{ game.platform.logo.width }}"
+                        height="{{ game.platform.logo.height }}"
+                        alt="Logo of video game developer {{ game.platform.name }}"
+                    >
+                    {{ game.platform.name }}
+                </a>
+            </span>
+
+            <span class="game-logo">
+                <strong>Developer: </strong>
+                <a href="{{ game.developer.get_absolute_url }}">
+                    <img
+                        src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ game.developer.logo.image_id }}.png"
+                        width="{{ game.developer.logo.width }}"
+                        height="{{ game.developer.logo.height }}"
+                        alt="Logo of video game developer {{ game.developer.name }}"
+                    >
+                    {{ game.developer.name }}
+                </a>
+            </span>
+
             <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
-            <p><strong>Developer: </strong><a href="{{ game.developer.get_absolute_url }}">{{ game.developer.name }}</a></p>
+
             <p><strong>Genres: </strong>{{ game.genres.all|join:", " }}</p>
+            
+            {% if game.collection_set.all %}
+                <p>
+                    <strong>Series: </strong>
+                    {% for collection in game.collection_set.all %}
+                        <a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a>
+                        {% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            {% endif %}
+
+            {% if game.franchise_set.all %}
+                <p>
+                    <strong>Franchises: </strong>
+                    {% for franchise in game.franchise_set.all %}
+                        <a href="{{ franchise.get_absolute_url }}">{{ franchise.name }}</a>
+                        {% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            {% endif %}
+
             {% if game.summary %}
                 <p>{{ game.summary|linebreaks }}</p>
             {% endif %}
@@ -41,16 +89,59 @@
     <!-- <p><strong>Slug: </strong>{{ game.slug }}</p>
     <p><strong>IGDB ID: </strong>{{ game.igdb_id }}</p> -->
 
+    <h2>Websites</h2>
+    <ul>
+        {% for website in game.websites.all %}
+            <li>
+                <a href="{{ website.url }}">{{ website.get_category_display }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+
     {% if game.screenshot_set.all %}
         <h2>Screenshots:</h2>
-        <div id="screenshot-gallery">
+        <div id="screenshot-gallery" class="img-gallery">
             {% for screenshot in game.screenshot_set.all %}
-            <div class="screenshot">
+            <div class="img-gallery-item">
                 <img 
                     src="https://images.igdb.com/igdb/image/upload/t_thumb_widescreen_large/{{ screenshot.image.image_id }}.jpg" 
                     width="{{ screenshot.image.width }}" height="{{ screenshot.image.height }}" 
                     alt="Screenshot #{{ forloop.counter }} for video game {{ game.name }}"
                 >
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if game.artwork_set.all %}
+        <h2>Artworks:</h2>
+        <div id="artwork-gallery" class="img-gallery">
+            {% for artwork in game.artwork_set.all %}
+            <div class="img-gallery-item">
+                <img 
+                    src="https://images.igdb.com/igdb/image/upload/t_thumb_widescreen_large/{{ artwork.image.image_id }}.jpg" 
+                    width="{{ artwork.image.width }}" height="{{ artwork.image.height }}" 
+                    alt="Artwork #{{ forloop.counter }} for video game {{ game.name }}"
+                >
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if game.gamevideo_set.all %}
+        <h2>Videos:</h2>
+        <div id="video-gallery" class="img-gallery">
+            {% for gamevideo in game.gamevideo_set.all %}
+            <div class="img-gallery-item">
+                <iframe
+                    frameborder="0"
+                    allowfullscreen="1"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    title="{{ gamevideo.name|default:'YouTube video player' }}"
+                    width="640"
+                    height="360"
+                    src="https://www.youtube.com/embed/{{ gamevideo.video_id }}"
+                ></iframe>
             </div>
             {% endfor %}
         </div>

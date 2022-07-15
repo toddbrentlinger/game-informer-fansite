@@ -1,0 +1,20 @@
+{% extends "base_generic.html" %}
+
+{% block title %}
+    <title>Game Informer Fansite - Games - Collections</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Collection List View</h1>
+    {% if collection_list %}
+        <ul>
+            {% for collection in collection_list %}
+                <li>
+                    <a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>There are no video game collections!</p>
+    {% endif %}
+{% endblock %}
