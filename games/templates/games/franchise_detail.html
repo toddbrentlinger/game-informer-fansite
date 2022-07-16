@@ -11,15 +11,5 @@
 
     <h2>{{ franchise.name }} Games Played By Game Informer:</h2>
 
-    {% if franchise.games.all %}
-        <ul id="game-list">
-            {% for game in franchise.games.all %}
-            <li>
-                {% game_basic_display game %}
-            </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>There are no video games!</p>
-    {% endif %}
+    {% game_basic_list_display franchise.games.all %}
 {% endblock %}

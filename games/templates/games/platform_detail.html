@@ -29,15 +29,5 @@
 
     <h2>{{ platform.name }} Games Played By Game Informer:</h2>
 
-    {% if platform.game_set.all %}
-        <ul id="game-list">
-            {% for game in platform.game_set.all %}
-            <li>
-                {% game_basic_display game %}
-            </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>There are no video games!</p>
-    {% endif %}
+    {% game_basic_list_display platform.game_set.all %}
 {% endblock %}

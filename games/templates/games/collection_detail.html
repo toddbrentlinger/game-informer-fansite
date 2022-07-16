@@ -11,15 +11,5 @@
 
     <h2>{{ collection.name }} Games Played By Game Informer:</h2>
 
-    {% if collection.games.all %}
-        <ul id="game-list">
-            {% for game in collection.games.all %}
-            <li>
-                {% game_basic_display game %}
-            </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>There are no video games!</p>
-    {% endif %}
+    {% game_basic_list_display collection.games.all %}
 {% endblock %}
