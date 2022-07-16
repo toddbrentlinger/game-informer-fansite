@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
     path('fansite/', include('fansite.urls')),
     path('', RedirectView.as_view(url='fansite/', permanent=True)),
     path('games/', include('games.urls')),
