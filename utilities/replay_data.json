@@ -802,11 +802,6 @@
     "fandomWikiURL": "/wiki/Replay:_The_2020_Holiday_Spectacular",
     "mainSegmentGamesAdv": [
       {
-        "title": "The 2020 Holiday Spectacular",
-        "system": "PC",
-        "yearReleased": "2020"
-      },
-      {
         "title": "Christmas Adventures: A Winter Night's Dream",
         "system": "PC",
         "yearReleased": "2020"
@@ -1420,14 +1415,29 @@
     "fandomWikiURL": "/wiki/Replay:_PlayStation_Demo_Discs",
     "mainSegmentGamesAdv": [
       {
-        "title": "PlayStation Demo Discs",
-        "system": "PS1",
+        "title": "Tomb Raider III",
+        "system": "PlayStation",
         "yearReleased": "1998"
       },
       {
-        "title": "PlayStation Demo Discs",
+        "title": "Gran Turismo",
+        "system": "PlayStation",
+        "yearReleased": "1997"
+      },
+      {
+        "title": "Crash Bandicoot: Warped",
+        "system": "PlayStation",
+        "yearReleased": "1998"
+      },
+      {
+        "title": "MediEvil",
+        "system": "PlayStation",
+        "yearReleased": "1998"
+      },
+      {
+        "title": "Metal Gear Solid",
         "system": "PS2",
-        "yearReleased": "2001"
+        "yearReleased": ""
       }
     ],
     "airDate": "11/07/20",
@@ -5549,19 +5559,14 @@
     "fandomWikiURL": "/wiki/Replay:_The_2019_Steam_Holiday_Extravaganza",
     "mainSegmentGamesAdv": [
       {
-        "title": "The 2019 Steam Holiday Extravaganza",
-        "system": "PC",
-        "yearReleased": "2018"
-      },
-      {
         "title": "Christmas Race 2",
         "system": "PC",
         "yearReleased": "2017"
       },
       {
-        "title": "Krampus Quest II",
+        "title": "Krampus Quest",
         "system": "PC",
-        "yearReleased": "2019"
+        "yearReleased": "2017"
       },
       {
         "title": "Operation Snowman",
@@ -6413,7 +6418,7 @@
     "fandomWikiURL": "/wiki/Replay:_Call_of_Duty_4:_Modern_Warfare_Remastered",
     "mainSegmentGamesAdv": [
       {
-        "title": "Call of Duty 4: Modern Warfare Remastered",
+        "title": "Call of Duty: Modern Warfare Remastered",
         "system": "Xbox One",
         "yearReleased": "2016"
       }
@@ -7297,7 +7302,17 @@
     "fandomWikiURL": "/wiki/Replay:_The_Blair_Witch_Trilogy",
     "mainSegmentGamesAdv": [
       {
-        "title": "The Blair Witch Trilogy",
+        "title": "Blair Witch Volume 1: Rustin Parr",
+        "system": "PC",
+        "yearReleased": "2000"
+      },
+      {
+        "title": "Blair Witch Volume 2: The Legend of Coffin Rock",
+        "system": "PC",
+        "yearReleased": "2000"
+      },
+      {
+        "title": "Blair Witch Volume 3: The Elly Kedward Tale",
         "system": "PC",
         "yearReleased": "2000"
       }
@@ -11538,7 +11553,117 @@
     "fandomWikiURL": "/wiki/Replay:_The_Commodore_64_Spectacular:_Part_2",
     "mainSegmentGamesAdv": [
       {
-        "title": "The Commodore 64 Spectacular: Part 2",
+        "title": "IO",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Jumpman",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Jumpman 2",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Mega-Apocalypse",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Mission A.D.",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Monty on the Run",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Netherworld",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Nobby the Aardvark",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Nodes of Yesod",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Paradroid",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Pitstop II",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Ranarama",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Robin of the Wood",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Silicon Warrior",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Skate Crazy",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Skool Daze",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Snare",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Speedball",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Speedball 2",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Spindizzy",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Street Sports Baseball",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Street Sports Basketball",
+        "system": "Commodore 64",
+        "yearReleased": "1983-1992"
+      },
+      {
+        "title": "Street Sports Soccer",
         "system": "Commodore 64",
         "yearReleased": "1983-1992"
       }
@@ -11647,7 +11772,137 @@
     "fandomWikiURL": "/wiki/Replay:_The_Commodore_64_Spectacular:_Part_1",
     "mainSegmentGamesAdv": [
       {
-        "title": "The Commodore 64 Spectacular: Part 1",
+        "title": "Alleykat",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Anarchy",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Avenger",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Battle Valley",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Boulder Dash",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Break Dance",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "California Games",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Chip's Challenge",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Coil Cop",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Confuzion",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Cosmic Causeway",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Cyberdyne Warrior",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Cybernoid",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Cybernoid II",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Deflektor",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Destroyer",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Everyone's a Wally",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Firelord",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Gateway to Apshai",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Gribbly's Day Out",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Heartland",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Herobotix",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Highway Encounter",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Hunter's Moon",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Hysteria",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Impossible Mission",
+        "system": "Commodore 64",
+        "yearReleased": "1982-1989"
+      },
+      {
+        "title": "Impossible Mission II",
         "system": "Commodore 64",
         "yearReleased": "1982-1989"
       }
@@ -15816,9 +16071,19 @@
     "fandomWikiURL": "/wiki/Replay:_Civil_War:_Final_Week",
     "mainSegmentGamesAdv": [
       {
-        "title": "Replay Civil War: Final Week",
-        "system": "",
-        "yearReleased": ""
+        "title": "Pocket Bike Racer",
+        "system": "Xbox 360",
+        "yearReleased": "2006"
+      },
+      {
+        "title": "Skate 2",
+        "system": "PlayStation 3",
+        "yearReleased": "2009"
+      },
+      {
+        "title": "Mario Party 4",
+        "system": "GameCube",
+        "yearReleased": "2002"
       }
     ],
     "airDate": "11/10/17",
@@ -16115,9 +16380,24 @@
     "fandomWikiURL": "/wiki/Replay:_Civil_War:_Week_Two",
     "mainSegmentGamesAdv": [
       {
-        "title": "Replay Civil War: Week Two",
-        "system": "",
-        "yearReleased": ""
+        "title": "Midway's Greatest Arcade Hits: Volume 1",
+        "system": "Nintendo 64",
+        "yearReleased": "2000"
+      },
+      {
+        "title": "Super Monkey Ball: Banana Blitz",
+        "system": "Wii",
+        "yearReleased": "2006"
+      },
+      {
+        "title": "James Bond 007: Nightfire",
+        "system": "GameCube",
+        "yearReleased": "2002"
+      },
+      {
+        "title": "Burnout Revenge",
+        "system": "Xbox 360",
+        "yearReleased": "2005"
       }
     ],
     "airDate": "10/20/17",
@@ -16215,9 +16495,24 @@
     "fandomWikiURL": "/wiki/Replay:_Civil_War:_Week_One",
     "mainSegmentGamesAdv": [
       {
-        "title": "Replay Civil War: Week One",
-        "system": "",
-        "yearReleased": ""
+        "title": "The Simpsons: Road Rage",
+        "system": "GameCube",
+        "yearReleased": "2001"
+      },
+      {
+        "title": "SSX Tricky",
+        "system": "PlayStation 2",
+        "yearReleased": "2001"
+      },
+      {
+        "title": "Outlaw Golf",
+        "system": "GameCube",
+        "yearReleased": "2002"
+      },
+      {
+        "title": "Red Dead Revolver",
+        "system": "Xbox",
+        "yearReleased": "2004"
       }
     ],
     "airDate": "10/13/17",
@@ -19936,9 +20231,19 @@
     "fandomWikiURL": "/wiki/Replay:_Holiday_Special_2016",
     "mainSegmentGamesAdv": [
       {
-        "title": "Holiday Special 2016",
+        "title": "Die Hard Trilogy",
         "system": "PlayStation",
         "yearReleased": "1996"
+      },
+      {
+        "title": "Donkey Kong Country 3: Dixie Kong's Double Trouble!",
+        "system": "Super NES",
+        "yearReleased": "1996"
+      },
+      {
+        "title": "Christmas Lemmings 1994",
+        "system": "PC",
+        "yearReleased": "1994"
       }
     ],
     "airDate": "12/23/16",
@@ -21938,7 +22243,7 @@
         "yearReleased": "1995"
       },
       {
-        "title": "Burn Cycle",
+        "title": "Burn:Cycle",
         "system": "Philips CD-i",
         "yearReleased": "1994"
       },
@@ -26527,7 +26832,7 @@
     "airDate": "7/4/15",
     "videoLength": "46:12",
     "middleSegment": "AD",
-    "middleSegmentContent": "Boom Bots Ad",
+    "middleSegmentContent": "BoomBots Ad",
     "secondSegment": "RR",
     "secondSegmentGames": [
       "Lego Rock Raiders"
@@ -27603,7 +27908,7 @@
     "fandomWikiURL": "/wiki/Replay:_Mega_Man_Spectacular",
     "mainSegmentGamesAdv": [
       {
-        "title": "Mega Man Spectacular",
+        "title": "Mega Man",
         "system": "NES",
         "yearReleased": "1987"
       }
@@ -29178,7 +29483,7 @@
     "videoLength": "1:04:43",
     "secondSegment": "RR",
     "secondSegmentGames": [
-      "Tiny Tank: Up Your Arsenal"
+      "Tiny Tank"
     ],
     "season": 2,
     "details": {
@@ -32172,7 +32477,7 @@
     "videoLength": "55:50",
     "secondSegment": "RR",
     "secondSegmentGames": [
-      "Spider-Man & Venom: Maximim Carnage"
+      "Spider-Man and Venom: Maximim Carnage"
     ],
     "season": 2,
     "details": {
@@ -32252,7 +32557,7 @@
     "mainSegmentGamesAdv": [
       {
         "title": "Ratchet & Clank",
-        "system": "PlayStyation 2",
+        "system": "PlayStation 2",
         "yearReleased": "2002"
       }
     ],
@@ -32439,7 +32744,7 @@
     "videoLength": "47:26",
     "secondSegment": "RR",
     "secondSegmentGames": [
-      "E-Swat: City Under Siege"
+      "ESWAT: City Under Siege"
     ],
     "season": 2,
     "details": {
@@ -44373,7 +44678,12 @@
     "fandomWikiURL": "/wiki/Replay:_Zelda_Games_On_CD-i",
     "mainSegmentGamesAdv": [
       {
-        "title": "Zelda Games On CD-i",
+        "title": "Link: The Faces of Evil",
+        "system": "CD-i",
+        "yearReleased": "1993"
+      },
+      {
+        "title": "Zelda: The Wand of Gamelon",
         "system": "CD-i",
         "yearReleased": "1993"
       }

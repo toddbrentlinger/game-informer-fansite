@@ -7,7 +7,7 @@ import re
 from django.db.models import Q
 from django.utils import timezone
 from utilities.igdb import IGDB # Make requests from IGDB API
-from utilities.data_migration_constants import SEGMENT_TYPES, STAFF # Separate file to hold constants
+from utilities.data_migration_constants import SEGMENT_TYPES, STAFF, GAME_NAME_ALTERNATIVES # Separate file to hold constants
 from utilities.misc import create_total_time_message # misc utility functions
 from django.template.defaultfilters import slugify
 
@@ -75,7 +75,7 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
     Parameters:
         models (Models): 
         igdb (): 
-        name (str): Title of video game
+        name (str|int): Title of video game if string OR IGDB ID if integer.
         platform_inst (Platform): Platform model instance for the video game (NOTE: Will be saved to database if game search succeeds)
         year_released (str|int): Year the video game was released
         fields (str): Search fields passed to IGDB API request
@@ -85,7 +85,10 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
         Game|None: Game model instance OR None if could not be found in database and could not be created using IGDB API
     '''
     # Get game data from IGDB API
-    game_data = igdb.get_game_data(name, platform_inst.id if platform_inst is not None else None, year_released, fields, exclude)
+    if isinstance(name, int):
+        game_data = igdb.get_game_data_by_id(name, fields, exclude)
+    else:
+        game_data = igdb.get_game_data(name, platform_inst.id if platform_inst is not None else None, year_released, fields, exclude)
     
     # If game search succeeds with given platform AND NOT empty
     if game_data is not None and len(game_data) > 0:
@@ -486,12 +489,16 @@ def get_game_inst(models, igdb, name, platform_name = None, year_released = None
                     leave platform and platform_id as None
     '''
     # Assign platform using platform_name parameter (initialized to None)
-    platform = get_platform_inst(models, igdb, platform_name)
+    platform = get_platform_inst(models, igdb, platform_name) if platform_name else None
 
     # Search IGDB for game based on title AND platform ID
     fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,url,videos.*,websites.*'
     exclude = 'collection.games,franchise.games,franchises.games,involved_companies.company.published, involved_companies.company.developed'
     
+    # Check alternative names in constant variable GAME_NAME_ALTERNATIVES
+    if name in GAME_NAME_ALTERNATIVES:
+        name = GAME_NAME_ALTERNATIVES[name]
+
     # Search for game with name+platform+year_released
     game_inst = create_game_model(models, igdb, name, platform, year_released, fields, exclude)
     # If game search succeeds with name+platform, return the game model instance
