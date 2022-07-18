@@ -1,0 +1,25 @@
+{% extends "base_generic.html" %}
+
+{% load replayepisode_tags %}
+{% load game_tags %}
+
+{% block content %}
+    <h1>Search Results: </h1>
+    <p>{{ search }}</p>
+
+    <h2>Replay Episodes:</h2>
+    {% replayepisode_basic_list_display replayepisodes %}
+
+    <h2>Games:</h2>
+    {% game_basic_list_display games %}
+
+    <h2>People:</h2>
+    <ul>
+        {% for person in people %}
+        <li><a href="{{ person.get_absolute_url }}">{{ person.full_name }}</a></li>
+        {% empty %}
+            <li>There are no people!</li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}

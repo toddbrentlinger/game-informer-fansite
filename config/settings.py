@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # PostgreSQL
+    'django.contrib.postgres',
     # Custom apps
     'accounts.apps.AccountsConfig',
     'games.apps.GamesConfig',

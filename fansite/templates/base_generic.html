@@ -27,41 +27,48 @@
         </span>
         <!-- <img src="{% static 'img/Game_Informer_logo_(2010-present)_512(dark_mode).png' %}" alt="Game Informer logo"> -->
         <!-- <nav id="topnav">Top Nav</nav> -->
-        <span id="header-search-bar">
+        <form action="/search/" method="get" id="header-search-bar">
             <i class="fas fa-search fa-lg"></i>
             <label for="header-search-input">
-                <input type="search" placeholder="Search..." id="header-search-input">
-                <!-- <span>Search</span> -->
+                <input type="search" name="q" placeholder="Search..." id="header-search-input">
             </label>
-        </span>
+            <input type="submit" value="Search">
+        </form>
     </header>
 
     {% block sidenav %}
     <nav id="sidenav">
-        <div id="sidenav-header">
-            <span class="hamburger-icon sidenav-expand-btn">
-                <i class="fas fa-bars fa-lg"></i>
-            </span>
-        </div>
-        <div id="sidenav-content">
-            <a href="{% url 'index' %}">Home</a>
-            <a href="{% url 'replay' %}">All Replay Episodes</a>
-            <a href="{% url 'segments' %}">All Replay Segments</a>
-            <br>
-            <a href="{% url 'games' %}">All Games</a>
-            <a href="{% url 'platforms' %}">All Game Platforms</a>
-            <a href="{% url 'developers' %}">All Game Developers</a>
-            <a href="{% url 'collections' %}">All Game Collections/Series</a>
-            <a href="{% url 'franchises' %}">All Game Franchises</a>
-            <br>
-            <a href="{% url 'people' %}">All People</a>
-            <br>
-            {% if user.is_authenticated %}
-                <div>User: {{ user.get_username }}</div>
-                <a href="{% url 'logout' %}?next={{ request.path }}">Logout</a>
-            {% else %}
-                <a href="{% url 'login' %}?next={{ request.path }}">Login</a>
-            {% endif %}
+        <div id="sidenav-content-container">
+            <div id="sidenav-content">
+                <div id="sidenav-header">
+                    <span class="hamburger-icon sidenav-expand-btn">
+                        <i class="fas fa-bars fa-lg"></i>
+                    </span>
+                </div>
+                <div id="sidenav-list">
+                    <a href="{% url 'index' %}">Home</a>
+                    <a href="{% url 'replay' %}">All Replay Episodes</a>
+                    <a href="{% url 'segments' %}">All Replay Segments</a>
+                    <br>
+                    <a href="{% url 'games' %}">All Games</a>
+                    <a href="{% url 'platforms' %}">All Game Platforms</a>
+                    <a href="{% url 'developers' %}">All Game Developers</a>
+                    <a href="{% url 'collections' %}">All Game Collections/Series</a>
+                    <a href="{% url 'franchises' %}">All Game Franchises</a>
+                    <a href="{% url 'genres' %}">All Game Genres</a>
+                    <a href="{% url 'themes' %}">All Game Themes</a>
+                    <a href="{% url 'keywords' %}">All Game Keywords</a>
+                    <br>
+                    <a href="{% url 'people' %}">All People</a>
+                    <br>
+                    {% if user.is_authenticated %}
+                        <div>User: {{ user.get_username }}</div>
+                        <a href="{% url 'logout' %}?next={{ request.path }}">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}">Login</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </nav>
     {% endblock %}

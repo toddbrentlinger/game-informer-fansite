@@ -18,6 +18,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
+from fansite import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,4 +28,5 @@ urlpatterns = [
     path('games/', include('games.urls')),
     path('people/', include('people.urls')),
     path('replay/', include('replay.urls')),
+    path('search/', views.search, name='search'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
