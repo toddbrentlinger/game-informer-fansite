@@ -16,9 +16,18 @@
     }
 
     const sideNavElement = document.getElementById('sidenav');
+    //const sideNavContentContainer = document.getElementById('sidenav-content-container');
+    const sideNavContent = document.getElementById('sidenav-content');
+
     function handleSideNavExpandClick(e) {
         e.preventDefault();
-        sideNavElement.classList.toggle('open');
+        //sideNavElement.classList.toggle('open');
+
+        if (sideNavElement.offsetWidth > 0) {
+            sideNavElement.style.width = 0;
+        } else {
+            sideNavElement.style.width = `${sideNavContent.offsetWidth}px`;
+        }
     }
     const sideNavExpandBtns = document.querySelectorAll('.sidenav-expand-btn');
     if (sideNavExpandBtns) {
