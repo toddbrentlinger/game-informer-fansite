@@ -18,8 +18,8 @@ def replay_episode_detail_view(request, pk):
     }
     return render(request, 'replay/replayepisode_detail.html', context=context)
 
-def replay_episode_detail_slug_view(request, stub):
-    replayepisode = get_object_or_404(ReplayEpisode, slug=stub)
+def replay_episode_detail_slug_view(request, slug):
+    replayepisode = get_object_or_404(ReplayEpisode, slug=slug)
     (season_num, season_episode_num) = replayepisode.get_season()
     context = {
         'replayepisode': replayepisode,
@@ -35,6 +35,13 @@ class SegmentTypeListView(generic.ListView):
 class SegmentTypeDetailView(generic.DetailView):
     model = SegmentType
 
-def segment_type_detail_slug_view(request, stub):
-    segmenttype = get_object_or_404(SegmentType, slug=stub)
-    return render(request, 'replay/segmenttype_detail.html', context={'segmenttype': segmenttype})
+def segment_type_detail_slug_view(request, slug):
+    segmenttype = get_object_or_404(SegmentType, slug=slug)
+
+    replayepisode_list = ReplayEpisode.objects.filter(other_segments__type=segmenttype.id).distinct()
+
+    context = {
+        'segmenttype': segmenttype,
+        'replayepisode_list': replayepisode_list
+    }
+    return render(request, 'replay/segmenttype_detail.html', context=context)

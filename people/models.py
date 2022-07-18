@@ -51,7 +51,7 @@ class Person(models.Model):
         # staff/tim-turi
         # guests/hilary-wilton
         # people/tim-turi
-        return reverse('person-detail-slug', kwargs={'stub': self.slug})
+        return reverse('person-detail-slug', kwargs={'slug': self.slug})
         #return reverse('people', args=[str(self.id)])
 
     def save(self, *args, **kwargs):

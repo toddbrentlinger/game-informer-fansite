@@ -14,11 +14,11 @@ class PersonDetailView(generic.DetailView):
     model = Person
 
 def get_person_detail_view(request, person):
-    replay_episodes = ReplayEpisode.objects.filter(Q(host=person) | Q(featuring=person)).distinct()
+    replayepisode_list = ReplayEpisode.objects.filter(Q(host=person) | Q(featuring=person)).distinct()
 
     context = {
         'person': person,
-        'replay_episodes': replay_episodes
+        'replayepisode_list': replayepisode_list
     }
     return render(request, 'people/person_detail.html', context=context)
 
@@ -26,6 +26,6 @@ def person_detail_view(request, pk):
     person = get_object_or_404(Person, pk=pk)
     return get_person_detail_view(request, person)
 
-def person_detail_slug_view(request, stub):
-    person = get_object_or_404(Person, slug=stub)
+def person_detail_slug_view(request, slug):
+    person = get_object_or_404(Person, slug=slug)
     return get_person_detail_view(request, person)
