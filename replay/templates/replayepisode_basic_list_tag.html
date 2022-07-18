@@ -1,0 +1,11 @@
+{% load replayepisode_tags %}
+
+{% if replayepisode_list %}
+    <ul>
+        {% for replayepisode in replayepisode_list %}
+            <li>{% replayepisode_basic_display replayepisode %}</li>
+        {% empty %}
+            <li>There are no Replay episodes!</li>
+        {% endfor %}
+    </ul>
+{% endif %}

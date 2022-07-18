@@ -9,7 +9,9 @@
 {% block content %}
     <h1>{{ collection.name }}</h1>
 
-    <h2>{{ collection.name }} Games Played By Game Informer:</h2>
+    {% with game_list=collection.games.all %}
+        <h2>{{ game_list|length }} {{ collection.name }} Game{{ game_list|pluralize }} Played By Game Informer:</h2>
 
-    {% game_basic_list_display collection.games.all %}
+        {% game_basic_list_display game_list %}
+    {% endwith %}
 {% endblock %}

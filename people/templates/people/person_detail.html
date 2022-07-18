@@ -45,32 +45,10 @@
 
     <hr>
 
-    <h2>Replay Episodes:</h2>
-    <p>All Episodes Length: {{ replay_episodes|length }}</p>
-    {% for replayepisode in replay_episodes %}
+    <h2>{{ replayepisode_list|length }} Replay Episode{{ replayepisode_list|pluralize }} featuring {{ person.full_name }} Played By Game Informer:</h2>
+    {% for replayepisode in replayepisode_list %}
         <hr>
         {% replayepisode_basic_display replayepisode %}
-    {% empty %}
-        <p>No Replay episodes!</p>
     {% endfor %}
 
-    <hr>
-
-    <!-- <h3>Host ({{ person.fansite_replayepisode_host_related.all|length }}): </h3>
-    {% for replayepisode in person.fansite_replayepisode_host_related.all %}
-        <hr>
-        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
-    {% empty %}
-        <p>No hosted Replay episodes!</p>
-    {% endfor %}
-
-    <hr>
-
-    <h3>Featuring ({{ person.fansite_replayepisode_featuring_related.all|length }}): </h3>
-    {% for replayepisode in person.fansite_replayepisode_featuring_related.all %}
-        <hr>
-        <p><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></p>
-    {% empty %}
-        <p>No featuring Replay episodes!</p>
-    {% endfor %} -->
 {% endblock %}

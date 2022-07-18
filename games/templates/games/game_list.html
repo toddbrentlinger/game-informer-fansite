@@ -13,16 +13,5 @@
 
 {% block content %}
     <h1>Game List View</h1>
-    {% if game_list %}
-        <ul id="game-list">
-            {% for game in game_list %}
-            <li>
-                {% game_basic_display game %}
-                <!-- <a href="{{ game.get_absolute_url }}">{{ game.name }}</a> ({{ game.platform.name }}) -->
-            </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>There are no video games!</p>
-    {% endif %}
+    {% game_basic_list_display game_list %}
 {% endblock %}

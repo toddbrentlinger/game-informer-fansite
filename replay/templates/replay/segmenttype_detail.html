@@ -17,26 +17,9 @@
         <p><strong>Description: </strong>{{ segmenttype.description|linebreaks }}</p>
     {% endif %}
 
-    <h2>Replay Episodes:</h2>
-    {% for segment in segmenttype.segment_set.all %}
-        {% for replayepisode in segment.replayepisode_set.all %}
-            <hr>
-            <p>
-                {% if segment.games.all %}
-                    <span>
-                        {% for game in segment.games.all %}
-                            <a href="{{ game.get_absolute_url }}">{{ game }}</a>
-                            {% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </span>
-                {% elif segment.description %}
-                    <span>{{ segment.description }}</span>
-                {% endif %}
-                <span>
-                    - Episode: <a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a>
-                </span>
-            </p>
-            {% replayepisode_basic_display replayepisode %}
-        {% endfor %}
+    <h2>{{ replayepisode_list|length }} Replay Episode{{ replayepisode_list|pluralize }} featuring {{ segmenttype.title }} Played By Game Informer:</h2>
+    {% for replayepisode in replayepisode_list %}
+        <hr>
+        {% replayepisode_basic_display replayepisode %}
     {% endfor %}
 {% endblock %}

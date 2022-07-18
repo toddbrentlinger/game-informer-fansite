@@ -1,12 +1,21 @@
 {% if game_list %}
     <ul 
         class="game-basic-list"
-        style="display: grid;grid-template-columns: repeat(auto-fill, minmax(250px, 20%));"
+        style="display: grid;grid-template-columns: repeat(auto-fill, minmax(250px, 20%));justify-content: space-around;gap: 1em;"
     >
         {% for game in game_list %}
-            <li>
-                <a href="{{ game.get_absolute_url }}" class="game-basic">
-                    <div class="game-basic-name">{{ game.name }}</div>
+            <li style="border: 2px solid var(--base-white);">
+                <a 
+                    href="{{ game.get_absolute_url }}" 
+                    class="game-basic"
+                    style="text-decoration: none;color: inherit;"
+                >
+                    <div 
+                        class="game-basic-name"
+                        style="text-align: center;font-size: 1.8rem;padding: 0.5em 1em;"
+                    >
+                        {{ game.name }}
+                    </div>
                 
                     {% if game.cover %}
                         <div class="game-basic-cover">

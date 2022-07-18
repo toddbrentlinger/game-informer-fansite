@@ -27,7 +27,9 @@
     {% endif %}
     <p><strong>IGDB URL: </strong><a href="{{ platform.url }}">{{ platform.name }}</a></p>
 
-    <h2>{{ platform.name }} Games Played By Game Informer:</h2>
+    {% with game_list=platform.game_set.all %}
+        <h2>{{ game_list|length }} {{ platform.name }} Game{{ game_list|pluralize }} Played By Game Informer:</h2>
 
-    {% game_basic_list_display platform.game_set.all %}
+        {% game_basic_list_display game_list %}
+    {% endwith %}
 {% endblock %}

@@ -9,7 +9,9 @@
 {% block content %}
     <h1>{{ franchise.name }}</h1>
 
-    <h2>{{ franchise.name }} Games Played By Game Informer:</h2>
+    {% with game_list=franchise.games.all %}
+        <h2>{{ game_list|length }} {{ franchise.name }} Game{{ game_list|pluralize }} Played By Game Informer:</h2>
 
-    {% game_basic_list_display franchise.games.all %}
+        {% game_basic_list_display game_list %}
+    {% endwith %}
 {% endblock %}

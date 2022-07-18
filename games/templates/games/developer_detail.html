@@ -28,8 +28,10 @@
 
     <p><strong>URL: </strong><a href="{{ developer.url }}">{{ developer.name }}</a></p>
 
-    <h2>{{ developer.name }} Games Played By Game Informer:</h2>
+    {% with game_list=developer.game_set.all %}
+        <h2>{{ game_list|length }} {{ developer.name }} Game{{ game_list|pluralize }} Played By Game Informer:</h2>
 
-    {% game_basic_list_display developer.game_set.all %}
+        {% game_basic_list_display game_list %}
+    {% endwith %}
 
 {% endblock %}
