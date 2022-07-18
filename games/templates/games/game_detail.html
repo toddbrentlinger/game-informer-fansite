@@ -25,35 +25,57 @@
 
             <h1 id="game-name">{{ game.name }}</h1>
 
-            <span class="game-logo">
-                <strong>Platform: </strong>
-                <a href="{{ game.platform.get_absolute_url }}">
-                    <img
-                        src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ game.platform.logo.image_id }}.png"
-                        width="{{ game.platform.logo.width }}"
-                        height="{{ game.platform.logo.height }}"
-                        alt="Logo of video game developer {{ game.platform.name }}"
-                    >
-                    {{ game.platform.name }}
-                </a>
-            </span>
-
-            <span class="game-logo">
-                <strong>Developer: </strong>
-                <a href="{{ game.developer.get_absolute_url }}">
-                    <img
-                        src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ game.developer.logo.image_id }}.png"
-                        width="{{ game.developer.logo.width }}"
-                        height="{{ game.developer.logo.height }}"
-                        alt="Logo of video game developer {{ game.developer.name }}"
-                    >
-                    {{ game.developer.name }}
-                </a>
-            </span>
+            <div id="platform-developer-container">
+                <span class="game-logo">
+                    <strong>Platform: </strong>
+                    <a href="{{ game.platform.get_absolute_url }}">
+                        <img
+                            src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ game.platform.logo.image_id }}.png"
+                            width="{{ game.platform.logo.width }}"
+                            height="{{ game.platform.logo.height }}"
+                            alt="Logo of video game developer {{ game.platform.name }}"
+                        >
+                        {{ game.platform.name }}
+                    </a>
+                </span>
+                <span class="game-logo">
+                    <strong>Developer: </strong>
+                    <a href="{{ game.developer.get_absolute_url }}">
+                        <img
+                            src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ game.developer.logo.image_id }}.png"
+                            width="{{ game.developer.logo.width }}"
+                            height="{{ game.developer.logo.height }}"
+                            alt="Logo of video game developer {{ game.developer.name }}"
+                        >
+                        {{ game.developer.name }}
+                    </a>
+                </span>
+            </div>
 
             <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
 
-            <p><strong>Genres: </strong>{{ game.genres.all|join:", " }}</p>
+            <p>
+                <strong>Genres: </strong>
+                {% for genre in game.genres.all %}
+                    {% if not forloop.first %}, {% endif %}
+                    <a href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
+                {% endfor %}
+            </p>
+
+            <p>
+                <strong>Themes: </strong>
+                {% for theme in game.themes.all %}
+                    {% if not forloop.first %}, {% endif %}<a href="{{ theme.get_absolute_url }}">{{ theme.name }}</a>
+                {% endfor %}
+            </p>
+
+            <p>
+                <strong>Keywords: </strong>
+                {% for keyword in game.keywords.all %}
+                    {% if not forloop.first %}, {% endif %}
+                    <a href="{{ keyword.get_absolute_url }}">{{ keyword.name }}</a>
+                {% endfor %}
+            </p>
             
             {% if game.collection_set.all %}
                 <p>
@@ -147,17 +169,9 @@
         </div>
     {% endif %}
 
-    <h2>Replay Episodes:</h2>
-
-    {% for replayepisode in game.replayepisode_set.all %}
+    <h2>{{ replayepisode_list|length }} Replay Episode{{ replayepisode_list|pluralize }} featuring {{ game.name }} Played By Game Informer:</h2>
+    {% for replayepisode in replayepisode_list %}
         <hr>
         {% replayepisode_basic_display replayepisode %}
-    {% endfor %}
-
-    {% for segment in game.segment_set.all %}
-        {% for replayepisode in segment.replayepisode_set.all %}
-            <hr>
-            {% replayepisode_basic_display replayepisode %}
-        {% endfor %}
     {% endfor %}
 {% endblock %}

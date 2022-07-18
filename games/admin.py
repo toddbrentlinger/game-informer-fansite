@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Artwork, Collection, Developer, Franchise, Game, GameVideo, Genre, ImageIGDB, Platform, Screenshot, Website
+from .models import Artwork, Collection, Developer, Franchise, Game, GameVideo, Genre, ImageIGDB, Keyword, Platform, Screenshot, Theme, Website
 
 # Register your models here.
 
@@ -38,6 +38,10 @@ class GenreAdmin(admin.ModelAdmin):
 class PlatformLogoAdmin(admin.ModelAdmin):
     pass
 
+@admin.register(Keyword)
+class KeywordAdmin(admin.ModelAdmin):
+    pass
+
 @admin.register(Platform)
 class PlatformAdmin(admin.ModelAdmin):
     list_display = ('name', 'abbreviation', 'id')
@@ -45,6 +49,10 @@ class PlatformAdmin(admin.ModelAdmin):
 
 @admin.register(Screenshot)
 class ScreenshotAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(Theme)
+class ThemeAdmin(admin.ModelAdmin):
     pass
 
 @admin.register(Website)
