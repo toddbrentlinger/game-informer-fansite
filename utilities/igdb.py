@@ -101,6 +101,63 @@ class IGDB:
             pass
         return response_data
 
+    def make_game_request(self, data):
+        '''
+        Makes request from IGDB game API using data parameter as attribute in request.
+
+        Parameters:
+            data (str): Used as data attribute in IGDB game request.
+
+        Returns:
+            (JSON|None): JSON response from IGDB request or None if request fails.
+        '''
+        # Request game based on search
+        response = requests.post(
+            'https://api.igdb.com/v4/games', 
+            data=data.encode('utf-8'),
+            headers=IGDB.headers
+        )
+
+        # Sleep to account for limit of 4 requests per second
+        time.sleep(0.25)
+
+        # Check status code from request
+        if response.status_code != requests.codes.ok:
+            print('Data Sent:')
+            pprint.pprint(data, indent=2)
+            print(f'Request to IGDB API failed with status code: {response.status_code}')
+            return None
+
+        # Set response from game request
+        try:
+            response_data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            print('Converting IGDB API response to JSON failed!')
+            return None
+
+        if response_data:
+            # print(json.dumps(response_data[0], sort_keys=True, indent=4))
+            # print(f'No. of entries: {len(response_data)}')
+            return response_data
+        else:
+            return None
+
+    def get_game_data_by_id(self, id, fields = '*', exclude = None):
+        ''''
+        Requests data on video game using IGDB API using the IGDB game ID.
+
+        Paramters:
+            id (int): IGDB video game ID to search.
+            fields (str): Fields used for IGDB API request to retrieve specific fields only.
+            exclude (str): Fields used for IGDB API request to exclude specific fields.
+        '''
+        data = ' '.join((f'fields {fields};', f'where id={id};'))
+
+        if exclude is not None:
+            data += f' exclude {exclude};'
+
+        return self.make_game_request(data)
+
     def get_game_data(self, name, platform = None, year_released = None, fields = '*', exclude = None):
         '''
         Requests data on video game using IGDB API.
@@ -159,41 +216,11 @@ class IGDB:
                 data += f' where release_dates.y={year_released};'
         # Else both platform and year_released have value None, do nothing
 
-        # Request game based on search
-        response = requests.post(
-            'https://api.igdb.com/v4/games', 
-            data=data.encode('utf-8'),
-            headers=IGDB.headers
-        )
-
-        # Sleep to account for limit of 4 requests per second
-        time.sleep(0.25)
-
-        # Check status code from request
-        if response.status_code != requests.codes.ok:
-            print('Data Sent:')
-            pprint.pprint(data, indent=2)
-            print(f'Request to IGDB API failed with status code: {response.status_code}')
-            return None
-
-        # Set response from game request
-        try:
-            response_data = response.json()
-        except requests.exceptions.JSONDecodeError:
-            print('Converting IGDB API response to JSON failed!')
-            return None
-
-        if response_data:
-            # print(json.dumps(response_data[0], sort_keys=True, indent=4))
-            # print(f'No. of entries: {len(response_data)}')
-            return response_data
-        else:
-            #print(f'No search results returned from IGDB API using Name: {name} - Platform: {platform} - Year: {year_released}')
-            return None
+        return self.make_game_request(data)
 
 def main():
     igdb = IGDB()
-    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,url,videos.*,websites.*'
+    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,keywords.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,themes.*,url,videos.*,websites.*'
     exclude = 'collection.games,franchise.games,franchises.games,involved_companies.company.published, involved_companies.company.developed'
     
     # data = 'fields {fields};', f'search "*"; where involved_companies'
@@ -223,19 +250,36 @@ def main():
     # pprint.pprint(platform_data, indent=2)
     # pprint.pprint(igdb.get_game_data('Pokemon Snap', None, None, fields)[0], indent=2) # é \u00e9
 
-    pprint.pprint(
-        igdb.get_game_data(
-            'Overlord',
-            None,
-            fields=fields,
-            exclude=exclude
-        )[0], 
-        indent=2
-    )
+    try:
+        pprint.pprint(
+            igdb.get_game_data(
+                'Bioshock Infinite',
+                None,
+                None,
+                fields=fields,
+                exclude=exclude
+            )[0], 
+            indent=2
+        )
+    except TypeError:
+        print('No game returned from IGDB!')
+    
+    try:
+        pprint.pprint(
+            igdb.get_game_data_by_id(
+                212,
+                fields=fields,
+                exclude=exclude
+            )[0], 
+            indent=2
+        )
+    except TypeError:
+        print('No game returned from IGDB using ID!')
+
     return
 
     pprint.pprint(
-        igdb.get_platform_data('Nintendo 64', '*,platform_logo.*')[0]
+        igdb.get_platform_data('Game Boy Color', '*,platform_logo.*')[0]
     )
 
     pprint.pprint(

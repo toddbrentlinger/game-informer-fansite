@@ -36,8 +36,10 @@ class Models:
         self.GameVideo = apps.get_model('games', 'GameVideo')
         self.Genre = apps.get_model('games', 'Genre')
         self.ImageIGDB = apps.get_model('games', 'ImageIGDB')
+        self.Keyword = apps.get_model('games', 'Keyword')
         self.Platform = apps.get_model('games', 'Platform')
         self.Screenshot = apps.get_model('games', 'Screenshot')
+        self.Theme = apps.get_model('games', 'Theme')
         self.Website = apps.get_model('games', 'Website')
 
         # Replay app
@@ -94,7 +96,7 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
     if game_data is not None and len(game_data) > 0:
         # Check if game ID already exists in database
         try:
-            game_inst = models.Game.objects.get(igdb_id=game_data[0]['id'])
+            game_inst = models.Game.objects.get(id=game_data[0]['id'])
         except models.Game.DoesNotExist:
             # TODO: Is this responsible for final value not being correct
             # Make release date (Unix Timestamp) timezone aware
@@ -222,7 +224,7 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
                     )
 
             game_inst = models.Game.objects.create(
-                igdb_id=game_data[0]['id'],
+                id=game_data[0]['id'],
                 name=game_data[0]['name'],
                 slug=game_data[0]['slug'],
                 summary=game_data[0]['summary'] if 'summary' in game_data[0] else '',
@@ -344,10 +346,44 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
                     except models.Genre.DoesNotExist:
                         genre_inst = models.Genre.objects.create(
                             id=genre['id'],
-                            name=genre['name']
+                            name=genre['name'],
+                            slug=genre['slug'],
+                            url=genre['url'] if 'url' in genre else None
                         )
                     if genre_inst is not None:
                         game_inst.genres.add(genre_inst)
+            
+            # Keyword is ManyToManyField, use game.keywords.add(new_keyword)
+            if 'keywords' in game_data[0]:
+                for keyword in game_data[0]['keywords']:
+                    keyword_inst = None
+                    try:
+                        keyword_inst = models.Keyword.objects.get(pk=keyword['id'])
+                    except models.Keyword.DoesNotExist:
+                        keyword_inst = models.Keyword.objects.create(
+                            id=keyword['id'],
+                            name=keyword['name'],
+                            slug=keyword['slug'],
+                            url=keyword['url'] if 'url' in keyword else None
+                        )
+                    if keyword_inst is not None:
+                        game_inst.keywords.add(keyword_inst)
+
+            # Theme is ManyToManyField, use game.keywords.add(new_keyword)
+            if 'themes' in game_data[0]:
+                for theme in game_data[0]['themes']:
+                    theme_inst = None
+                    try:
+                        theme_inst = models.Theme.objects.get(pk=theme['id'])
+                    except models.Theme.DoesNotExist:
+                        theme_inst = models.Theme.objects.create(
+                            id=theme['id'],
+                            name=theme['name'],
+                            slug=theme['slug'],
+                            url=theme['url'] if 'url' in theme else None
+                        )
+                    if theme_inst is not None:
+                        game_inst.themes.add(theme_inst)
 
             # Websites is ManyToManyField
             if 'websites' in game_data[0]:
@@ -492,7 +528,7 @@ def get_game_inst(models, igdb, name, platform_name = None, year_released = None
     platform = get_platform_inst(models, igdb, platform_name) if platform_name else None
 
     # Search IGDB for game based on title AND platform ID
-    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,url,videos.*,websites.*'
+    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,keywords.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,themes.*,url,videos.*,websites.*'
     exclude = 'collection.games,franchise.games,franchises.games,involved_companies.company.published, involved_companies.company.developed'
     
     # Check alternative names in constant variable GAME_NAME_ALTERNATIVES
@@ -1186,5 +1222,24 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(initialize_database),
+    ]
+
+# Create PostgreSQL extensions using migration
+
+from django.db import migrations
+from django.contrib.postgres.operations import TrigramExtension, UnaccentExtension
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('fansite', '0001_initial'),
+        ('games', '0001_initial'),
+        ('people', '0001_initial'),
+        ('replay', '0001_initial'),
+    ]
+
+    operations = [
+        TrigramExtension(),
+        UnaccentExtension(),
     ]
 '''
