@@ -1,35 +1,13 @@
-{% extends "base_generic.html" %}
+{% extends "base_game_detail.html" %}
 
-{% load game_tags %}
+{% block details %}
+    <p><strong>Abbreviation: </strong>{{ object.abbreviation }}</p>
 
-{% block title %}
-    <title>Game Informer Fansite - Games - Platform - {{ platform.name }}</title>
-{% endblock %}
+    <p><strong>Alternative Name: </strong>{{ object.alternative_name }}</p>
 
-{% block content %}
-    <h1>{{ platform.name }}</h1>
-
-    {% if platform.logo %}
-        <div id="platform-logo">
-            <img
-                src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ platform.logo.image_id }}.png"
-                width="{{ platform.logo.width }}"
-                height="{{ platform.logo.height }}"
-                alt="Logo of video game platform {{ platform.name }}"
-            >
-        </div>
+    {% if object.summary %}
+        <p><strong>Summary: </strong>{{ object.summary }}</p>
     {% endif %}
-
-    <p><strong>Abbreviation: </strong>{{ platform.abbreviation }}</p>
-    <p><strong>Alternative Name: </strong>{{ platform.alternative_name }}</p>
-    {% if platform.summary %}
-        <p><strong>Summary: </strong>{{ platform.summary }}</p>
-    {% endif %}
-    <p><strong>IGDB URL: </strong><a href="{{ platform.url }}">{{ platform.name }}</a></p>
-
-    {% with game_list=platform.game_set.all %}
-        <h2>{{ game_list|length }} {{ platform.name }} Game{{ game_list|pluralize }} Played By Game Informer:</h2>
-
-        {% game_basic_list_display game_list %}
-    {% endwith %}
+    
+    <p><strong>IGDB URL: </strong><a href="{{ object.url }}" target="_blank">{{ object.name }}</a></p>
 {% endblock %}

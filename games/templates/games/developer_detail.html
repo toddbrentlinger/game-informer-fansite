@@ -1,37 +1,11 @@
-{% extends "base_generic.html" %}
+{% extends "base_game_detail.html" %}
 
-{% load game_tags %}
+{% block details %}
+    <p><strong>Country: </strong>{{ object.country }}</p>
 
-{% block title %}
-    <title>Game Informer Fansite - Games - Developer - {{ developer.name }}</title>
-{% endblock %}
-
-{% block content %}
-    <h1>{{ developer.name }}</h1>
-
-    {% if developer.logo %}
-        <div id="developer-logo">
-            <img
-                src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ developer.logo.image_id }}.png"
-                width="{{ developer.logo.width }}"
-                height="{{ developer.logo.height }}"
-                alt="Logo of video game developer {{ developer.name }}"
-            >
-        </div>
+    {% if object.description %}
+        <p><strong>Description: </strong>{{ object.description }}</p>
     {% endif %}
 
-    <p><strong>Country: </strong>{{ developer.country }}</p>
-
-    {% if developer.description %}
-        <p><strong>Description: </strong>{{ developer.description }}</p>
-    {% endif %}
-
-    <p><strong>URL: </strong><a href="{{ developer.url }}">{{ developer.name }}</a></p>
-
-    {% with game_list=developer.game_set.all %}
-        <h2>{{ game_list|length }} {{ developer.name }} Game{{ game_list|pluralize }} Played By Game Informer:</h2>
-
-        {% game_basic_list_display game_list %}
-    {% endwith %}
-
+    <p><strong>URL: </strong><a href="{{ object.url }}" target="_blank">{{ object.name }}</a></p>
 {% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base_generic.html" %}
+
+{% load static %}
+{% load game_tags %}
+
+{% block title %}
+    <title>Game Informer Fansite - Games - {{ model_name|title }} - {{ object.name }}</title>
+{% endblock %}
+
+{% block custom-css %}
+    <link rel="stylesheet" href="{% static 'css/base_game_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+    <h1>{{ object.name }}</h1>
+
+    {% if object.logo %}
+        <div class="game-logo">
+            <img
+                src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ object.logo.image_id }}.png"
+                width="{{ object.logo.width }}"
+                height="{{ object.logo.height }}"
+                alt="Logo of video game {{ model_name }} {{ object.name }}"
+            >
+        </div>
+    {% endif %}
+
+    {% block details %}{% endblock %}
+
+    <h2>{{ game_list|length }} {{ object.name }} Game{{ game_list|pluralize }} Played By Game Informer:</h2>
+
+    {% game_basic_list_display game_list %}
+    
+{% endblock %}

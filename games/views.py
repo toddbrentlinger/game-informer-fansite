@@ -37,7 +37,12 @@ class PlatformDetailView(generic.DetailView):
 
 def platform_detail_slug_view(request, slug):
     platform = get_object_or_404(Platform, slug=slug)
-    return render(request, 'games/platform_detail.html', context={'platform': platform})
+    return render(request, 'games/platform_detail.html', context={ 
+        'object': platform,
+        'game_list': platform.game_set.all,
+        'model_name': 'platform',
+    })
+    #return render(request, 'games/platform_detail_old.html', context={'platform': platform})
 
 class DeveloperListView(generic.ListView):
     model = Developer
@@ -48,7 +53,12 @@ class DeveloperDetailView(generic.DetailView):
 
 def developer_detail_slug_view(request, slug):
     developer = get_object_or_404(Developer, slug=slug)
-    return render(request, 'games/developer_detail.html', context={'developer': developer})
+    return render(request, 'games/developer_detail.html', context={ 
+        'object': developer,
+        'game_list': developer.game_set.all,
+        'model_name': 'developer' 
+    })
+    #return render(request, 'games/developer_detail.html', context={'developer': developer})
 
 class CollectionListView(generic.ListView):
     model = Collection
@@ -59,7 +69,11 @@ class CollectionDetailView(generic.DetailView):
 
 def collection_detail_slug_view(request, slug):
     collection = get_object_or_404(Collection, slug=slug)
-    return render(request, 'games/collection_detail.html', context={'collection': collection})
+    return render(request, 'base_game_detail.html', context={ 
+        'object': collection,
+        'game_list': collection.games.all,
+        'model_name': 'collection' 
+    })
 
 class FranchiseListView(generic.ListView):
     model = Franchise
@@ -70,7 +84,11 @@ class FranchiseDetailView(generic.DetailView):
 
 def franchise_detail_slug_view(request, slug):
     franchise = get_object_or_404(Franchise, slug=slug)
-    return render(request, 'games/franchise_detail.html', context={'franchise': franchise})
+    return render(request, 'base_game_detail.html', context={ 
+        'object': franchise,
+        'game_list': franchise.games.all,
+        'model_name': 'franchise' 
+    })
 
 class GenreListView(generic.ListView):
     model = Genre
@@ -81,7 +99,11 @@ class GenreDetailView(generic.DetailView):
 
 def genre_detail_slug_view(request, slug):
     genre = get_object_or_404(Genre, slug=slug)
-    return render(request, 'games/genre_detail.html', context={'genre': genre})
+    return render(request, 'base_game_detail.html', context={ 
+        'object': genre,
+        'game_list': genre.game_set.all,
+        'model_name': 'genre' 
+    })
 
 class ThemeListView(generic.ListView):
     model = Theme
@@ -92,7 +114,11 @@ class ThemeDetailView(generic.DetailView):
 
 def theme_detail_slug_view(request, slug):
     theme = get_object_or_404(Theme, slug=slug)
-    return render(request, 'games/theme_detail.html', context={'theme': theme})
+    return render(request, 'base_game_detail.html', context={ 
+        'object': theme,
+        'game_list': theme.game_set.all,
+        'model_name': 'theme' 
+    })
 
 class KeywordListView(generic.ListView):
     model = Keyword
@@ -103,4 +129,8 @@ class KeywordDetailView(generic.DetailView):
 
 def keyword_detail_slug_view(request, slug):
     keyword = get_object_or_404(Keyword, slug=slug)
-    return render(request, 'games/keyword_detail.html', context={'keyword': keyword})
+    return render(request, 'base_game_detail.html', context={ 
+        'object': keyword,
+        'game_list': keyword.game_set.all,
+        'model_name': 'keyword' 
+    })
