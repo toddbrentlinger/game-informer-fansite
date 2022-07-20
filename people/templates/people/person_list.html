@@ -1,12 +1,15 @@
 {% extends "base_generic.html" %}
 
+{% load person_tags %}
+
 {% block title %}
     <title>Game Informer Fansite - People</title>
 {% endblock %}
 
 {% block content %}
     <h1>People List View</h1>
-    {% if person_list %}
+    {% person_basic_list_display person_list %}
+    <!-- {% if person_list %}
     <ul>
         {% for person in person_list %}
         <li>
@@ -16,5 +19,5 @@
     </ul>
     {% else %}
     <p>There are no people!</p>
-    {% endif %}
+    {% endif %} -->
 {% endblock %}

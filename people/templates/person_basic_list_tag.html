@@ -1,0 +1,13 @@
+{% load person_tags %}
+
+{% if person_list %}
+    <ul
+        style="display: grid;grid-template-columns: repeat(auto-fill, minmax(250px, 20%));justify-content: space-around;gap: 1em;"
+    >
+        {% for person in person_list %}
+            <li>{% person_basic_display person %}</li>
+        {% empty %}
+            <li>There are no people!</li>
+        {% endfor %}
+    </ul>
+{% endif %}
