@@ -31,6 +31,30 @@
     height: auto;
 }
 
+#platform-developer-container,
+#genres-themes-container,
+#collections-franchises-container,
+#websites {
+    display: flex;
+    gap: 1.2em;
+}
+
+#platform-developer-container {
+
+}
+
+#genres-themes-container {
+
+}
+
+#collections-franchises-container {
+
+}
+
+#websites {
+    
+}
+
 #screenshot-gallery {
 
 }
@@ -40,7 +64,8 @@
     grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
 }
 
-.img-gallery .img-gallery-item img {
+.img-gallery .img-gallery-item img,
+.img-gallery .img-gallery-item iframe {
     width: 100%;
     height: auto;
 }

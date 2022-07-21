@@ -13,11 +13,11 @@
         >
     {% else %}
         <img
-            src="{% static 'img/abstract-user-flat-1.svg' %}"
+            src="{% static 'people/img/abstract-user-flat-1.svg' %}"
             width="100%"
             height="auto"
             alt="Empty thumbnail image for {{ person.full_name }}"
-            style="background-color: var(--base-white);"
+            style="background-color: var(--base-white, white);"
         >
     {% endif %}
     <a href="{{ person.get_absolute_url }}">{{ person.full_name }}</a>

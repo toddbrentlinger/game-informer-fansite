@@ -75,7 +75,7 @@ header img {
     height: 100vh;
     overflow: hidden;
     z-index: 1;
-    transition: width 500ms ease;
+    transition: width 300ms ease;
 }
 
 #sidenav.open {
@@ -100,8 +100,8 @@ header img {
 }
 
 #sidenav-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: max-content;
     gap: 1.6rem;
 }
 

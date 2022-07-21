@@ -8,7 +8,11 @@
 {% endblock %}
 
 {% block custom-css %}
-    <link rel="stylesheet" href="{% static 'css/game_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'games/css/game_detail.css' %}">
+{% endblock %}
+
+{% block custom-js %}
+    <script type="module" defer src="{% static 'games/js/game_detail.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -54,51 +58,56 @@
 
             <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
 
-            <p>
-                <strong>Genres: </strong>
-                {% for genre in game.genres.all %}
-                    {% if not forloop.first %}, {% endif %}
-                    <a href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
-                {% endfor %}
-            </p>
-
-            <p>
-                <strong>Themes: </strong>
-                {% for theme in game.themes.all %}
-                    {% if not forloop.first %}, {% endif %}<a href="{{ theme.get_absolute_url }}">{{ theme.name }}</a>
-                {% endfor %}
-            </p>
-
-            <p>
-                <strong>Keywords: </strong>
-                {% for keyword in game.keywords.all %}
-                    {% if not forloop.first %}, {% endif %}
-                    <a href="{{ keyword.get_absolute_url }}">{{ keyword.name }}</a>
-                {% endfor %}
-            </p>
-            
-            {% if game.collection_set.all %}
+            <div id="genres-themes-container">
                 <p>
-                    <strong>Series: </strong>
-                    {% for collection in game.collection_set.all %}
-                        <a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a>
-                        {% if not forloop.last %}, {% endif %}
+                    <strong>Genres: </strong>
+                    {% for genre in game.genres.all %}
+                        {% if not forloop.first %}, {% endif %}
+                        <a href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
                     {% endfor %}
                 </p>
-            {% endif %}
-
-            {% if game.franchise_set.all %}
                 <p>
-                    <strong>Franchises: </strong>
-                    {% for franchise in game.franchise_set.all %}
-                        <a href="{{ franchise.get_absolute_url }}">{{ franchise.name }}</a>
-                        {% if not forloop.last %}, {% endif %}
+                    <strong>Themes: </strong>
+                    {% for theme in game.themes.all %}
+                        {% if not forloop.first %}, {% endif %}<a href="{{ theme.get_absolute_url }}">{{ theme.name }}</a>
                     {% endfor %}
                 </p>
-            {% endif %}
+            </div>
+
+            <div id="collections-franchises-container">
+                {% if game.collection_set.all %}
+                    <p>
+                        <strong>Series: </strong>
+                        {% for collection in game.collection_set.all %}
+                            <a href="{{ collection.get_absolute_url }}">{{ collection.name }}</a>
+                            {% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                {% endif %}
+
+                {% if game.franchise_set.all %}
+                    <p>
+                        <strong>Franchises: </strong>
+                        {% for franchise in game.franchise_set.all %}
+                            <a href="{{ franchise.get_absolute_url }}">{{ franchise.name }}</a>
+                            {% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                {% endif %}
+            </div>
 
             {% if game.summary %}
                 <p>{{ game.summary|linebreaks }}</p>
+            {% endif %}
+
+            {% if game.keywords.all %}
+                <p>
+                    <strong>Keywords: </strong>
+                    {% for keyword in game.keywords.all %}
+                        {% if not forloop.first %}, {% endif %}
+                        <a href="{{ keyword.get_absolute_url }}">{{ keyword.name }}</a>
+                    {% endfor %}
+                </p>
             {% endif %}
         </div>
     </div>
@@ -112,7 +121,7 @@
     <p><strong>IGDB ID: </strong>{{ game.igdb_id }}</p> -->
 
     <h2>Websites</h2>
-    <ul>
+    <ul id="websites">
         {% for website in game.websites.all %}
             <li>
                 <a href="{{ website.url }}">{{ website.get_category_display }}</a>
