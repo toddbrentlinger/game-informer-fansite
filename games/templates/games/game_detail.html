@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% load static %}
+{% load fansite_tags %}
 {% load replayepisode_tags %}
 
 {% block title %}
@@ -9,6 +10,7 @@
 
 {% block custom-css %}
     <link rel="stylesheet" href="{% static 'games/css/game_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'fansite/css/image_slider.css' %}">
 {% endblock %}
 
 {% block custom-js %}
@@ -131,51 +133,17 @@
 
     {% if game.screenshot_set.all %}
         <h2>Screenshots:</h2>
-        <div id="screenshot-gallery" class="img-gallery">
-            {% for screenshot in game.screenshot_set.all %}
-            <div class="img-gallery-item">
-                <img 
-                    src="https://images.igdb.com/igdb/image/upload/t_thumb_widescreen_large/{{ screenshot.image.image_id }}.jpg" 
-                    width="{{ screenshot.image.width }}" height="{{ screenshot.image.height }}" 
-                    alt="Screenshot #{{ forloop.counter }} for video game {{ game.name }}"
-                >
-            </div>
-            {% endfor %}
-        </div>
+        {% create_img_gallery_slider game.screenshot_set.all "https://images.igdb.com/igdb/image/upload/t_thumb_widescreen_large/" "jpg" "for video game {{ game.name }}" %}
     {% endif %}
 
     {% if game.artwork_set.all %}
         <h2>Artworks:</h2>
-        <div id="artwork-gallery" class="img-gallery">
-            {% for artwork in game.artwork_set.all %}
-            <div class="img-gallery-item">
-                <img 
-                    src="https://images.igdb.com/igdb/image/upload/t_thumb_widescreen_large/{{ artwork.image.image_id }}.jpg" 
-                    width="{{ artwork.image.width }}" height="{{ artwork.image.height }}" 
-                    alt="Artwork #{{ forloop.counter }} for video game {{ game.name }}"
-                >
-            </div>
-            {% endfor %}
-        </div>
+        {% create_img_gallery_slider game.artwork_set.all "https://images.igdb.com/igdb/image/upload/t_thumb_widescreen_large/" "jpg" "for video game {{ game.name }}" %}
     {% endif %}
 
     {% if game.gamevideo_set.all %}
         <h2>Videos:</h2>
-        <div id="video-gallery" class="img-gallery">
-            {% for gamevideo in game.gamevideo_set.all %}
-            <div class="img-gallery-item">
-                <iframe
-                    frameborder="0"
-                    allowfullscreen="1"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    title="{{ gamevideo.name|default:'YouTube video player' }}"
-                    width="640"
-                    height="360"
-                    src="https://www.youtube.com/embed/{{ gamevideo.video_id }}"
-                ></iframe>
-            </div>
-            {% endfor %}
-        </div>
+        {% create_video_gallery_slider game.gamevideo_set.all %}
     {% endif %}
 
     <h2>{{ replayepisode_list|length }} Replay Episode{{ replayepisode_list|pluralize }} featuring {{ game.name }} Played By Game Informer:</h2>
