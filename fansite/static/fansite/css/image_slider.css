@@ -8,10 +8,10 @@
     border: 2px solid var(--base-black, black);
 }
 .gallery-slider .gallery-slider-main .gallery-slider-prev, .gallery-slider .gallery-slider-main .gallery-slider-next {
-    opacity: 0;
+    opacity: 0.8;
     z-index: 1;
     cursor: pointer;
-    background-color: gray;
+    background-color: rgba(128, 128, 128, 0);
     color: var(--base-white, white);
     font-size: 3rem;
     position: absolute;
@@ -21,10 +21,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: opacity 300ms ease;
+    transition: background-color 300ms ease;
 }
 .gallery-slider .gallery-slider-main .gallery-slider-prev:hover, .gallery-slider .gallery-slider-main .gallery-slider-next:hover {
-    opacity: 0.8;
+    background-color: rgba(128, 128, 128, 1);
 }
 .gallery-slider .gallery-slider-main .gallery-slider-prev {
     left: 0;

@@ -1,35 +1,13 @@
-<div class="gallery-slider">
-    <div class="gallery-slider-main">
-        {% if img_list|length > 1 %}
-            <div class="gallery-slider-prev">&lt;</div>
-            <div class="gallery-slider-next">&gt;</div>
-        {% endif %}
+{% extends "base_gallery_slider_tag.html" %}
 
-        <div class="gallery-slider-content">
-            {% for gamevideo in gamevideo_list %}
-                <div 
-                    class="gallery-slider-item" 
-                    data-index="{{ forloop.counter0 }}"
-                >
-                    <iframe
-                        frameborder="0"
-                        allowfullscreen="1"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        title="{{ gamevideo.name|default:'YouTube video player' }}"
-                        width="640"
-                        height="360"
-                        src="https://www.youtube.com/embed/{{ gamevideo.video_id }}"
-                    ></iframe>
-                </div>
-
-            {% endfor %}
-        </div>
-    </div>
-    <div class="gallery-slider-footer">
-        <div class="gallery-slider-counter">
-            {% for gamevideo in gamevideo_list %}
-                <div class="gallery-counter-item" data-index="{{ forloop.counter0 }}"></div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
+{% block gallery-slider-item-content %}
+    <iframe
+        frameborder="0"
+        allowfullscreen="1"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        title="{{ item.name|default:'YouTube video player' }}"
+        width="640"
+        height="360"
+        src="https://www.youtube.com/embed/{{ item.video_id }}"
+    ></iframe>
+{% endblock %}
