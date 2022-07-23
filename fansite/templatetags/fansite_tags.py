@@ -18,6 +18,13 @@ def create_video_gallery_slider(gamevideo_list):
         'item_list': gamevideo_list,
     }
 
+@register.inclusion_tag('page_selection_tag.html')
+def create_page_selection(paginator, curr_page):
+    return {
+        'paginator': paginator,
+        'curr_page': curr_page,
+    }
+
 @register.filter
 def add_commas_to_num(val):
     if not val and val != 0:

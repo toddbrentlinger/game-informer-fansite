@@ -2,24 +2,37 @@
 
 {% load replayepisode_tags %}
 {% load game_tags %}
+{% load person_tags %}
 
 {% block content %}
     <h1>Search Results: </h1>
     <p>{{ search }}</p>
+    <p>Replay Episode Pages: {{ replayepisodes_paginator.num_pages }}</p>
+    <p>Game Pages: {{ games_paginator.num_pages }}</p>
+    <p>People Pages: {{ people_paginator.num_pages }}</p>
 
     <h2>Replay Episodes:</h2>
-    {% replayepisode_basic_list_display replayepisodes %}
+    <p>{{ replayepisodes_paginator.count }} Replay episode{{ replayepisodes_paginator.count|pluralize }} matched the search query!</p>
+    {% replayepisode_basic_list_display replayepisodes_page_obj.object_list %}
+
+    <!-- <h2>Replay Episodes:</h2>
+    <p>{{ replayepisodes|length }} Replay episode{{ replayepisodes|pluralize }} matched the search query!</p>
+    {% replayepisode_basic_list_display replayepisodes %} -->
 
     <h2>Games:</h2>
-    {% game_basic_list_display games %}
+    <p>{{ games_paginator.count }} game{{ games_paginator.count|pluralize }} matched the search query!</p>
+    {% game_basic_list_display games_page_obj.object_list %}
+
+    <!-- <h2>Games:</h2>
+    <p>{{ games|length }} game{{ games|pluralize }} matched the search query!</p>
+    {% game_basic_list_display games %} -->
 
     <h2>People:</h2>
-    <ul>
-        {% for person in people %}
-        <li><a href="{{ person.get_absolute_url }}">{{ person.full_name }}</a></li>
-        {% empty %}
-            <li>There are no people!</li>
-        {% endfor %}
-    </ul>
+    <p>{{ people_paginator.count }} {% if people_paginator.count == 1 %}person{% else%}people{% endif %} matched the search query!</p>
+    {% person_basic_list_display people_page_obj %}
+
+    <!-- <h2>People:</h2>
+    <p>{{ people|length }} {% if people|length == 1 %}person{% else%}people{% endif %} matched the search query!</p>
+    {% person_basic_list_display people %} -->
 
 {% endblock %}

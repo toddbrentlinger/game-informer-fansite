@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.core.paginator import Paginator
 from django.db.models import Q
 from games.models import Game, Platform, Developer, Collection, Franchise, Genre, Theme, Keyword
 from replay.models import ReplayEpisode, SegmentType
@@ -32,21 +33,37 @@ def search(request):
 
     search_input = request.GET['q']
 
+    replayepisodes = ReplayEpisode.objects.filter(
+        Q(title__unaccent__icontains=search_input) 
+        | Q(main_segment_games__name__unaccent__icontains=search_input)
+        | Q(other_segments__games__name__unaccent__icontains=search_input)
+    ).distinct()
+
+    games = Game.objects.filter(
+        Q(name__unaccent__icontains=search_input)
+        | Q(keywords__name__unaccent__icontains=search_input)
+        | Q(themes__name__unaccent__icontains=search_input)
+    ).distinct()
+
+    people = Person.objects.filter(
+        Q(full_name__unaccent__icontains=search_input)
+        | Q(short_name__unaccent__icontains=search_input)
+    ).distinct()
+
+    replayepisodes_paginator = Paginator(replayepisodes, 20)
+    games_paginator = Paginator(games, 20)
+    people_paginator = Paginator(people, 20)
+
     context = {
-        'replayepisodes': ReplayEpisode.objects.filter(
-            Q(title__unaccent__icontains=search_input) 
-            | Q(main_segment_games__name__unaccent__icontains=search_input)
-            | Q(other_segments__games__name__unaccent__icontains=search_input)
-        ).distinct(),
-        'games': Game.objects.filter(
-            Q(name__unaccent__icontains=search_input)
-            | Q(keywords__name__unaccent__icontains=search_input)
-            | Q(themes__name__unaccent__icontains=search_input)
-        ).distinct(),
-        'people': Person.objects.filter(
-            Q(full_name__unaccent__icontains=search_input)
-            | Q(short_name__unaccent__icontains=search_input)
-        ).distinct(),
+        #'replayepisodes': replayepisodes,
+        'replayepisodes_paginator': replayepisodes_paginator,
+        'replayepisodes_page_obj': replayepisodes_paginator.page(1),
+        #'games': games,
+        'games_paginator': games_paginator,
+        'games_page_obj': games_paginator.page(1),
+        #'people': people,
+        'people_paginator': people_paginator,
+        'people_page_obj': people_paginator.page(1),
     }
 
     return render(request, 'search.html', context=context)
