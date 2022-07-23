@@ -1,0 +1,50 @@
+.page-number-container { 
+    display: flex; 
+    margin: .6em 0;
+}
+.page-number-container button {
+    cursor: pointer;
+}
+.page-number-container > button { 
+    flex: 1;
+    padding: 1em;
+}
+.page-number-container > button:disabled { 
+    opacity: 0; 
+    cursor: default;
+}
+/* .page-number-container > button[value="prev"] {
+
+} */
+.page-number-container > button[value="first"] {
+    border-radius: .5em 0 0 .5em;
+    margin-left: .5em;
+}
+.page-number-container > button[value="last"] {
+    border-radius: 0 .5em .5em 0;
+    margin-right: .5em;
+}
+/* .page-number-container > button[value="next"] {
+
+} */
+.page-number-list {
+    flex: 6;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-left: 1px solid var(--base-black, black);
+    border-right: 1px solid var(--base-black, black);
+}
+.page-number-list button {
+    /*width: 10%;*/
+    flex: 1;
+    /*box-shadow: none;*/
+    border: 1px solid var(--base-black, black);
+    border-radius: 0;
+    border-top: none;
+    border-bottom: none;
+}
+.page-number-list button.active {
+    background-image: none;
+    background-color: gray;
+}

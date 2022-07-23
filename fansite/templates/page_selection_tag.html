@@ -1,0 +1,53 @@
+<div class="page-number-container">
+    <button 
+        class="custom-button" 
+        type="button" 
+        value="prev"
+        {% if prev %}
+            disabled="true"
+        {% endif %}
+    >PREV</button>
+
+    <button 
+        class="custom-button" 
+        type="button" 
+        value="first"
+        {% if first %}
+            disabled="true"
+        {% endif %}
+    >FIRST</button>
+
+    <div class="page-number-list">
+        {% for i in range %}
+            <button
+                {% if i == page_obj.number %}
+                    class="active custom-button"
+                {% else %}
+                    class="custom-button"
+                {% endif %}
+                type="button" 
+                value="{{ i }}"
+            >{{ i }}</button>
+        {% endfor %}
+
+        <!-- <button class="active custom-button" type="button" value="{{ curr_page }}">{{ curr_page }}</button> -->
+    </div>
+
+    <button 
+        class="custom-button" 
+        type="button" 
+        value="last"
+        {% if last %}
+            disabled="true"
+        {% endif %}
+    >LAST</button>
+
+    <button 
+        class="custom-button" 
+        type="button" 
+        value="next"
+        {% if next %}
+            disabled="true"
+        {% endif %}
+    >NEXT</button>
+</div>

@@ -1,18 +1,26 @@
 {% extends "base_generic.html" %}
 
+{% load fansite_tags %}
 {% load replayepisode_tags %}
 {% load game_tags %}
 {% load person_tags %}
 
+{% load static %}
+
+{% block custom-css %}
+    <link rel="stylesheet" href="{% static 'fansite/css/page_selection.css' %}">
+{% endblock %}
+
 {% block content %}
     <h1>Search Results: </h1>
     <p>{{ search }}</p>
-    <p>Replay Episode Pages: {{ replayepisodes_paginator.num_pages }}</p>
+    <p>Replay Episode Pages: {{ replayepisodes_page_obj.paginator.num_pages }}</p>
     <p>Game Pages: {{ games_paginator.num_pages }}</p>
     <p>People Pages: {{ people_paginator.num_pages }}</p>
 
     <h2>Replay Episodes:</h2>
-    <p>{{ replayepisodes_paginator.count }} Replay episode{{ replayepisodes_paginator.count|pluralize }} matched the search query!</p>
+    {% create_page_selection replayepisodes_page_obj %}
+    <p>Displaying {{ replayepisodes_page_obj.start_index }} - {{ replayepisodes_page_obj.end_index }} of {{ replayepisodes_page_obj.paginator.count }} Replay episode{{ replayepisodes_page_obj.paginator.count|pluralize }}</p>
     {% replayepisode_basic_list_display replayepisodes_page_obj.object_list %}
 
     <!-- <h2>Replay Episodes:</h2>
