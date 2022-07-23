@@ -1,0 +1,12 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    {% for customuser in customuser_list %}
+        <p>{{ customuser }}</p>
+        <div>
+            <p><span>Username: </span>{{ customuser.get_username }}</p>
+            <p><span>ID: </span>{{ customuser.id }}</p>
+            <a href="{{ customuser.get_absolute_url }}">Detail Page</a>
+        </div>
+    {% endfor %}
+{% endblock %}

@@ -23,6 +23,7 @@ from fansite import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('users/', include('accounts.urls')),
     path('fansite/', include('fansite.urls')),
     path('', RedirectView.as_view(url='fansite/', permanent=True)),
     path('games/', include('games.urls')),
