@@ -5,10 +5,17 @@ from games.models import Game, Platform, Developer, Collection, Franchise, Genre
 from replay.models import ReplayEpisode, SegmentType
 from people.models import Person
 
+from random import choice
+
 # Create your views here.
 
 def index(request):
     '''View function for home page of site.'''
+
+    # Random items
+    pks = ReplayEpisode.objects.values_list('pk', flat=True)
+    random_pk = choice(pks)
+    random_replayepisode = ReplayEpisode.objects.get(pk=random_pk)
 
     # Generate counts of some objects
     context = {
@@ -23,6 +30,7 @@ def index(request):
         'num_game_genres': Genre.objects.count(),
         'num_game_themes': Theme.objects.count(),
         'num_game_keywords': Keyword.objects.count(),
+        'random_replayepisode': random_replayepisode,
     }
 
     # Render the HTML template index.html with the data in the context variable
@@ -56,7 +64,7 @@ def search(request):
 
     context = {
         #'replayepisodes': replayepisodes,
-        'replayepisodes_paginator': replayepisodes_paginator,
+        #'replayepisodes_paginator': replayepisodes_paginator,
         'replayepisodes_page_obj': replayepisodes_paginator.page(1),
         #'games': games,
         'games_paginator': games_paginator,
