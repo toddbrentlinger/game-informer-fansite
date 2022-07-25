@@ -122,6 +122,7 @@ STAFF = [
 GAME_NAME_ALTERNATIVES = {
     "Alone in the Dark: One-Eyed Jack's Revenge": "Alone in the Dark 2",
     "Beetlejuice": 7778,
+    "Beyond the Beyond": 20303,
     "Big Motha Truckers 2: Truck Me Harder": "Big Mutha Truckers 2",
     "Bioshock Infinite Part 2": "Bioshock Infinite",
     "Brütal Legend": 212,

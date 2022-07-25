@@ -21,8 +21,8 @@ class FranchiseAdmin(admin.ModelAdmin):
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('name', 'platform', 'release_date')
-    list_filter = ('platform__abbreviation', 'release_date')
+    list_display = ('name', 'release_date')
+    list_filter = ('platforms__abbreviation', 'release_date')
     search_fields = ['name']
     prepopulated_fields = {'slug': ('name',)}
 

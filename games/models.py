@@ -89,6 +89,8 @@ class Developer(BaseIGDB):
     country = models.PositiveSmallIntegerField(blank=True, null=True, help_text='Enter the ISO 3166-1 country code.')
     description = models.TextField(blank=True, help_text='Enter free text description of the company.')
     logo = models.ForeignKey('ImageIGDB', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo of the company.')
+    start_date = models.DateTimeField(blank=True, null=True, verbose_name='Release Date', help_text='Enter date the company was founded.')
+    websites = models.ManyToManyField('Website', blank=True, help_text='Enter companies official websites.')
 
     # Metadata
 
@@ -128,15 +130,14 @@ class Game(BaseIGDB):
     #igdb_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='IGDB ID', help_text='Enter IGDB game ID to be used with API. If ID entered, other fields do NOT need to be filled out.')
     summary = models.TextField(blank=True, help_text='Enter description of the game.')
     storyline = models.TextField(blank=True, help_text='Enter short description of the game\'s story.')
-    platform = models.ForeignKey('Platform', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter game platform (ex. PC, PS4, XBox 360, etc.).')
+    platforms = models.ManyToManyField('Platform', blank=True, help_text='Enter game platforms (ex. PC, PS4, XBox 360, etc.).')
     genres = models.ManyToManyField('Genre', blank=True, help_text='Enter genres of the game.')
     keywords = models.ManyToManyField('Keyword', blank=True, help_text='Enter keywords of the game.')
     themes = models.ManyToManyField('Theme', blank=True, help_text='Enter themes of the game.')
-    developer = models.ForeignKey(Developer, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter developer of the game.')
+    developers = models.ManyToManyField(Developer, blank=True, help_text='Enter developers of the game.')
     release_date = models.DateTimeField(blank=True, null=True, verbose_name='Release Date', help_text='Enter date the game was released.')
     cover = models.OneToOneField('ImageIGDB', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter the cover of the game.')
     websites = models.ManyToManyField('Website', blank=True, help_text='Enter websites associated with the game.')
-
 
     # Metadata
 
@@ -147,8 +148,8 @@ class Game(BaseIGDB):
 
     def __str__(self):
         output_str = self.name
-        if self.platform is not None:
-            output_str += f' ({self.platform.abbreviation})'
+        # if self.platform is not None:
+        #     output_str += f' ({self.platform.abbreviation})'
         return output_str
 
     # TODO: Use IGDB API to display information about the game as well as any stored
@@ -232,10 +233,12 @@ class Platform(BaseIGDB):
 
     # Fields
 
-    abbreviation = models.CharField(max_length=20, blank=True, help_text='Enter shortened abbreviation for this system/platform.')
+    abbreviation = models.CharField(max_length=20, blank=True, help_text='Enter shortened abbreviation for the system/platform.')
     alternative_name = models.CharField(max_length=1000, blank=True, help_text='Enter alternative names as list separated by commas.')
-    logo = models.ForeignKey(ImageIGDB, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo of the first Version of this platform.')
-    summary = models.TextField(blank=True, help_text='Enter a summary of the first Version of this platform.')
+    generation = models.PositiveSmallIntegerField(blank=True, null=True, help_text='Enter the generation of the system/platform.')
+    logo = models.ForeignKey(ImageIGDB, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter logo of the first Version of the platform.')
+    summary = models.TextField(blank=True, help_text='Enter a summary of the first Version of the platform.')
+    websites = models.ManyToManyField('Website', blank=True, help_text='Enter websites associated with the system/platform.')
 
     # Metadata
 

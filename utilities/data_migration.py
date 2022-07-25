@@ -70,6 +70,53 @@ def is_franchise_in_list(franchise, franchise_list):
             return True
     return False
 
+def add_websites_to_m2m_field(models, website_list, model_inst):
+    '''
+    Adds list of websites in JSON to 'websites' ManyToManyField in provided model.
+
+    Parameter:
+        models (Models): 
+        website_list (List): List of 
+        model_inst (Model): Model instance to add websites to ManyToManyField
+    '''
+    for website in website_list:
+        website_inst = None
+        try:
+            website_inst = models.Website.objects.get(url=website['url'])
+        except models.Website.DoesNotExist:
+            website_inst = models.Website.objects.create(
+                category=website['category'],
+                trusted=website['trusted'],
+                url=website['url']
+            )
+        if website_inst is not None:
+            model_inst.websites.add(website_inst)
+
+def create_datetime_obj(num):
+    '''
+    Creates datetime object given seconds since epoch, either positive or negative values.
+
+    Parameters:
+        num (int): Seconds after or before epoch
+
+    Returns:
+        (Datetime|None)
+    '''
+
+    # Return if parameter is NOT int
+    if not isinstance(num, int):
+        return None
+
+    if num < 0:
+        now = datetime.datetime.now(timezone.utc)
+        total_seconds = now.timestamp() - num
+        try:
+            return now - datetime.timedelta(seconds=total_seconds)
+        except OverflowError:
+            return None
+    else: # num >= 0
+        return datetime.datetime.fromtimestamp(num, timezone.utc)
+
 def create_game_model(models, igdb, name, platform_inst = None, year_released = None, fields = '*', exclude = None):
     '''
     Returns Game model instance from database if it already exists OR needs to be created.
@@ -100,114 +147,14 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
         except models.Game.DoesNotExist:
             # TODO: Is this responsible for final value not being correct
             # Make release date (Unix Timestamp) timezone aware
-            if 'first_release_date' in game_data[0]:
+            try:
                 # release_date = timezone.make_aware(
                 #     datetime.datetime.utcfromtimestamp(game_data[0]['first_release_date']),
                 #     timezone=timezone.utc
                 # )
-                release_date = datetime.datetime.fromtimestamp(
-                    game_data[0]['first_release_date'], 
-                    timezone.utc
-                )
-            else:
+                release_date = create_datetime_obj(game_data[0]['first_release_date'])
+            except KeyError:
                 release_date = None
-
-            # Platform
-            platform_final_inst = None
-            if platform_inst is not None:
-                for platform in game_data[0]['platforms']:
-                    # If platform id from IGDB response matches parameter platform id model
-                    if platform_inst.id == platform['id']:
-                        platform_final_inst = platform_inst
-                        break
-
-                # Save or remove model instances if platform_inst was successful
-                if platform_final_inst is None:
-                    # Do NOT save platform_inst
-                    # Delete ImageIGDB instance in 'logo' field
-                    platform_inst.logo.delete()
-                else: # Else platform_final_inst is not None
-                    # Save platform in case it was created for this game and not yet inside database.
-                    # Did NOT save new instance to database until now to confirm game name and platform search succeeded.
-                    platform_inst.save()
-            
-            # If platform_final_inst is still None when reaching this point, use one from the IGDB response
-            if platform_final_inst is None and 'release_dates' in game_data[0]:
-                # Filter release_dates by region code North America or Worldwide
-                region_codes = (2,8)
-                filtered_release_dates = [
-                    release_date for release_date in game_data[0]['release_dates'] if release_date['region'] in region_codes
-                ]
-
-                # If filter leaves empty list, use original unfiltered release dates list
-                if not filtered_release_dates:
-                    filtered_release_dates = game_data[0]['release_dates']
-
-                # Use platform with release date closest to the 'gamedate' JSON attribute or just year_released parameter
-                if (year_released is not None) and (len(filtered_release_dates) > 1):
-                    if (type(year_released) == str and '-' not in year_released) or type(year_released) == int:
-                        filtered_release_dates.sort(key=lambda release_date: abs(release_date['y'] - int(year_released)))
-
-                # Use first platform from top filtered_release_dates
-                if filtered_release_dates:
-                    platform = filtered_release_dates[0]['platform']
-                    try:
-                        platform_final_inst = models.Platform.objects.get(pk=platform['id'])
-                    except models.Platform.DoesNotExist:
-                        image_igdb_inst = None
-                        if 'platform_logo' in platform:
-                            try:
-                                image_igdb_inst = models.ImageIGDB.objects.get(pk=platform['platform_logo']['id'])
-                            except models.ImageIGDB.DoesNotExist:
-                                image_igdb_inst = models.ImageIGDB.objects.create(
-                                    id=platform['platform_logo']['id'],
-                                    image_id=platform['platform_logo']['image_id'],
-                                    width=platform['platform_logo']['width'] if 'width' in platform['platform_logo'] else None,
-                                    height=platform['platform_logo']['height'] if 'height' in platform['platform_logo'] else None
-                                )
-
-                        platform_final_inst = models.Platform.objects.create(
-                            id=platform['id'],
-                            name=platform['name'],
-                            abbreviation=platform['abbreviation'] if 'abbreviation' in platform else '',
-                            alternative_name=platform['alternative_name'] if 'alternative_name' in platform else '',
-                            logo=image_igdb_inst,
-                            slug=platform['slug'],
-                            summary=platform['summary'] if 'summary' in platform else '',
-                            url=platform['url']
-                        )
-
-            # Developer
-            developer_inst = None
-            if 'involved_companies' in game_data[0]:
-                for involved_company in game_data[0]['involved_companies']:
-                    if involved_company['developer']:
-                        developer = involved_company['company']
-                        try:
-                            developer_inst = models.Developer.objects.get(pk=developer['id'])
-                        except models.Developer.DoesNotExist:
-                            try:
-                                image_igdb_inst = models.ImageIGDB.objects.get(pk=developer['logo']['id'])
-                            except models.ImageIGDB.DoesNotExist:
-                                image_igdb_inst = models.ImageIGDB.objects.create(
-                                    id=developer['logo']['id'],
-                                    image_id=developer['logo']['image_id'],
-                                    width=developer['logo']['width'] if 'width' in developer['logo'] else None,
-                                    height=developer['logo']['height'] if 'height' in developer['logo'] else None
-                                )
-                            except KeyError:
-                                image_igdb_inst = None
-
-                            developer_inst = models.Developer.objects.create(
-                                id=developer['id'],
-                                name=developer['name'],
-                                country=developer['country'] if 'country' in developer else None,
-                                description=developer['description'] if 'description' in developer else '',
-                                logo=image_igdb_inst,
-                                slug=developer['slug'],
-                                url=developer['url']
-                            )
-                        break
 
             # Images - Cover
             image_igdb_inst = None
@@ -229,8 +176,6 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
                 slug=game_data[0]['slug'],
                 summary=game_data[0]['summary'] if 'summary' in game_data[0] else '',
                 storyline=game_data[0]['storyline'] if 'storyline' in game_data[0] else '',
-                platform=platform_final_inst,
-                developer=developer_inst,
                 release_date=release_date,
                 cover=image_igdb_inst,
                 url=game_data[0]['url'] if 'url' in game_data[0] else None
@@ -337,6 +282,51 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
                 # Add game to Franchise ManyToManyField
                 franchise_inst.games.add(game_inst)
 
+            # Developer
+            if 'involved_companies' in game_data[0]:
+                developer_inst = None
+                for involved_company in game_data[0]['involved_companies']:
+                    if involved_company['developer']:
+                        developer = involved_company['company']
+                        try:
+                            developer_inst = models.Developer.objects.get(pk=developer['id'])
+                        except models.Developer.DoesNotExist:
+                            try:
+                                image_igdb_inst = models.ImageIGDB.objects.get(pk=developer['logo']['id'])
+                            except models.ImageIGDB.DoesNotExist:
+                                image_igdb_inst = models.ImageIGDB.objects.create(
+                                    id=developer['logo']['id'],
+                                    image_id=developer['logo']['image_id'],
+                                    width=developer['logo']['width'] if 'width' in developer['logo'] else None,
+                                    height=developer['logo']['height'] if 'height' in developer['logo'] else None
+                                )
+                            except KeyError:
+                                image_igdb_inst = None
+
+                            # Make start date (Unix Timestamp) timezone aware
+                            try:
+                                start_date = create_datetime_obj(developer['start_date'])
+                            except KeyError:
+                                start_date = None
+
+                            developer_inst = models.Developer.objects.create(
+                                id=developer['id'],
+                                name=developer['name'],
+                                country=developer['country'] if 'country' in developer else None,
+                                description=developer['description'] if 'description' in developer else '',
+                                logo=image_igdb_inst,
+                                slug=developer['slug'],
+                                url=developer['url'],
+                                start_date=start_date
+                            )
+
+                            # Websites is ManyToManyField
+                            # TODO: Make separate function (similar to Game.websites field)
+                            if 'websites' in developer:
+                                add_websites_to_m2m_field(models, developer['websites'], developer_inst)
+
+                        game_inst.developers.add(developer_inst)
+
             # Genre is ManyToManyField, use game.genres.add(new_genre)
             if 'genres' in game_data[0]:
                 for genre in game_data[0]['genres']:
@@ -387,18 +377,82 @@ def create_game_model(models, igdb, name, platform_inst = None, year_released = 
 
             # Websites is ManyToManyField
             if 'websites' in game_data[0]:
-                for website in game_data[0]['websites']:
-                    website_inst = None
-                    try:
-                        website_inst = models.Website.objects.get(url=website['url'])
-                    except models.Website.DoesNotExist:
-                        website_inst = models.Website.objects.create(
-                            category=website['category'],
-                            trusted=website['trusted'],
-                            url=website['url']
-                        )
-                    if website_inst is not None:
-                        game_inst.websites.add(website_inst)
+                add_websites_to_m2m_field(models, game_data[0]['websites'], game_inst)
+        
+        # Platform
+        platform_final_inst = None
+        if platform_inst is not None:
+            for platform in game_data[0]['platforms']:
+                # If platform id from IGDB response matches parameter platform id model
+                if platform_inst.id == platform['id']:
+                    platform_final_inst = platform_inst
+                    break
+
+            # Save or remove model instances if platform_inst was successful
+            if platform_final_inst is None:
+                # Do NOT save platform_inst
+                # Delete ImageIGDB instance in 'logo' field
+                if platform_inst.logo:
+                    platform_inst.logo.delete()
+            else: # Else platform_final_inst is not None
+                # Save platform in case it was created for this game and not yet inside database.
+                # Did NOT save new instance to database until now to confirm game name and platform search succeeded.
+                platform_inst.save()
+        
+        # If platform_final_inst is still None when reaching this point, use one from the IGDB response
+        if platform_final_inst is None and 'release_dates' in game_data[0]:
+            # Filter release_dates by region code North America or Worldwide
+            region_codes = (2,8)
+            filtered_release_dates = [
+                release_date for release_date in game_data[0]['release_dates'] if release_date['region'] in region_codes
+            ]
+
+            # If filter leaves empty list, use original unfiltered release dates list
+            if not filtered_release_dates:
+                filtered_release_dates = game_data[0]['release_dates']
+
+            # Use platform with release date closest to the 'gamedate' JSON attribute or just year_released parameter
+            if (year_released is not None) and (len(filtered_release_dates) > 1):
+                if (type(year_released) == str and '-' not in year_released) or type(year_released) == int:
+                    filtered_release_dates.sort(key=lambda release_date: abs(release_date['y'] - int(year_released)))
+
+            # Use first platform from top filtered_release_dates
+            if filtered_release_dates:
+                platform = filtered_release_dates[0]['platform']
+                try:
+                    platform_final_inst = models.Platform.objects.get(pk=platform['id'])
+                except models.Platform.DoesNotExist:
+                    image_igdb_inst = None
+                    if 'platform_logo' in platform:
+                        try:
+                            image_igdb_inst = models.ImageIGDB.objects.get(pk=platform['platform_logo']['id'])
+                        except models.ImageIGDB.DoesNotExist:
+                            image_igdb_inst = models.ImageIGDB.objects.create(
+                                id=platform['platform_logo']['id'],
+                                image_id=platform['platform_logo']['image_id'],
+                                width=platform['platform_logo']['width'] if 'width' in platform['platform_logo'] else None,
+                                height=platform['platform_logo']['height'] if 'height' in platform['platform_logo'] else None
+                            )
+
+                    platform_final_inst = models.Platform.objects.create(
+                        id=platform['id'],
+                        name=platform['name'],
+                        abbreviation=platform['abbreviation'] if 'abbreviation' in platform else '',
+                        alternative_name=platform['alternative_name'] if 'alternative_name' in platform else '',
+                        generation=platform['generation'] if 'generation' in platform else None,
+                        logo=image_igdb_inst,
+                        slug=platform['slug'],
+                        summary=platform['summary'] if 'summary' in platform else '',
+                        url=platform['url']
+                    )
+
+                    # Websites is ManyToManyField
+                    if 'websites' in platform:
+                        add_websites_to_m2m_field(models, platform['websites'], platform_final_inst)
+
+        # If platform_final_inst is not None, add to platforms m2m field of game_inst
+        if platform_final_inst is not None:
+            game_inst.platforms.add(platform_final_inst)
         return game_inst
     return None
 
@@ -528,7 +582,7 @@ def get_game_inst(models, igdb, name, platform_name = None, year_released = None
     platform = get_platform_inst(models, igdb, platform_name) if platform_name else None
 
     # Search IGDB for game based on title AND platform ID
-    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,keywords.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,themes.*,url,videos.*,websites.*'
+    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,involved_companies.company.websites.*,keywords.*,name,platforms.*,platforms.platform_logo.*,platforms.websites.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,release_dates.platform.websites.*,screenshots.*,slug,storyline,summary,themes.*,url,videos.*,websites.*'
     exclude = 'collection.games,franchise.games,franchises.games,involved_companies.company.published, involved_companies.company.developed'
     
     # Check alternative names in constant variable GAME_NAME_ALTERNATIVES
@@ -982,12 +1036,13 @@ def createReplayEpisodeFromJSON(replayData, models):
     if replay_manytomany_instances_dict['main_segment_games']:
         platform_count = {} # key: IGDB platform ID, value: number of games with this platform in main_segment_games
         for game in replay_manytomany_instances_dict['main_segment_games']:
-            if game.platform is None:
-                continue
-            if game.platform.id in platform_count:
-                platform_count[game.platform.id] += 1
-            else:
-                platform_count[game.platform.id] = 1
+            for platform in game.platforms.all():
+                if platform is None:
+                    continue
+                if platform.id in platform_count:
+                    platform_count[platform.id] += 1
+                else:
+                    platform_count[platform.id] = 1
         # Use platform id with highest count
         max_count = 0
         for id, count in platform_count.items():

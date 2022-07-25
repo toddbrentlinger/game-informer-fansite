@@ -33,47 +33,60 @@
 
             <div id="platform-developer-container">
                 <span class="game-logo">
-                    <strong>Platform: </strong>
-                    <a href="{{ game.platform.get_absolute_url }}">
-                        <img
-                            src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ game.platform.logo.image_id }}.png"
-                            width="{{ game.platform.logo.width }}"
-                            height="{{ game.platform.logo.height }}"
-                            alt="Logo of video game developer {{ game.platform.name }}"
-                        >
-                        {{ game.platform.name }}
-                    </a>
+                    {% with platform_list=game.platforms.all %}
+                        <strong>Platform{{ platform_list|pluralize }}: </strong>
+                        {% for platform in platform_list %}
+                            <a href="{{ platform.get_absolute_url }}">
+                                <img
+                                    src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ platform.logo.image_id }}.png"
+                                    width="{{ platform.logo.width }}"
+                                    height="{{ platform.logo.height }}"
+                                    alt="Logo of video game developer {{ platform.name }}"
+                                >
+                                {{ game.platform.name }}
+                            </a>
+                        {% endfor %}
+                    {% endwith %}
                 </span>
                 <span class="game-logo">
-                    <strong>Developer: </strong>
-                    <a href="{{ game.developer.get_absolute_url }}">
-                        <img
-                            src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ game.developer.logo.image_id }}.png"
-                            width="{{ game.developer.logo.width }}"
-                            height="{{ game.developer.logo.height }}"
-                            alt="Logo of video game developer {{ game.developer.name }}"
-                        >
-                        {{ game.developer.name }}
-                    </a>
+                    {% with developer_list=game.developers.all %}
+                        <strong>Developer{{ developer_list|pluralize }}: </strong>
+                        {% for developer in developer_list %}
+                            <a href="{{ developer.get_absolute_url }}">
+                                <img
+                                    src="https://images.igdb.com/igdb/image/upload/t_logo_med/{{ developer.logo.image_id }}.png"
+                                    width="{{ developer.logo.width }}"
+                                    height="{{ developer.logo.height }}"
+                                    alt="Logo of video game developer {{ developer.name }}"
+                                >
+                                {{ developer.name }}
+                            </a>
+                        {% endfor %}
+                    {% endwith %}
                 </span>
             </div>
 
             <p><strong>Release Date: </strong>{{ game.release_date|date:"F j, o" }}</p>
 
             <div id="genres-themes-container">
-                <p>
-                    <strong>Genres: </strong>
-                    {% for genre in game.genres.all %}
-                        {% if not forloop.first %}, {% endif %}
-                        <a href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
-                    {% endfor %}
-                </p>
-                <p>
-                    <strong>Themes: </strong>
-                    {% for theme in game.themes.all %}
-                        {% if not forloop.first %}, {% endif %}<a href="{{ theme.get_absolute_url }}">{{ theme.name }}</a>
-                    {% endfor %}
-                </p>
+                {% if game.genres.all %}
+                    <p>
+                        <strong>Genres: </strong>
+                        {% for genre in game.genres.all %}
+                            {% if not forloop.first %}, {% endif %}
+                            <a href="{{ genre.get_absolute_url }}">{{ genre.name }}</a>
+                        {% endfor %}
+                    </p>
+                {% endif %}
+
+                {% if game.themes.all %}
+                    <p>
+                        <strong>Themes: </strong>
+                        {% for theme in game.themes.all %}
+                            {% if not forloop.first %}, {% endif %}<a href="{{ theme.get_absolute_url }}">{{ theme.name }}</a>
+                        {% endfor %}
+                    </p>
+                {% endif %}
             </div>
 
             <div id="collections-franchises-container">
@@ -122,14 +135,16 @@
     <!-- <p><strong>Slug: </strong>{{ game.slug }}</p>
     <p><strong>IGDB ID: </strong>{{ game.igdb_id }}</p> -->
 
-    <h2>Websites</h2>
-    <ul id="websites">
-        {% for website in game.websites.all %}
-            <li>
-                <a href="{{ website.url }}">{{ website.get_category_display }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+    {% if game.websites.all %}
+        <h2>Websites</h2>
+        <ul id="websites">
+            {% for website in game.websites.all %}
+                <li>
+                    <a href="{{ website.url }}">{{ website.get_category_display }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
     {% if game.screenshot_set.all %}
         <h2>Screenshots:</h2>

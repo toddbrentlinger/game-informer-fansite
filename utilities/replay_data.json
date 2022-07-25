@@ -1436,8 +1436,8 @@
       },
       {
         "title": "Metal Gear Solid",
-        "system": "PS2",
-        "yearReleased": ""
+        "system": "PlayStation",
+        "yearReleased": "1998"
       }
     ],
     "airDate": "11/07/20",
@@ -11568,7 +11568,7 @@
         "yearReleased": "1983-1992"
       },
       {
-        "title": "Mega-Apocalypse",
+        "title": "Mega Apocalypse",
         "system": "Commodore 64",
         "yearReleased": "1983-1992"
       },
@@ -11608,7 +11608,7 @@
         "yearReleased": "1983-1992"
       },
       {
-        "title": "Ranarama",
+        "title": "Rana Rama",
         "system": "Commodore 64",
         "yearReleased": "1983-1992"
       },
@@ -11797,7 +11797,7 @@
         "yearReleased": "1982-1989"
       },
       {
-        "title": "Break Dance",
+        "title": "Breakdance",
         "system": "Commodore 64",
         "yearReleased": "1982-1989"
       },
@@ -32477,7 +32477,7 @@
     "videoLength": "55:50",
     "secondSegment": "RR",
     "secondSegmentGames": [
-      "Spider-Man and Venom: Maximim Carnage"
+      "Spider-Man and Venom: Maximum Carnage"
     ],
     "season": 2,
     "details": {
@@ -33913,7 +33913,7 @@
     "videoLength": "1:01:28",
     "secondSegment": "ST",
     "secondSegmentGames": [
-      "Silver Surfer"
+      "Silver Surfer (NES)"
     ],
     "season": 2,
     "details": {
