@@ -1,8 +1,9 @@
 {% load static %}
 
-<div 
+<a
+    href="{{ person.get_absolute_url }}"
     class="person-basic"
-    style="display:flex;flex-direction:column;justify-content:space-between;"
+    style="display:flex;flex-direction:column;justify-content:space-between;text-align:center;"
 >
     {% if person.thumbnail %}
         <img
@@ -20,5 +21,5 @@
             style="background-color: var(--base-white, white);"
         >
     {% endif %}
-    <a href="{{ person.get_absolute_url }}">{{ person.full_name }}</a>
-</div>
+    <span>{{ person.full_name }}</span>
+</a>

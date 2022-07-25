@@ -17,8 +17,8 @@
                         {{ game.name }}
                     </div>
                 
-                    {% if game.cover %}
-                        <div class="game-basic-cover">
+                    <div class="game-basic-cover">
+                        {% if game.cover %}
                             <img 
                                 src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.cover.image_id }}.png" 
                                 width="{{ game.cover.width }}" 
@@ -26,8 +26,16 @@
                                 alt="Cover image of video game {{ game.name }}"
                                 style="width:100%;height:auto;"
                             >
-                        </div>
-                    {% endif %}
+                        {% elif game.platform.logo %}
+                            <img 
+                                src="https://images.igdb.com/igdb/image/upload/t_cover_big/{{ game.platform.logo.image_id }}.png" 
+                                width="{{ game.platform.logo.width }}" 
+                                height="{{ game.platform.logo.height }}"
+                                alt="Cover image of video game platform {{ game.platform.name }}"
+                                style="width:100%;height:auto;padding:1em;"
+                            >
+                        {% endif %}
+                    </div>
                 </a>
             </li>
         {% empty %}
