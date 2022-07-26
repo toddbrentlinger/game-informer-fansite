@@ -42,8 +42,8 @@ class Episode(models.Model):
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
     host = models.ForeignKey(Person, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter person who hosts the episode.')
     featuring = models.ManyToManyField(Person, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter people who feature in the episode (NOT including the host).')
-    youtube_video = models.OneToOneField('YouTubeVideo', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='YouTube Video', help_text='Enter the YouTube video for the episode.')
-    external_links = models.ManyToManyField('ExternalLink', blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
+    youtube_video = models.OneToOneField('replay.YouTubeVideo', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='YouTube Video', help_text='Enter the YouTube video for the episode.')
+    external_links = models.ManyToManyField('replay.ExternalLink', blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
     #description = models.TextField(max_length=10000, blank=True, help_text='Enter episode description')
     #other_headings = models.ForeignKey(HeadingInstance, on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Other Headings', help_text='Enter heading se')
     headings = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
@@ -371,18 +371,41 @@ class Thumbnail(models.Model):
     def create_srcset_entry(self):
         return f'{self.url} {self.width}w'
 
+class YouTubeTag(models.Model):
+    """Model representing a YouTube video tag."""
+
+    # Fields
+
+    name = models.CharField(max_length=50, blank=True, help_text='Enter name of YouTube tag.')
+
+    # Metadata
+
+    class Meta:
+        verbose_name = 'YouTube Tag'
+
+    # Methods
+
+    def __str__(self):
+        return self.name
+
 # TODO: Use YouTube Data API
 class YouTubeVideo(models.Model):
     """Model representing a YouTube video."""
 
     # Fields
 
-    youtube_id = models.CharField(max_length=15, blank=True, verbose_name='Video ID', help_text='Enter YouTube video ID') # YouTube ID has 11 characters
+    youtube_id = models.CharField(max_length=15, blank=True, verbose_name='Video ID', help_text='Enter YouTube video ID.') # YouTube ID has 11 characters
     title = models.CharField(max_length=100, help_text='Enter title of the video.')
     views = models.PositiveBigIntegerField(null=True, blank=True, help_text='Enter number of views.')
     likes = models.PositiveIntegerField(null=True, blank=True, help_text='Enter number of likes.')
     dislikes = models.PositiveIntegerField(null=True, blank=True, help_text='Enter the number of dislikes.')
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the video.')
+    
+    # description = models.TextField(blank=True, help_text='Enter description of the video.')
+    # tags = models.ManyToManyField(YouTubeTag, help_text='Enter tags for the video.')
+    # duration = models.CharField(max_length=10, help_text='Enter video duration in format: ex. PT1H34M35S.')
+    # published_at = models.DateField(help_text='Enter date the YouTube video was published.')
+    # last_updated = models.DateField(auto_now=True)
 
     # Metadata
 
