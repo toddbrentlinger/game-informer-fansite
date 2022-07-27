@@ -54,6 +54,11 @@ class Models:
         self.Thumbnail = apps.get_model('replay', 'Thumbnail')
         self.YouTubeVideo = apps.get_model('replay', 'YouTubeVideo')
 
+        # Super Replay app
+        self.SuperReplay = apps.get_model('superreplay', 'SuperReplay')
+        self.SuperReplayEpisode = apps.get_model('superreplay', 'SuperReplayEpisode')
+        self.SuperReplayGame = apps.get_model('superreplay', 'SuperReplayGame')
+
 def is_franchise_in_list(franchise, franchise_list):
     '''
     Returns True if franchise object already exists in list, else returns False.
@@ -845,17 +850,15 @@ def add_model_inst_list_to_field(m2m_field, model_inst_list):
         model_inst.save()
         m2m_field.add(model_inst)
 
-def createReplayEpisodeFromJSON(replayData, models):
+def createReplayEpisodeFromJSON(replayData, models, igdb):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
 
     Parameters:
         replayData (dict):
         models (Models):
+        igdb (IGDB): 
     '''
-
-    # IGDB instance initialization creates API access_token
-    igdb = IGDB()
 
     # Create Replay episode object
     replay = models.ReplayEpisode()
@@ -1216,8 +1219,12 @@ def initialize_database(apps, schema_editor):
             total_replay_count = len(allReplayData)
             curr_replay_count = 0
             start_time = time.time()
+
+            # IGDB instance initialization creates API access_token
+            igdb = IGDB()
+
             for replayData in reversed(allReplayData):
-                createReplayEpisodeFromJSON(replayData, models)
+                createReplayEpisodeFromJSON(replayData, models, igdb)
 
                 curr_replay_count += 1
                 avg_seconds_per_replay = (time.time() - start_time) / curr_replay_count
@@ -1228,8 +1235,6 @@ def initialize_database(apps, schema_editor):
             # Use YouTube Data API to update all YouTubeVideo models.
             # Can batch video IDs into single request rather than doing them 
             # individually when YouTubeVideo model is first created.
-
-        #createReplayEpisodeFromJSON(allReplayData[0], apps)
 
 def get_season(replayEpisode):
     # Episode numbers less than 1 are special unofficial episodes

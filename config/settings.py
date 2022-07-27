@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'fansite.apps.FansiteConfig',
     'people.apps.PeopleConfig',
     'replay.apps.ReplayConfig',
+    'superreplay.apps.SuperreplayConfig',
 ]
 
 MIDDLEWARE = [
