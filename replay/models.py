@@ -402,7 +402,7 @@ class YouTubeVideo(models.Model):
     thumbnails = models.ManyToManyField(Thumbnail, help_text='Enter thumbnail images for the video.')
     
     # description = models.TextField(blank=True, help_text='Enter description of the video.')
-    # tags = models.ManyToManyField(YouTubeTag, help_text='Enter tags for the video.')
+    # tags = models.JSONField(null=True, blank=True, help_text='Enter tags for the video.')
     # duration = models.CharField(max_length=10, help_text='Enter video duration in format: ex. PT1H34M35S.')
     # published_at = models.DateField(help_text='Enter date the YouTube video was published.')
     # last_updated = models.DateField(auto_now=True)
