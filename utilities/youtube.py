@@ -131,7 +131,16 @@ class YouTube:
         return video_data_list
 
 def main():
-    pass
+    youtube_inst = YouTube()
+
+    # Game Informer Uploads Playlist ID: UUK-65DO2oOxxMwphl2tYtcw
+    playlist_video_data = youtube_inst.get_all_video_data_from_playlist('UUK-65DO2oOxxMwphl2tYtcw', param='contentDetails')
+
+    video_id_list = list(map(lambda playlist_item: playlist_item['contentDetails']['videoId'], playlist_video_data))
+    video_data = youtube_inst.get_video_data_from_video_id_list(video_id_list)
+
+    with open('utilities/gi_youtube_video_data.json', 'w') as outfile:
+            json.dump(video_data, outfile, indent=2)
 
 if __name__ == "__main__":
     main()

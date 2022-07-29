@@ -2,7 +2,6 @@ import json
 import pprint
 import math
 from operator import itemgetter
-from venv import create
 
 def change_dashes_to_null(obj):
     if isinstance(obj, dict):
@@ -174,7 +173,7 @@ def create_total_time_message(total_seconds):
 
     return output_str
 
-def main():
+def get_blank_segment_type_replays():
     with open('utilities/replay_data.json', 'r') as outfile:
         all_replay_data = json.load(outfile)
         # pprint.pprint(all_replay_data[89], indent=2)
@@ -199,9 +198,115 @@ def main():
                 )
         print(blank_segment_type_replays)
 
+def get_gi_shows():
+    # ( (<tags>,), (<prioritized shows by key value>,) )
+    # Tuple of tuples
+    # Ex. 
+    # 'replay': (('replay', 'replayshow'), ('super_replay'))
+    # 'super_replay': (('super replay'),),
+    # If video has both tags 'replay, super replay', show key 'super_replay'
+    # will be chosen instead of show key 'replay'.
+    GI_SHOWS = {
+        'replay': (('replay', 'replayshow'), ('super_replay',)),
+        'super_replay': (('super replay',),),
+        'game_informer_show': (('gi show', 'game informer show', 'the game informer show'), ('spoiled',)),
+        'test_chamber': (('test chamber',),),
+        'review': (('review', 'game review'), ('game_informer_show', 'new_gameplay_today', 'test_chamber')),
+        #'game_informer_podcast': (('game informer podcast',),),
+        'new_gameplay_today': (('new gameplay today', 'new gameplay'), ('test_chamber',)),
+        'chronicles': (('chronicles',), ('super_replay',)),
+        'reiner_and_phil': (('Reiner and Phil',),),
+        'spoiled': (('spoiled',),),
+    }
+
+    sorted_tags_obj = {}
+    all_youtube_video_data = []
+    with open('utilities/gi_youtube_video_data.json', 'r') as outfile:
+        all_youtube_video_data = json.load(outfile)
+
+        gi_shows = {
+            'matches': {},
+            'duplicates': [],
+            'no_matches': [],
+            'no_tags': [],
+        }
+
+        for youtube_video_data in all_youtube_video_data:
+            if 'snippet' in youtube_video_data and 'tags' in youtube_video_data['snippet']:
+                matching_shows = set()
+
+                for tag in youtube_video_data['snippet']['tags']:
+                    for show, tags_tuple in GI_SHOWS.items():
+                        if tag in tags_tuple[0]:
+                            matching_shows.add(show)
+
+                # Handle duplicates shows with prioritization
+                if len(matching_shows) > 1:
+                    def handle_matching_show_filter(show):
+                        if len(GI_SHOWS[show]) > 1:
+                            for priority_show in GI_SHOWS[show][1]:
+                                if priority_show in matching_shows:
+                                    return False
+                        return True
+                    # Remove duplicates by checking for priorities
+                    matching_shows = list(filter(handle_matching_show_filter, matching_shows))
+
+                if len(matching_shows) > 1:
+                    gi_shows['duplicates'].append(youtube_video_data)
+                elif len(matching_shows) == 1:
+                    matching_show = matching_shows.pop()
+                    if matching_show in gi_shows['matches']:
+                        gi_shows['matches'][matching_show].append(youtube_video_data)
+                    else:
+                        gi_shows['matches'][matching_show] = [youtube_video_data]
+
+                else: # len(matching_shows) == 0
+                    gi_shows['no_matches'].append(youtube_video_data)
+
+            else:
+                gi_shows['no_tags'].append(youtube_video_data)
+
+        # Create obj with key as tag and value as count of tag for 'no_matches' videos
+        tags_obj = {}
+        for youtube_video_data in gi_shows['no_matches']:
+            for tag in youtube_video_data['snippet']['tags']:
+                # Increment or initialize tag count
+                if tag in tags_obj:
+                    tags_obj[tag] += 1
+                else:
+                    tags_obj[tag] = 1
+
+        # Sort tags_obj by tag count
+        sorted_tags_obj = dict(sorted(tags_obj.items(), key=lambda item: item[1], reverse=True))
+
+    # Save sorted shows
+    with open('utilities/gi_youtube_video_sorted_by_shows_data.json', 'w') as outfile:
+        json.dump(gi_shows, outfile, indent=2)
+
+    # Save sorted tags by count to file
+    with open('utilities/gi_youtube_video_tags_data.json', 'w') as outfile:
+        json.dump(sorted_tags_obj, outfile, indent=2)
+
+    duplicates_count = len(gi_shows['duplicates'])
+    no_matches_count = len(gi_shows['no_matches']) 
+    no_tags_count = len(gi_shows['no_tags'])
+    matches_count = len(all_youtube_video_data) - duplicates_count - no_matches_count - no_tags_count
+    print(
+        f"Matches: { matches_count }",
+        f"Duplicates: { duplicates_count }",
+        f"No Matches: { no_matches_count }",
+        f"No Tags: { no_tags_count }",
+        sep='\n'
+    )
+
+def main():
+    get_gi_shows()
+    #get_blank_segment_type_replays()
+    
     #clean_json_file()
     #display_middle_segment_data()
     #display_second_segment_data()
+    pass
 
 if __name__ == '__main__':
     main()
