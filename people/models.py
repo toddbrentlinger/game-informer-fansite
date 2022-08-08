@@ -28,7 +28,7 @@ class Person(models.Model):
     slug = models.SlugField(max_length=100, unique=True, null=False)
     description = models.TextField(blank=True)
     headings = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
-    thumbnail = models.ForeignKey('replay.Thumbnail', on_delete=models.SET_NULL, null=True, blank=True)
+    thumbnail = models.ForeignKey('shows.Thumbnail', on_delete=models.SET_NULL, null=True, blank=True)
     infobox_details = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
 
     # gallery 

@@ -1,12 +1,8 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import Article, ExternalLink, Heading, HeadingInstance, ReplayEpisode, ReplaySeason, Segment, SegmentType, Thumbnail, YouTubeVideo
+from .models import Article, ReplayEpisode, ReplaySeason, Segment, SegmentType
 
 # Inlines
-
-class HeadingInstanceInline(admin.TabularInline):
-    model = HeadingInstance
-    extra = 0
 
 class ReplayEpisodeInline(admin.StackedInline):
     model = ReplayEpisode
@@ -19,19 +15,6 @@ class ArticleAdmin(admin.ModelAdmin):
     list_display = ('title', 'author', 'datetime')
     list_filter = ('datetime',)
     search_fields = ['title', 'author__full_name', 'author__short_name']
-
-@admin.register(ExternalLink)
-class ExternalLinkAdmin(admin.ModelAdmin):
-    list_display = ('title', 'url')
-    search_fields = ['title', 'url']
-
-@admin.register(Heading)
-class HeadingAdmin(admin.ModelAdmin):
-    inlines = [HeadingInstanceInline,]
-
-@admin.register(HeadingInstance)
-class HeadingInstanceAdmin(admin.ModelAdmin):
-    list_filter = ('heading__title',)
 
 @admin.register(ReplayEpisode)
 class ReplayEpisodeAdmin(admin.ModelAdmin):
@@ -56,13 +39,3 @@ class SegmentAdmin(admin.ModelAdmin):
 class SegmentTypeAdmin(admin.ModelAdmin):
     list_display = ('title', 'abbreviation')
     prepopulated_fields = {'slug': ('title',)}
-
-@admin.register(Thumbnail)
-class ThumbnailAdmin(admin.ModelAdmin):
-    list_filter = ('quality',)
-
-@admin.register(YouTubeVideo)
-class YouTubeVideoAdmin(admin.ModelAdmin):
-    list_display = ('title', 'youtube_id', 'views', 'likes', 'dislikes')
-    search_fields = ['title']
-    

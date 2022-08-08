@@ -1,5 +1,79 @@
 TODO:
 
+7/25/22
+
+- Change 'host' field in Episode abstract model from ForeignKey to ManyToManyField 
+since multiple people can be host in a single episode.
+
+X ISSUE: IGDB creates API access token every time a ReplayEpisode is 
+created inside data migration script. 
+SOLUTION: Create API access token once and pass as parameter into function 
+inside data migration script.
+
+7/22/22
+
+Show(Model):
+    name = CharField()
+    description = TextField()
+    slug = SlugField()
+
+ShowEpisode(Episode):
+    show = ForeignKey(Show)
+    youtube_video = ForeignKey|OneToOneField(YouTubeVideo)
+
+Super Replay Special Case:
+- Show instance of 'Super Replay'
+- ShowEpisode instances of every Super Replay Episode
+
+SuperReplay(Model): # Extend Show?
+    name = CharField()
+    # Do NOT need show since show type is set inside ShowEpisode
+
+SuperReplayEpisode(Model): # Extend ShowEpisode?
+    super_replay = ForeignKey(SuperReplay)
+    episode = OneToOne(ShowEpisode)
+
+- GI Live
+    /gi-live/
+    /gilive/
+- GI Show - Game Informer Show
+    /gi-show/
+    /gishow/
+- Spoiled
+    /spoiled/
+- Extra Life
+    /extra-life/
+
+- Add detail page for games with NO platforms, developers, etc. Any field that can be blank.
+
+- When use general search on header, display first 10 matches from each map AND links to see 
+the remaining search results in app specific search results page. Ex. ./search/?q=splinter will 
+display max 10 results from each app. Clicking to see remaining Game results goes to 
+./games/search/?q=splinter
+Alternative to having separate pagination funcionality to page through each app results on same search
+page.
+
+7/19/22
+
+X Change developer field in Game to ManyToManyField to add multiple developers to single Game
+instead of using the first one listed.
+
+X Some games could be played on multiple platforms but only save the first one.
+Change platform field in Game to ManyToManyField. When matching game is found using 
+name or id, add platform if doesn't already exist in M2M field.
+
+- If must take platform data from game data returned from IGDB request, use the platform 
+with the earliest release date instead of the first in the list.
+
+Developer
+    X description
+    X start_date
+    X websites?
+Publisher? (same as developer)
+Platform
+    X generation (int)
+    X websites?
+
 7/10/22
 
 X Add Fandom link to external links field
@@ -9,7 +83,7 @@ use 'description' field instead as backup.
 
 6/29/22
 
-- Add 'collection' or 'franchise' field to Game and in game detail page, show same series games.
+X Add 'collection' or 'franchise' field to Game and in game detail page, show same series games.
 IGDB Fields To Consider:
     X artworks
     X videos
@@ -18,9 +92,9 @@ IGDB Fields To Consider:
     X franchise
     X franchises
 
-    keywords
+    X keywords
     tags
-    themes
+    X themes
     * Abstract model with same shared functionality as Genre
 
     X websites
@@ -110,6 +184,32 @@ Reset PostgreSQL database:
 
 - Superuser was removed. Must add it again.
     python manage.py createsuperuser
+
+-------------------------------------------------------------------------------
+
+Data Migration:
+
+from django.db import migrations
+from django.contrib.postgres.operations import TrigramExtension, UnaccentExtension
+from utilities.replay_data_migration import initialize_database as replay_init
+from utilities.super_replay_data_migration import initialize_database as super_replay_init
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('games', '0003_remove_game_developer_remove_game_platform_and_more'),
+        ('people', '0002_initial'),
+        ('replay', '0001_initial'),
+        ('shows', '0001_initial'),
+        ('superreplay', '0001_initial'),
+    ]
+
+    operations = [
+        TrigramExtension(),
+        UnaccentExtension(),
+        migrations.RunPython(replay_init),
+        migrations.RunPython(super_replay_init),
+    ]
 
 -------------------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.views import generic
-from .models import Show, ShowEpisode
+from .models import Show, Episode
 
 # Create your views here.
 
@@ -20,18 +20,18 @@ def show_detail_slug_view(request, slug):
 
     return render(request, 'shows/show_detail.html', context=context)
 
-class ShowEpisodeListView(generic.ListView):
-    model = ShowEpisode
+class EpisodeListView(generic.ListView):
+    model = Episode
     paginate_by = 20
 
-class ShowEpisodeDetailView(generic.DetailView):
-    model = ShowEpisode
+class EpisodeDetailView(generic.DetailView):
+    model = Episode
 
-def showepisode_detail_slug_view(request, slug):
-    showepisode = get_object_or_404(ShowEpisode, slug=slug)
+def episode_detail_slug_view(request, slug):
+    episode = get_object_or_404(Episode, slug=slug)
 
     context = {
-        'showepisode': showepisode,
+        'episode': episode,
     }
 
-    return render(request, 'shows/showepisode_detail.html', context=context)
+    return render(request, 'shows/episode_detail.html', context=context)
