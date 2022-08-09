@@ -9,6 +9,7 @@ from django.utils import timezone
 from utilities.igdb import IGDB # Make requests from IGDB API
 from utilities.data_migration_constants import SEGMENT_TYPES, STAFF, GAME_NAME_ALTERNATIVES # Separate file to hold constants
 from utilities.misc import create_total_time_message # misc utility functions
+from utilities.youtube import YouTube
 from django.template.defaultfilters import slugify
 
 class Models:
@@ -17,8 +18,6 @@ class Models:
         # than this migration expects. Use historical versions instead.
         
         # Fansite app
-        # self.SuperReplay = apps.get_model('fansite', 'SuperReplay')
-        # self.SuperReplayEpisode = apps.get_model('fansite', 'SuperReplayEpisode')
 
         # People app
         self.Person = apps.get_model('people', 'Person')
@@ -44,15 +43,17 @@ class Models:
 
         # Replay app
         self.Article = apps.get_model('replay', 'Article')
-        self.ExternalLink = apps.get_model('replay', 'ExternalLink')
-        # self.Heading = apps.get_model('replay', 'Heading')
-        # self.HeadingInstance = apps.get_model('replay', 'HeadingInstance')
         self.ReplayEpisode = apps.get_model('replay', 'ReplayEpisode')
         self.ReplaySeason = apps.get_model('replay', 'ReplaySeason')
         self.Segment = apps.get_model('replay', 'Segment')
         self.SegmentType = apps.get_model('replay', 'SegmentType')
-        self.Thumbnail = apps.get_model('replay', 'Thumbnail')
-        self.YouTubeVideo = apps.get_model('replay', 'YouTubeVideo')
+
+        # Shows app
+        self.Episode = apps.get_model('shows', 'Episode')
+        self.ExternalLink = apps.get_model('shows', 'ExternalLink')
+        self.Show = apps.get_model('shows', 'Show')
+        self.Thumbnail = apps.get_model('shows', 'Thumbnail')
+        self.YouTubeVideo = apps.get_model('shows', 'YouTubeVideo')
 
         # Super Replay app
         self.SuperReplay = apps.get_model('superreplay', 'SuperReplay')
@@ -850,18 +851,86 @@ def add_model_inst_list_to_field(m2m_field, model_inst_list):
         model_inst.save()
         m2m_field.add(model_inst)
 
-def createReplayEpisodeFromJSON(replayData, models, igdb):
+def get_or_create_youtube_video(models, youtube_id, youtube):
+    # Get video data using YouTube Data API
+    youtube_response = youtube.get_youtube_video_data(youtube_id)
+
+    # If YouTube response fails, return None
+    if not youtube_response:
+        return None
+    else: # Else YouTube response succeeded
+        youtube_video_inst = models.YouTubeVideo()
+
+        # ID - youtube_response['id']
+        youtube_video_inst.youtube_id = youtube_id
+
+        if 'contentDetails' in youtube_response:
+            # Duration - youtube_response['contentDetails']['duration']
+            if 'duration' in youtube_response['contentDetails']:
+                youtube_video_inst.duration = youtube_response['contentDetails']['duration']
+
+        if 'statistics' in youtube_response:
+            # Views - youtube_response['statistics']['viewCount']
+            if 'viewCount' in youtube_response['statistics']:
+                youtube_video_inst.views = int(youtube_response['statistics']['viewCount'])
+
+            # Likes - youtube_response['statistics']['likeCount]
+            if 'likeCount' in youtube_response['statistics']:
+                youtube_video_inst.likes = int(youtube_response['statistics']['likeCount'])
+
+        if 'snippet' in youtube_response:
+            # Title - youtube_response['snippet']['title']
+            if 'title' in youtube_response['snippet']:
+                youtube_video_inst.title = youtube_response['snippet']['title']
+
+            # Description - youtube_response['snippet']['description']
+            if 'description' in youtube_response['snippet']:
+                youtube_video_inst.description = youtube_response['snippet']['description']
+
+            # Tags - youtube_response['snippet']['tags']
+            if 'tags' in youtube_response['snippet']:
+                youtube_video_inst.tags = youtube_response['snippet']['tags']
+
+            # Published At - youtube_response['snippet']['publishedAt']
+            # Example Format: 2015-08-08T16:03:03Z
+            timezone.make_aware(
+                datetime.datetime.strptime(youtube_response['snippet']['publishedAt'], '%Y-%m-%d'),
+                timezone=timezone.get_current_timezone()
+            )
+
+            # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
+            youtube_video_inst.save()
+
+            # Thumbnails - youtube_response['snippet']['thumbnails']
+            for key, value in youtube_response['snippet']['thumbnails'].items():
+                try:
+                    thumbnail = models.Thumbnail.objects.get(url=value['url'])
+                except models.Thumbnail.DoesNotExist:
+                    thumbnail = models.Thumbnail.objects.create(
+                        quality=key.upper(),
+                        url=value['url'],
+                        width=value['width'],
+                        height=value['height']
+                    )
+                youtube_video_inst.thumbnails.add(thumbnail)
+
+def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
 
     Parameters:
-        replayData (dict):
         models (Models):
+        replayData (dict):
+        show_inst (Show):
         igdb (IGDB): 
+        youtube (YouTube): 
     '''
 
     # Create Replay episode object
     replay = models.ReplayEpisode()
+
+    # Add Show instance
+    replay.show = show_inst
 
     # Dictionary to hold model instances for ManyToManyFields.
     # Key is field name and value is list of model instances.
@@ -914,43 +983,57 @@ def createReplayEpisodeFromJSON(replayData, models, igdb):
 
     # YouTube Video - replayData.youtube (OneToOne)
     if 'youtube' in replayData and 'views' in replayData['youtube']:
-        youtubeVideo = models.YouTubeVideo()
+        # youtubeVideo = models.YouTubeVideo()
 
         # ID - replayData.details.external_links
         # Title
+        youtube_id = None
+        youtube_title = None
+        youtube_video_inst = None
         if 'details' in replayData and 'external_links' in replayData['details'] and replayData['details']['external_links']:
             for link in replayData['details']['external_links']:
                 # If link contains YouTube url, set ID, title, and break loop
                 if ('youtube.com' in link['href']):
-                    youtubeVideo.youtube_id = link['href'].split('watch?v=', 1)[1]
-                    youtubeVideo.title = link['title']
+                    # youtubeVideo.youtube_id = link['href'].split('watch?v=', 1)[1]
+                    # youtubeVideo.title = link['title']
+                    youtube_id = link['href'].split('watch?v=', 1)[1]
+                    youtube_title = link['title']
+                    youtube_video_inst = get_or_create_youtube_video(models, youtube_id, youtube)
                     break
 
-        # Views
-        youtubeVideo.views = replayData['youtube']['views']
-        # Likes
-        youtubeVideo.likes = replayData['youtube']['likes']
-        # Dislikes
-        youtubeVideo.dislikes = replayData['youtube']['dislikes']
+        # If failed to find or created YouTube video
+        if youtube_video_inst is None:
+            youtube_video_inst = models.YouTubeVideo()
+            if youtube_id:
+                youtube_video_inst.youtube_id = youtube_id
+            if youtube_title:
+                youtube_video_inst.title = youtube_title
 
-        # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
-        youtubeVideo.save()
+            # Views
+            youtube_video_inst.views = replayData['youtube']['views']
+            # Likes
+            youtube_video_inst.likes = replayData['youtube']['likes']
+            # Dislikes
+            youtube_video_inst.dislikes = replayData['youtube']['dislikes']
 
-        # Thumbnails
-        for key, value in replayData['youtube']['thumbnails'].items():
-            try:
-                thumbnail = models.Thumbnail.objects.get(url=value['url'])
-            except models.Thumbnail.DoesNotExist:
-                thumbnail = models.Thumbnail.objects.create(
-                    quality=key.upper(),
-                    url=value['url'],
-                    width=value['width'],
-                    height=value['height']
-                )
-            youtubeVideo.thumbnails.add(thumbnail)
+            # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
+            youtube_video_inst.save()
+
+            # Thumbnails
+            for key, value in replayData['youtube']['thumbnails'].items():
+                try:
+                    thumbnail = models.Thumbnail.objects.get(url=value['url'])
+                except models.Thumbnail.DoesNotExist:
+                    thumbnail = models.Thumbnail.objects.create(
+                        quality=key.upper(),
+                        url=value['url'],
+                        width=value['width'],
+                        height=value['height']
+                    )
+                youtube_video_inst.thumbnails.add(thumbnail)
 
         # Add YouTubeVideo to ReplayEpisode
-        replay.youtube_video = youtubeVideo
+        replay.youtube_video = youtube_video_inst
 
     # Thumbnails - replayData.youtube.thumbnails (ManyToMany)
     # Use YouTubeVideo.thumbnails instead or set to null
@@ -1223,8 +1306,20 @@ def initialize_database(apps, schema_editor):
             # IGDB instance initialization creates API access_token
             igdb = IGDB()
 
+            # YouTube Data API instance
+            youtube = YouTube()
+
+            # Replay Show instance
+            try:
+                show_inst = models.Show.objects.get(name='Replay')
+            except models.Show.DoesNotExist:
+                show_inst = models.Show.objects.create(
+                    name='Replay',
+                    slug='replay'
+                )
+
             for replayData in reversed(allReplayData):
-                createReplayEpisodeFromJSON(replayData, models, igdb)
+                createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube)
 
                 curr_replay_count += 1
                 avg_seconds_per_replay = (time.time() - start_time) / curr_replay_count

@@ -6,25 +6,30 @@ import math
 import re
 from django.db.models import Q
 from django.utils import timezone
-from utilities.igdb import IGDB # Make requests from IGDB API
-from utilities.data_migration import Models
+from django.template.defaultfilters import slugify
+from utilities.igdb import IGDB # Make requests to IGDB API
+from utilities.youtube import YouTube # Make requests to YouTube Data API
 from utilities.misc import create_total_time_message # misc utility functions
-from utilities.data_migration import get_game_inst, get_person_inst, add_model_inst_list_to_field
-from utilities.youtube import YouTube
+from utilities.replay_data_migration import Models, get_or_create_youtube_video, get_game_inst, get_person_inst, add_model_inst_list_to_field
 
-def createSuperReplayEpisodeFromJSON(superReplayEpisodeData, superReplayInst, episode_num, models, igdb):
+def createSuperReplayEpisodeFromJSON(models, superReplayEpisodeData, superReplayInst, episode_num, show_inst, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
 
     Parameters:
+        models (Models): 
         superReplayEpisodeData (dict):
         superReplayInst (SuperReplay): 
         episode_num (int): 
-        models (Models): 
+        show_inst (Show): 
         igdb (IGDB): 
+        youtube (YouTube): 
     '''
     # Create Super Replay Episode object
     superreplayepisode = models.SuperReplayEpisode()
+
+    # Add Show instance
+    superreplayepisode.show = show_inst
 
     # Dictionary to hold model instances for ManyToManyFields.
     # Key is field name and value is list of model instances.
@@ -42,9 +47,14 @@ def createSuperReplayEpisodeFromJSON(superReplayEpisodeData, superReplayInst, ep
     superreplayepisode.episode_number = episode_num
 
     # Airdate
-    if 'airdate' in superReplayEpisodeData and superReplayEpisodeData['airDate']:
+    if 'airdate' in superReplayEpisodeData and superReplayEpisodeData['airdate']:
+        if '/' in superReplayEpisodeData['airdate']:
+            airdate = datetime.datetime.strptime(superReplayEpisodeData['airdate'],'%m/%d/%y') # month/day/year
+        else:
+            airdate = datetime.datetime.strptime(superReplayEpisodeData['airdate'],'%B %d, %Y') # month day, year
+        
         superreplayepisode.airdate = timezone.make_aware(
-            datetime.datetime.strptime(superReplayEpisodeData['airDate'],'%m/%d/%y'), # month/day/year
+            airdate,
             timezone=timezone.get_current_timezone()
         )
 
@@ -83,66 +93,73 @@ def createSuperReplayEpisodeFromJSON(superReplayEpisodeData, superReplayInst, ep
     # YouTube Video
     if 'youtubeVideo' in superReplayEpisodeData:
         youtube_video_data = superReplayEpisodeData['youtubeVideo']
-        youtube_video_inst = models.YouTubeVideo()
 
-        # YouTube Video ID
-        youtube_video_inst.youtube_id = youtube_video_data['id']
+        youtube_video_inst = get_or_create_youtube_video(models, youtube_video_data['id'], youtube)
 
-        # Title
-        youtube_video_inst.title = youtube_video_data['title']
+        if youtube_video_inst is None:
+            # Create YouTubeVideo instance
+            youtube_video_inst = models.YouTubeVideo()
 
-        # Views
-        youtube_video_inst.views = youtube_video_data['views']
+            # YouTube Video ID
+            youtube_video_inst.youtube_id = youtube_video_data['id']
 
-        # Likes
-        youtube_video_inst.likes = youtube_video_data['likes']
+            # Title
+            youtube_video_inst.title = youtube_video_data['title']
 
-        # Dislikes
-        youtube_video_inst.dislikes = youtube_video_data['dislikes']
+            # Views
+            youtube_video_inst.views = youtube_video_data['views']
 
-        # Description
-        youtube_video_inst.description = youtube_video_data['description']
+            # Likes
+            youtube_video_inst.likes = youtube_video_data['likes']
 
-        # Duration
-        youtube_video_inst.duration = youtube_video_data['runtime']
+            # Dislikes
+            youtube_video_inst.dislikes = youtube_video_data['dislikes']
 
-        # Published At
-        youtube_video_inst.published_at = timezone.make_aware(
-            datetime.datetime.strptime(youtube_video_data['airDate'],'%m/%d/%y'), # month/day/year
-            timezone=timezone.get_current_timezone()
-        )
+            # Description
+            youtube_video_inst.description = youtube_video_data['description']
 
-        # Tags
-        if 'tags' in youtube_video_data and youtube_video_data['tags']:
-            youtube_video_inst.tags = youtube_video_data['tags']
+            # Duration
+            youtube_video_inst.duration = youtube_video_data['runtime']
 
-        # Save YouTubeVideo instance before adding ManyToManyFields
-        youtube_video_inst.save()
+            # Published At
+            youtube_video_inst.published_at = timezone.make_aware(
+                datetime.datetime.strptime(youtube_video_data['airdate'],'%B %d, %Y'), # month day, year
+                timezone=timezone.get_current_timezone()
+            )
 
-        # Thumbnails
-        for key, value in youtube_video_data['thumbnails'].items():
-            try:
-                thumbnail = models.Thumbnail.objects.get(url=value['url'])
-            except models.Thumbnail.DoesNotExist:
-                thumbnail = models.Thumbnail.objects.create(
-                    quality=key.upper(),
-                    url=value['url'],
-                    width=value['width'],
-                    height=value['height']
-                )
-            youtube_video_inst.thumbnails.add(thumbnail)
+            # Tags
+            if 'tags' in youtube_video_data and youtube_video_data['tags']:
+                youtube_video_inst.tags = youtube_video_data['tags']
+
+            # Save YouTubeVideo instance before adding ManyToManyFields
+            youtube_video_inst.save()
+
+            # Thumbnails
+            for key, value in youtube_video_data['thumbnails'].items():
+                try:
+                    thumbnail = models.Thumbnail.objects.get(url=value['url'])
+                except models.Thumbnail.DoesNotExist:
+                    thumbnail = models.Thumbnail.objects.create(
+                        quality=key.upper(),
+                        url=value['url'],
+                        width=value['width'],
+                        height=value['height']
+                    )
+                youtube_video_inst.thumbnails.add(thumbnail)
 
         # Add YouTubeVideo to SuperReplayEpisode
         superreplayepisode.youtube_video = youtube_video_inst
 
-def createSuperReplayFromJSON(superReplayData, models, igdb):
+def createSuperReplayFromJSON(models, superReplayData, show_inst, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
 
     Parameters:
-        superReplayData (dict):
         models (Models):
+        superReplayData (dict):
+        show_inst (Show): 
         igdb (IGDB): 
+        youtube (YouTube): 
     '''
 
     # Create Super Replay object
@@ -158,6 +175,9 @@ def createSuperReplayFromJSON(superReplayData, models, igdb):
 
     # Title
     superreplay.title = superReplayData['title']
+
+    # Slug - convert 'title' field
+    superreplay.slug = slugify(re.sub(r'Super Replay:\s?', '', superreplay.title, 1, re.IGNORECASE))
 
     # Number
     superreplay.number = superReplayData['number']
@@ -199,12 +219,12 @@ def createSuperReplayFromJSON(superReplayData, models, igdb):
 
         # Date
         article.datetime = timezone.make_aware(
-            datetime.datetime.strptime(article['date'], ' on %b %d, %Y at %I:%M %p'),
+            datetime.datetime.strptime(article_data['date'], ' on %b %d, %Y at %I:%M %p'),
             timezone=timezone.get_current_timezone()
         )
 
         # Content HTML
-        article.content = article['contentHTML']
+        article.content = article_data['contentHTML']
 
     # Image
     # Thumbnails
@@ -218,7 +238,7 @@ def createSuperReplayFromJSON(superReplayData, models, igdb):
     # Episode List
     if 'episodeList' in superReplayData:
         for num, super_replay_episode_data in enumerate(superReplayData['episodeList'], start=1):
-            createSuperReplayEpisodeFromJSON(super_replay_episode_data, superreplay, num, models, igdb)
+            createSuperReplayEpisodeFromJSON(models, super_replay_episode_data, superreplay, num, show_inst, igdb, youtube)
 
     # Games
     for game in superReplayData['games']:
@@ -262,8 +282,20 @@ def initialize_database(apps, schema_editor):
             # IGDB instance initialization creates API access_token
             igdb = IGDB()
 
+            # YouTube Data API instance
+            youtube = YouTube()
+
+            # Super Replay Show instance
+            try:
+                show_inst = models.Show.objects.get(name='Super Replay')
+            except models.Show.DoesNotExist:
+                show_inst = models.Show.objects.create(
+                    name='Super Replay',
+                    slug='super-replay'
+                )
+
             for superReplayData in reversed(allSuperReplayData):
-                createSuperReplayFromJSON(superReplayData, models, igdb)
+                createSuperReplayFromJSON(models, superReplayData, show_inst, igdb, youtube)
 
                 curr_count += 1
                 avg_seconds_per_replay = (time.time() - start_time) / curr_count
