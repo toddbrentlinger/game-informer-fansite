@@ -178,7 +178,7 @@ class GameVideo(models.Model):
     # Metadata
 
     class Meta:
-        pass
+        verbose_name = 'Video'
 
     # Methods
 
@@ -304,4 +304,4 @@ class Website(models.Model):
     # Methods
 
     def __str__(self):
-        return f'{self.category} - {self.url}'
+        return f'{self.get_category_display()} - {self.url}'

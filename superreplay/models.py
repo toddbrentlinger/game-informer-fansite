@@ -24,7 +24,7 @@ class SuperReplay(models.Model):
     # Methods
     
     def __str__(self):
-        pass
+        return self.title
 
     def get_absolute_url(self):
         # super-replay/5 -> Super Replay 5
@@ -68,7 +68,10 @@ class SuperReplayGame(models.Model):
 
     # Metadata
 
+    class Meta:
+        verbose_name = 'Super Replay Game'
+
     # Methods
 
     def __str__(self):
-        return f'${self.game.name} (${self.super_replay.title})'
+        return f'{self.game.name} ({self.super_replay.title})'
