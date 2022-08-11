@@ -893,15 +893,17 @@ def get_or_create_youtube_video(models, youtube_id, youtube):
 
             # Published At - youtube_response['snippet']['publishedAt']
             # Example Format: 2015-08-08T16:03:03Z
-            timezone.make_aware(
-                datetime.datetime.strptime(youtube_response['snippet']['publishedAt'], '%Y-%m-%d'),
-                timezone=timezone.get_current_timezone()
-            )
+            if 'publishedAt' in youtube_response['snippet']:
+                youtube_video_inst.published_at = timezone.make_aware(
+                    datetime.datetime.strptime(youtube_response['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
+                    timezone=timezone.get_current_timezone()
+                )
 
-            # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
-            youtube_video_inst.save()
+        # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
+        youtube_video_inst.save()
 
-            # Thumbnails - youtube_response['snippet']['thumbnails']
+        # Thumbnails - youtube_response['snippet']['thumbnails']
+        if 'snippet' in youtube_response and 'thumbnails' in youtube_response['snippet']:
             for key, value in youtube_response['snippet']['thumbnails'].items():
                 try:
                     thumbnail = models.Thumbnail.objects.get(url=value['url'])
@@ -929,14 +931,12 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     # Create Replay episode object
     replay = models.ReplayEpisode()
 
-    # Add Show instance
-    replay.show = show_inst
-
     # Dictionary to hold model instances for ManyToManyFields.
     # Key is field name and value is list of model instances.
     # After other fields in Replay instance are set and it's saved to database,
     # can then add to the actual ManyToManyFields.
-    replay_manytomany_instances_dict = {
+    manytomany_instances_dict = {
+        'shows': [],
         'featuring': [],
         'external_links': [],
         'main_segment_games': [],
@@ -944,6 +944,10 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     }
 
     # ---------- Episode ----------
+
+    # Add Show instance
+    # replay.show = show_inst
+    manytomany_instances_dict['shows'].append(show_inst)
 
     # Title - replayData.episodeTitle
     replay.title = replayData['episodeTitle']
@@ -979,12 +983,10 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
         if 'featuring' in replayData['details'] and replayData['details']['featuring']:
             for personName in replayData['details']['featuring']:
                 person = get_person_inst(models, {'name': personName})
-                replay_manytomany_instances_dict['featuring'].append(person)
+                manytomany_instances_dict['featuring'].append(person)
 
     # YouTube Video - replayData.youtube (OneToOne)
     if 'youtube' in replayData and 'views' in replayData['youtube']:
-        # youtubeVideo = models.YouTubeVideo()
-
         # ID - replayData.details.external_links
         # Title
         youtube_id = None
@@ -1051,7 +1053,7 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
                     url=link['href'],
                     title=link['title']
                 )
-                replay_manytomany_instances_dict['external_links'].append(externalLink)
+                manytomany_instances_dict['external_links'].append(externalLink)
             
             # Fandom Link - replayData.fandomWikiURL (ManyToMany)
             if 'fandomWikiURL' in replayData and replayData['fandomWikiURL']:
@@ -1059,7 +1061,7 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
                     url=f'https://replay.fandom.com{replayData["fandomWikiURL"]}',
                     title=replay.title
                 )
-                replay_manytomany_instances_dict['external_links'].append(externalLink)
+                manytomany_instances_dict['external_links'].append(externalLink)
 
         # Headings - replayData.details
         HEADINGS_TO_IGNORE = ('external_links', 'system', 'gamedate', 'airdate', 'runtime', 'host', 'featuring', 'image')
@@ -1114,14 +1116,14 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
             )
             if game_inst is not None:
                 #replay.main_segment_games.add(game_inst)
-                replay_manytomany_instances_dict['main_segment_games'].append(game_inst)
+                manytomany_instances_dict['main_segment_games'].append(game_inst)
     
     # Use most played platform from main_segment_games field to search for games in other segments
     # TODO: Why not search all platforms?
     platform = None # Platform string OR number of IGDB platform code
-    if replay_manytomany_instances_dict['main_segment_games']:
+    if manytomany_instances_dict['main_segment_games']:
         platform_count = {} # key: IGDB platform ID, value: number of games with this platform in main_segment_games
-        for game in replay_manytomany_instances_dict['main_segment_games']:
+        for game in manytomany_instances_dict['main_segment_games']:
             for platform in game.platforms.all():
                 if platform is None:
                     continue
@@ -1160,7 +1162,7 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
         segmentContent = replayData['middleSegmentContent']
         
         if segmentContent:
-            replay_manytomany_instances_dict['other_segments'].append(
+            manytomany_instances_dict['other_segments'].append(
                 get_segment_inst(
                     models,
                     platform, 
@@ -1176,7 +1178,7 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
         segmentContent = replayData['secondSegmentGames']
 
         if segmentContent:
-            replay_manytomany_instances_dict['other_segments'].append(
+            manytomany_instances_dict['other_segments'].append(
                 get_segment_inst(
                     models,
                     platform, 
@@ -1222,10 +1224,11 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     replay.save()
 
     # Now that Replay is saved to database, add ManyToManyFields
-    add_model_inst_list_to_field(replay.featuring, replay_manytomany_instances_dict['featuring'])
-    add_model_inst_list_to_field(replay.external_links, replay_manytomany_instances_dict['external_links'])
-    add_model_inst_list_to_field(replay.main_segment_games, replay_manytomany_instances_dict['main_segment_games'])
-    add_model_inst_list_to_field(replay.other_segments, replay_manytomany_instances_dict['other_segments'])
+    add_model_inst_list_to_field(replay.shows, manytomany_instances_dict['shows'])
+    add_model_inst_list_to_field(replay.featuring, manytomany_instances_dict['featuring'])
+    add_model_inst_list_to_field(replay.external_links, manytomany_instances_dict['external_links'])
+    add_model_inst_list_to_field(replay.main_segment_games, manytomany_instances_dict['main_segment_games'])
+    add_model_inst_list_to_field(replay.other_segments, manytomany_instances_dict['other_segments'])
 
 def database_init(apps):
     '''

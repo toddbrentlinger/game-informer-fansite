@@ -28,17 +28,19 @@ def createSuperReplayEpisodeFromJSON(models, superReplayEpisodeData, superReplay
     # Create Super Replay Episode object
     superreplayepisode = models.SuperReplayEpisode()
 
-    # Add Show instance
-    superreplayepisode.show = show_inst
-
     # Dictionary to hold model instances for ManyToManyFields.
     # Key is field name and value is list of model instances.
     # After other fields in Super Replay Episode instance are set and it's saved to database,
     # can then add to the actual ManyToManyFields.
     manytomany_instances_dict = {
+        'shows': [],
         'featuring': [],
         'external_links': [],
     }
+
+    # Add Show instance
+    # superreplayepisode.show = show_inst
+    manytomany_instances_dict['shows'].append(show_inst)
 
     # Super Replay
     superreplayepisode.super_replay = superReplayInst
@@ -149,6 +151,14 @@ def createSuperReplayEpisodeFromJSON(models, superReplayEpisodeData, superReplay
 
         # Add YouTubeVideo to SuperReplayEpisode
         superreplayepisode.youtube_video = youtube_video_inst
+
+        # Save SuperReplayEpisode instance to database
+        superreplayepisode.save()
+
+        # Now that SuperReplayEpisode is saved to database, add ManyToManyFields
+        add_model_inst_list_to_field(superreplayepisode.shows, manytomany_instances_dict['shows'])
+        add_model_inst_list_to_field(superreplayepisode.featuring, manytomany_instances_dict['featuring'])
+        add_model_inst_list_to_field(superreplayepisode.external_links, manytomany_instances_dict['external_links'])
 
 def createSuperReplayFromJSON(models, superReplayData, show_inst, igdb, youtube):
     '''
