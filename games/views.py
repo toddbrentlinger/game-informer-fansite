@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404
+from django.urls import reverse_lazy
 from django.views import generic
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from .models import Developer, Game, Genre, Platform, Developer, Collection, Franchise, Theme, Keyword
 from replay.models import ReplayEpisode
@@ -27,6 +29,18 @@ def game_detail_slug_view(request, slug):
     }
 
     return render(request, 'games/game_detail.html', context=context)
+
+class GameCreate(CreateView):
+    model = Game
+    fields = ['name', 'slug', 'url', 'summary', 'storyline', 'platforms', 'genres', 'keywords', 'themes', 'developers', 'release_date', 'cover', 'websites']
+
+class GameUpdate(UpdateView):
+    model = Game
+    fields = ['name', 'slug', 'url', 'summary', 'storyline', 'platforms', 'genres', 'keywords', 'themes', 'developers', 'release_date', 'cover', 'websites']
+
+class GameDelete(DeleteView):
+    model = Game
+    success_url = reverse_lazy('games')
 
 class PlatformListView(generic.ListView):
     model = Platform

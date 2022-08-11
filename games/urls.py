@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.GameListView.as_view(), name='games'),
-    path('<int:pk>/', views.GameDetailView.as_view(), name='game-detail'),
+    path('create/', views.GameCreate.as_view(), name='game-create'),
 
     path('platforms/', views.PlatformListView.as_view(), name='platforms'),
     path('developers/', views.DeveloperListView.as_view(), name='developers'),
@@ -13,6 +13,7 @@ urlpatterns = [
     path('themes/', views.ThemeListView.as_view(), name='themes'),
     path('keywords/', views.KeywordListView.as_view(), name='keywords'),
 
+    path('<int:pk>/', views.GameDetailView.as_view(), name='game-detail'),
     re_path(r'(?P<slug>[-\w]+)/$', views.game_detail_slug_view, name='game-detail-slug'),
 
     path('platforms/<int:pk>/', views.PlatformDetailView.as_view(), name='platform-detail'),
