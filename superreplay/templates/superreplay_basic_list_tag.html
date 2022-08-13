@@ -1,0 +1,11 @@
+{% load superreplay_tags %}
+
+{% if superreplay_list %}
+    <ul>
+        {% for superreplay in superreplay_list %}
+            <li>{% superreplay_basic_display superreplay %}</li>
+        {% empty %}
+            <li>There are no Super Replays!</li>
+        {% endfor %}
+    </ul>
+{% endif %}

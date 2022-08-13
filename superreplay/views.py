@@ -16,11 +16,21 @@ def super_replay_detail_view(request, pk):
     context = {
         'superreplay': superreplay
     }
-    return render(request, 'super-replay/superreplay_detail.html', context=context)
+    return render(request, 'superreplay/superreplay_detail.html', context=context)
 
 def super_replay_detail_slug_view(request, slug):
     superreplay = get_object_or_404(SuperReplay, slug=slug)
     context = {
         'superreplay': superreplay,
     }
-    return render(request, 'super-replay/superreplay_detail.html', context=context)
+    return render(request, 'superreplay/superreplay_detail.html', context=context)
+
+class SuperReplayEpisodeDetailView(generic.DetailView):
+    model = SuperReplayEpisode
+
+def super_replay_episode_detail_slug_view(request, slug, num):
+    superreplayepisode = get_object_or_404(SuperReplayEpisode, super_replay__slug=slug, episode_number=num)
+    context = {
+        'superreplayepisode': superreplayepisode,
+    }
+    return render(request, 'superreplay/superreplayepisode_detail.html', context=context)

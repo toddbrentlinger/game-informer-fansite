@@ -32,7 +32,7 @@ class Episode(models.Model):
     # TODO: Runtime should be in youtube_video after using YouTube API. 
     # One few videos do not have YouTube id but does have runtime (videos never on YouTube).
     # nn:nn:nn (ex. 01:35:23 for 1hr 35min 23sec)
-    runtime = models.CharField(max_length=10, blank=True, help_text='Enter episode runtime in format hh:mm:ss.')
+    runtime = models.CharField(max_length=11, blank=True, help_text='Enter episode runtime in format hh:mm:ss.')
     airdate = models.DateField(help_text='Enter original date the episode first aired.')
 
     # Metadata
@@ -214,7 +214,7 @@ class YouTubeVideo(models.Model):
     
     description = models.TextField(blank=True, help_text='Enter description of the video.')
     tags = models.JSONField(null=True, blank=True, help_text='Enter tags for the video.')
-    duration = models.CharField(max_length=10, blank=True, help_text='Enter video duration in format: ex. PT1H34M35S.')
+    duration = models.CharField(max_length=11, blank=True, help_text='Enter video duration in format: ex. PT1H34M35S.')
     published_at = models.DateField(null=True, blank=True, help_text='Enter date the YouTube video was published.')
     last_updated = models.DateField(auto_now=True)
 

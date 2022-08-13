@@ -4,6 +4,7 @@ from django.db.models import Q
 from games.models import Game, Platform, Developer, Collection, Franchise, Genre, Theme, Keyword
 from replay.models import ReplayEpisode, SegmentType
 from people.models import Person
+from superreplay.models import SuperReplay, SuperReplayEpisode
 
 from random import choice
 
@@ -20,8 +21,12 @@ def index(request):
     # Generate counts of some objects
     context = {
         'num_replay_episodes': ReplayEpisode.objects.count(),
-        'num_games': Game.objects.count(),
         'num_replay_segment_types': SegmentType.objects.count(),
+
+        'num_super_replays': SuperReplay.objects.count(),
+        'num_super_replay_episodes': SuperReplayEpisode.objects.count(),
+
+        'num_games': Game.objects.count(),
         'num_game_platforms': Platform.objects.count(),
         'num_game_developers': Developer.objects.count(),
         'num_people': Person.objects.count(),
@@ -30,6 +35,7 @@ def index(request):
         'num_game_genres': Genre.objects.count(),
         'num_game_themes': Theme.objects.count(),
         'num_game_keywords': Keyword.objects.count(),
+
         'random_replayepisode': random_replayepisode,
     }
 
@@ -65,13 +71,13 @@ def search(request):
     context = {
         #'replayepisodes': replayepisodes,
         #'replayepisodes_paginator': replayepisodes_paginator,
-        'replayepisodes_page_obj': replayepisodes_paginator.page(1),
+        'replayepisodes_page_obj': replayepisodes_paginator.get_page(1),
         #'games': games,
         'games_paginator': games_paginator,
-        'games_page_obj': games_paginator.page(1),
+        'games_page_obj': games_paginator.get_page(1),
         #'people': people,
         'people_paginator': people_paginator,
-        'people_page_obj': people_paginator.page(1),
+        'people_page_obj': people_paginator.get_page(1),
     }
 
     return render(request, 'search.html', context=context)

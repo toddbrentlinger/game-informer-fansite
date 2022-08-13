@@ -29,7 +29,7 @@ class SuperReplay(models.Model):
     def get_absolute_url(self):
         # super-replay/5 -> Super Replay 5
         # super-replay/Overblood -> Overblood Super Replay
-        return reverse('super-replay', args=[str(self.id)])
+        return reverse('super-replay-detail-slug', kwargs={'slug': self.slug})
 
 class SuperReplayEpisode(Episode):
     '''Model representing an episode of Super Replay.'''
@@ -56,7 +56,7 @@ class SuperReplayEpisode(Episode):
     def get_absolute_url(self):
         # super-replay/5/3 -> Super Replay 5 Episode 3
         # super-replay/Overblood/3 -> Overblood Super Replay Episode 3
-        pass
+        return reverse('super-replay-episode-detail-slug', kwargs={'slug': self.super_replay.slug, 'num': self.episode_number})
 
 class SuperReplayGame(models.Model):
     '''Model representing a game played on a Super Replay.'''

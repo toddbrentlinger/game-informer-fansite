@@ -29,5 +29,6 @@ urlpatterns = [
     path('games/', include('games.urls')),
     path('people/', include('people.urls')),
     path('replay/', include('replay.urls')),
+    path('super-replay/', include('superreplay.urls')),
     path('search/', views.search, name='search'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

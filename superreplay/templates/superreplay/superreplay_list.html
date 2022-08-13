@@ -1,0 +1,12 @@
+{% extends "base_generic.html" %}
+
+{% load superreplay_tags %}
+
+{% block title %}
+    <title>Game Informer Fansite - Super Replay</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Super Replay List</h1>
+    {% superreplay_basic_list_display superreplay_list %}
+{% endblock %}
