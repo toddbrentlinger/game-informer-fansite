@@ -12,6 +12,9 @@ from utilities.replay_data_migration import Models, create_total_time_message, a
 from utilities.igdb import IGDB # Make requests to IGDB API
 from utilities.youtube import YouTube # Make requests to YouTube Data API
 
+# TODO:
+# - Search tags to find different Show instances to add to 'shows' field
+
 def create_show_episode(models, episode_data, show_inst, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
@@ -26,12 +29,18 @@ def create_show_episode(models, episode_data, show_inst, igdb, youtube):
     # Check if Episode already exists with matching YouTubeVideo ID.
     # YouTubeVideo can have multiple Episodes BUT each Episode should 
     # be a unique Show field.
+    # TODO: Since Episode has OneToOneField for YouTubeVideo, query Episode with just
+    # The YouTube ID AND then check if need to just add Show inst to 'shows' M2M field.
     try:
         youtube_id = episode_data['id']
         episode = models.Episode.objects.get(
-            youtube_video__youtube_id=youtube_id, 
-            show=show_inst
+            youtube_video__youtube_id=youtube_id
         )
+        # If reach here, Episode already exists
+        # Add Show inst if it does NOT already exist in 'shows' field
+        if show_inst and not show_inst.episode_set.filter(pk=show_inst.pk).exists():
+            add_model_inst_list_to_field(episode.shows, [ show_inst ])
+            
     except models.Episode.DoesNotExist:
         # Create Episode object
         episode = models.Episode()
@@ -48,7 +57,8 @@ def create_show_episode(models, episode_data, show_inst, igdb, youtube):
 
         # Add Show instance
         # episode.show = show_inst
-        manytomany_instances_dict['shows'].append(show_inst)
+        if show_inst:
+            manytomany_instances_dict['shows'].append(show_inst)
 
         # Title - snippet.title
         episode.title = episode_data['snippet']['title']
@@ -142,7 +152,7 @@ def create_show_episode(models, episode_data, show_inst, igdb, youtube):
         # Featuring - snippet.tags
         if youtube_video_inst.tags:
             for name in STAFF:
-                if name in youtube_video_inst.tags:
+                if name.lower() in youtube_video_inst.tags:
                     person = get_person_inst(models, {'name': name})
                     manytomany_instances_dict['featuring'].append(person)
 

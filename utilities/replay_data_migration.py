@@ -852,6 +852,12 @@ def add_model_inst_list_to_field(m2m_field, model_inst_list):
         m2m_field.add(model_inst)
 
 def get_or_create_youtube_video(models, youtube_id, youtube):
+    '''
+    Parameters:
+        models (Models): Contains historical version of database models
+        youtube_id (str): YouTube video ID
+        youtube (YouTube): Used to request data from YouTube Data API
+    '''
     # Get video data using YouTube Data API
     youtube_response = youtube.get_youtube_video_data(youtube_id)
 
@@ -860,51 +866,52 @@ def get_or_create_youtube_video(models, youtube_id, youtube):
         return None
     else: # Else YouTube response succeeded
         youtube_video_inst = models.YouTubeVideo()
+        youtube_video_data = youtube_response[0]
 
-        # ID - youtube_response['id']
+        # ID - youtube_video_data['id']
         youtube_video_inst.youtube_id = youtube_id
 
-        if 'contentDetails' in youtube_response:
-            # Duration - youtube_response['contentDetails']['duration']
-            if 'duration' in youtube_response['contentDetails']:
-                youtube_video_inst.duration = youtube_response['contentDetails']['duration']
+        if 'contentDetails' in youtube_video_data:
+            # Duration - youtube_video_data['contentDetails']['duration']
+            if 'duration' in youtube_video_data['contentDetails']:
+                youtube_video_inst.duration = youtube_video_data['contentDetails']['duration']
 
-        if 'statistics' in youtube_response:
-            # Views - youtube_response['statistics']['viewCount']
-            if 'viewCount' in youtube_response['statistics']:
-                youtube_video_inst.views = int(youtube_response['statistics']['viewCount'])
+        if 'statistics' in youtube_video_data:
+            # Views - youtube_video_data['statistics']['viewCount']
+            if 'viewCount' in youtube_video_data['statistics']:
+                youtube_video_inst.views = int(youtube_video_data['statistics']['viewCount'])
 
-            # Likes - youtube_response['statistics']['likeCount]
-            if 'likeCount' in youtube_response['statistics']:
-                youtube_video_inst.likes = int(youtube_response['statistics']['likeCount'])
+            # Likes - youtube_video_data['statistics']['likeCount]
+            if 'likeCount' in youtube_video_data['statistics']:
+                youtube_video_inst.likes = int(youtube_video_data['statistics']['likeCount'])
 
-        if 'snippet' in youtube_response:
-            # Title - youtube_response['snippet']['title']
-            if 'title' in youtube_response['snippet']:
-                youtube_video_inst.title = youtube_response['snippet']['title']
+        if 'snippet' in youtube_video_data:
+            # Title - youtube_video_data['snippet']['title']
+            if 'title' in youtube_video_data['snippet']:
+                youtube_video_inst.title = youtube_video_data['snippet']['title']
 
-            # Description - youtube_response['snippet']['description']
-            if 'description' in youtube_response['snippet']:
-                youtube_video_inst.description = youtube_response['snippet']['description']
+            # Description - youtube_video_data['snippet']['description']
+            if 'description' in youtube_video_data['snippet']:
+                youtube_video_inst.description = youtube_video_data['snippet']['description']
 
-            # Tags - youtube_response['snippet']['tags']
-            if 'tags' in youtube_response['snippet']:
-                youtube_video_inst.tags = youtube_response['snippet']['tags']
+            # Tags - youtube_video_data['snippet']['tags']
+            if 'tags' in youtube_video_data['snippet']:
+                youtube_video_inst.tags = youtube_video_data['snippet']['tags']
 
-            # Published At - youtube_response['snippet']['publishedAt']
+            # Published At - youtube_video_data['snippet']['publishedAt']
             # Example Format: 2015-08-08T16:03:03Z
-            if 'publishedAt' in youtube_response['snippet']:
+            if 'publishedAt' in youtube_video_data['snippet']:
                 youtube_video_inst.published_at = timezone.make_aware(
-                    datetime.datetime.strptime(youtube_response['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
+                    datetime.datetime.strptime(youtube_video_data['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
                     timezone=timezone.get_current_timezone()
                 )
 
         # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
         youtube_video_inst.save()
 
-        # Thumbnails - youtube_response['snippet']['thumbnails']
-        if 'snippet' in youtube_response and 'thumbnails' in youtube_response['snippet']:
-            for key, value in youtube_response['snippet']['thumbnails'].items():
+        # Thumbnails - youtube_video_data['snippet']['thumbnails']
+        if 'snippet' in youtube_video_data and 'thumbnails' in youtube_video_data['snippet']:
+            for key, value in youtube_video_data['snippet']['thumbnails'].items():
                 try:
                     thumbnail = models.Thumbnail.objects.get(url=value['url'])
                 except models.Thumbnail.DoesNotExist:
@@ -915,6 +922,9 @@ def get_or_create_youtube_video(models, youtube_id, youtube):
                         height=value['height']
                     )
                 youtube_video_inst.thumbnails.add(thumbnail)
+
+        # Return newly created YouTubeVideo instance
+        return youtube_video_inst
 
 def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     '''
@@ -995,7 +1005,7 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
         if 'details' in replayData and 'external_links' in replayData['details'] and replayData['details']['external_links']:
             for link in replayData['details']['external_links']:
                 # If link contains YouTube url, set ID, title, and break loop
-                if ('youtube.com' in link['href']):
+                if 'youtube.com' in link['href']:
                     # youtubeVideo.youtube_id = link['href'].split('watch?v=', 1)[1]
                     # youtubeVideo.title = link['title']
                     youtube_id = link['href'].split('watch?v=', 1)[1]
@@ -1003,7 +1013,7 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
                     youtube_video_inst = get_or_create_youtube_video(models, youtube_id, youtube)
                     break
 
-        # If failed to find or created YouTube video
+        # If failed to find or create YouTube video
         if youtube_video_inst is None:
             youtube_video_inst = models.YouTubeVideo()
             if youtube_id:
@@ -1033,6 +1043,11 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
                         height=value['height']
                     )
                 youtube_video_inst.thumbnails.add(thumbnail)
+
+        else: # Else succeeded to find or create YouTubeVideo instance
+            # Add dislikes from JSON file since it's no longer provided by YouTube API
+            if youtube_video_inst.dislikes is None:
+                youtube_video_inst.dislikes = replayData['youtube']['dislikes']
 
         # Add YouTubeVideo to ReplayEpisode
         replay.youtube_video = youtube_video_inst

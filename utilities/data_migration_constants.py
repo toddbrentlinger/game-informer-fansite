@@ -203,4 +203,9 @@ SHOWS = [
         "description": "",
         "slug": "test-chamber",
     },
+    {
+        "name": "What The Heck Is This?",
+        "description": "",
+        "slug": "what-the-heck-is-this",
+    },
 ]

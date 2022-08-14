@@ -12,14 +12,14 @@ from utilities.youtube import YouTube # Make requests to YouTube Data API
 from utilities.misc import create_total_time_message # misc utility functions
 from utilities.replay_data_migration import Models, get_or_create_youtube_video, get_game_inst, get_person_inst, add_model_inst_list_to_field
 
-def createSuperReplayEpisodeFromJSON(models, superReplayEpisodeData, superReplayInst, episode_num, show_inst, igdb, youtube):
+def createSuperReplayEpisodeFromJSON(models, superReplayEpisodeData, super_replay_inst, episode_num, show_inst, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
 
     Parameters:
         models (Models): 
         superReplayEpisodeData (dict):
-        superReplayInst (SuperReplay): 
+        super_replay_inst (SuperReplay): 
         episode_num (int): 
         show_inst (Show): 
         igdb (IGDB): 
@@ -43,22 +43,32 @@ def createSuperReplayEpisodeFromJSON(models, superReplayEpisodeData, superReplay
     manytomany_instances_dict['shows'].append(show_inst)
 
     # Super Replay
-    superreplayepisode.super_replay = superReplayInst
+    superreplayepisode.super_replay = super_replay_inst
 
     # Number
     superreplayepisode.episode_number = episode_num
 
+    # Title
+    superreplayepisode.title = super_replay_inst.title + f' - Episode {superreplayepisode.episode_number}'
+
+    # Slug
+    superreplayepisode.slug = super_replay_inst.slug + f'-episode-{superreplayepisode.episode_number}'
+
     # Airdate
     if 'airdate' in superReplayEpisodeData and superReplayEpisodeData['airdate']:
-        if '/' in superReplayEpisodeData['airdate']:
-            airdate = datetime.datetime.strptime(superReplayEpisodeData['airdate'],'%m/%d/%y') # month/day/year
-        else:
-            airdate = datetime.datetime.strptime(superReplayEpisodeData['airdate'],'%B %d, %Y') # month day, year
+        airdate_str = superReplayEpisodeData['airdate']
+    elif 'youtubeVideo' in superReplayEpisodeData and 'airdate' in superReplayEpisodeData['youtubeVideo']:
+        airdate_str = superReplayEpisodeData['youtubeVideo']['airdate']
         
-        superreplayepisode.airdate = timezone.make_aware(
-            airdate,
-            timezone=timezone.get_current_timezone()
-        )
+    if '/' in airdate_str:
+        airdate = datetime.datetime.strptime(airdate_str,'%m/%d/%y') # month/day/year
+    else:
+        airdate = datetime.datetime.strptime(airdate_str,'%B %d, %Y') # month day, year
+    
+    superreplayepisode.airdate = timezone.make_aware(
+        airdate,
+        timezone=timezone.get_current_timezone()
+    )
 
     # Runtime
     if 'runtime' in superReplayEpisodeData and superReplayEpisodeData['runtime']:
@@ -98,6 +108,7 @@ def createSuperReplayEpisodeFromJSON(models, superReplayEpisodeData, superReplay
 
         youtube_video_inst = get_or_create_youtube_video(models, youtube_video_data['id'], youtube)
 
+        # If failed to find or create YouTube video
         if youtube_video_inst is None:
             # Create YouTubeVideo instance
             youtube_video_inst = models.YouTubeVideo()
@@ -148,6 +159,11 @@ def createSuperReplayEpisodeFromJSON(models, superReplayEpisodeData, superReplay
                         height=value['height']
                     )
                 youtube_video_inst.thumbnails.add(thumbnail)
+
+        else: # Else succeeded to find or create YouTubeVideo instance
+            # Add dislikes from JSON file since it's no longer provided by YouTube API
+            if youtube_video_inst.dislikes is None:
+                youtube_video_inst.dislikes = youtube_video_data['dislikes']
 
         # Add YouTubeVideo to SuperReplayEpisode
         superreplayepisode.youtube_video = youtube_video_inst
