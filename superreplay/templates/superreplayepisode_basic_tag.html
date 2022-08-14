@@ -1,0 +1,26 @@
+{% load static %}
+
+<div class="episode-basic">    
+    <div class="episode-basic-header">
+        <h2><a href="{{ superreplayepisode.get_absolute_url }}">{{ superreplayepisode.title }}</a></h2>
+    </div>
+
+    <div class="episode-basic-thumbnail">
+        <div class="thumbnail-aspect-ratio">
+            <div class="thumbnail-img-container">
+                <img
+                    {% if superreplayepisode.youtube_video and superreplayepisode.youtube_video.thumbnails %}                            
+                        srcset="{% for thumbnail in superreplayepisode.youtube_video.thumbnails.all %}{{ thumbnail.create_srcset_entry }}, {% endfor %}"
+                        alt="Thumbnail image for {{ superrepay.title }} - Episode {{ superreplayepisode.episode_number }}"
+                    {% else %}
+                        src="{% static 'replay/img/Replay_new_logo_orig_300x169.png' %}"
+                        alt="Default thumbnail image for {{ superrepay.title }} - Episode {{ superreplayepisode.episode_number }}"
+                    {% endif %}
+                    
+                    loading="lazy"
+                >
+                <time class="episode-runtime" datetime="">{{ superreplayepisode.runtime }}</time>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,3 +1,31 @@
-<div class="super-replay-basic">
-    <h2><a href="{{ superreplay.get_absolute_url }}">{{ superreplay.title }}</a></h2>
+{% load static %}
+
+<div class="episode-basic">    
+    <div class="episode-basic-header">
+        <h2><a href="{{ superreplay.get_absolute_url }}">{{ superreplay.title }}</a></h2>
+        <span title="Super Replay #{{ superreplay.number }}">
+            SR #{{ superreplay.number }}
+        </span>
+    </div>
+
+    {% with first_episode=superreplay.superreplayepisode_set.all|first %}
+        <div class="episode-basic-thumbnail">
+            <div class="thumbnail-aspect-ratio">
+                <div class="thumbnail-img-container">
+                    <img
+                        {% if first_episode.youtube_video and first_episode.youtube_video.thumbnails %}                            
+                            srcset="{% for thumbnail in first_episode.youtube_video.thumbnails.all %}{{ thumbnail.create_srcset_entry }}, {% endfor %}"
+                            alt="Thumbnail image for Super Replay: {{ superrepay.title }}"
+                        {% else %}
+                            src="{% static 'replay/img/Replay_new_logo_orig_300x169.png' %}"
+                            alt="Default thumbnail image for Super Replay: {{ superreplay.title }}"
+                        {% endif %}
+                        
+                        loading="lazy"
+                    >
+                    <time class="episode-runtime" datetime="">{{ superreplay.title }}</time>
+                </div>
+            </div>
+        </div>
+    {% endwith %}
 </div>

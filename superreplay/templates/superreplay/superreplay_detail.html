@@ -9,9 +9,5 @@
 {% block content %}
     <h1>{{ superreplay.title }}</h1>
 
-    <div>
-        {% for superreplayepisode in superreplay.superreplayepisode_set.all %}
-            <div><a href="{{ superreplayepisode.get_absolute_url }}">{{ superreplayepisode.title }}</a></div>
-        {% endfor %}
-    </div>
+    {% superreplayepisode_basic_list_display superreplay.superreplayepisode_set.all %}
 {% endblock %}
