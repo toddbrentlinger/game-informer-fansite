@@ -1,0 +1,26 @@
+{% load static %}
+
+<div class="episode-basic">    
+    <div class="episode-basic-header">
+        <h2><a href="{{ episode.get_absolute_url }}">{{ episode.title }}</a></h2>
+    </div>
+
+    <div class="episode-basic-thumbnail">
+        <div class="thumbnail-aspect-ratio">
+            <div class="thumbnail-img-container">
+                <img
+                    {% if episode.youtube_video and episode.youtube_video.thumbnails %}                            
+                        srcset="{% for thumbnail in episode.youtube_video.thumbnails.all %}{{ thumbnail.create_srcset_entry }}, {% endfor %}"
+                        alt="Thumbnail image for episode: {{ episode.title }}"
+                    {% else %}
+                        src="{% static 'replay/img/Replay_new_logo_orig_300x169.png' %}"
+                        alt="Default thumbnail image for episode: {{ episode.title }}"
+                    {% endif %}
+                    
+                    loading="lazy"
+                >
+                <time class="episode-runtime" datetime="">{{ episode.runtime }}</time>
+            </div>
+        </div>
+    </div>
+</div>

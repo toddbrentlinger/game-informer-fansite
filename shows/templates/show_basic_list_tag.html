@@ -1,0 +1,11 @@
+{% load shows_tags %}
+
+{% if show_list %}
+    <ul>
+        {% for show in show_list %}
+            <li>{% show_basic_display show %}</li>
+        {% empty %}
+            <li>There are no Shows!</li>
+        {% endfor %}
+    </ul>
+{% endif %}

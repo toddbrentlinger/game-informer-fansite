@@ -1,0 +1,11 @@
+{% load shows_tags %}
+
+{% if episode_list %}
+    <ul>
+        {% for episode in episode_list %}
+            <li>{% episode_basic_display episode %}</li>
+        {% empty %}
+            <li>There are no Episodes!</li>
+        {% endfor %}
+    </ul>
+{% endif %}

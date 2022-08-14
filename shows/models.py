@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 from people.models import Person
 
@@ -44,6 +45,13 @@ class Episode(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        # test-chamber/test-chamber-title
+        # shows/test-chamber/test-chamber-title
+        # test-chamber-title
+        # return reverse('episode-detail-slug', kwargs={'slug': self.slug, 'show_slug': self.shows})
+        pass
 
     def display_featuring(self):
         return ', '.join( person.__str__() for person in self.featuring.all()[:3] )
@@ -160,6 +168,11 @@ class Show(models.Model):
     
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        # test-chamber/
+        # shows/test-chamber
+        return reverse('show-detail-slug', kwargs={'slug': self.slug})
 
 class Thumbnail(models.Model):
     """Model representing a thumbnail."""

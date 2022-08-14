@@ -6,7 +6,8 @@ from .models import Episode, ExternalLink, Show, Thumbnail, YouTubeVideo
 
 @admin.register(Episode)
 class EpisodeAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('title', 'airdate')
+    filter_horizontal = ('featuring', 'external_links')
 
 @admin.register(ExternalLink)
 class ExternalLinkAdmin(admin.ModelAdmin):
@@ -33,3 +34,4 @@ class ThumbnailAdmin(admin.ModelAdmin):
 class YouTubeVideoAdmin(admin.ModelAdmin):
     list_display = ('title', 'youtube_id', 'views', 'likes', 'dislikes')
     search_fields = ['title']
+    filter_horizontal = ('thumbnails',)
