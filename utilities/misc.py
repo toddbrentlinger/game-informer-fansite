@@ -217,6 +217,7 @@ def get_gi_shows():
         'chronicles': (('chronicles',), ('super_replay',)),
         'reiner_and_phil': (('Reiner and Phil',),),
         'spoiled': (('spoiled',),),
+        'what_the_heck_is_this': (('what the heck', 'what the heck is this', 'what the heck is this?'),),
     }
 
     sorted_tags_obj = {}

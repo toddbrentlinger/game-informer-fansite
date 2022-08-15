@@ -29,11 +29,12 @@
         <!-- <img src="{% static 'fansite/img/Game_Informer_logo_(2010-present)_512(dark_mode).png' %}" alt="Game Informer logo"> -->
         <!-- <nav id="topnav">Top Nav</nav> -->
         <form action="/search/" method="get" id="header-search-bar">
-            <i class="fas fa-search fa-lg"></i>
             <label for="header-search-input">
                 <input type="search" name="q" placeholder="Search..." id="header-search-input">
             </label>
-            <input type="submit" value="Search">
+            <button type="submit" aria-label="Search">
+                <i class="fas fa-search fa-lg"></i>
+            </button>
         </form>
     </header>
 
@@ -51,6 +52,10 @@
                     <hr>
                     <a href="{% url 'replay' %}">All Replay Episodes</a>
                     <a href="{% url 'segments' %}">All Replay Segments</a>
+                    <hr>
+                    <a href="{% url 'super-replay' %}">All Super Replays</a>
+                    <hr>
+                    <a href="{% url 'shows' %}">All Shows</a>
                     <hr>
                     <a href="{% url 'games' %}">All Games</a>
                     <a href="{% url 'platforms' %}">All Game Platforms</a>

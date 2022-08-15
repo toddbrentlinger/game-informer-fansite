@@ -1,13 +1,31 @@
 {% extends "base_game_detail.html" %}
 
 {% block details %}
-    <p><strong>Abbreviation: </strong>{{ object.abbreviation }}</p>
+    {% if object.abbreviation %}
+        <p><strong>Abbreviation: </strong>{{ object.abbreviation }}</p>
+    {% endif %}
 
-    <p><strong>Alternative Name: </strong>{{ object.alternative_name }}</p>
+    {% if object.alternative_name %}
+        <p><strong>Alternative Name: </strong>{{ object.alternative_name }}</p>
+    {% endif %}
+
+    {% if object.generation %}
+        <p><strong>Generation: </strong>{{ object.generation }}</p>
+    {% endif %}
 
     {% if object.summary %}
         <p><strong>Summary: </strong>{{ object.summary }}</p>
     {% endif %}
-    
-    <p><strong>IGDB URL: </strong><a href="{{ object.url }}" target="_blank">{{ object.name }}</a></p>
+
+    <h2>Websites:</h2>
+    <div id="websites">
+        {% with website_list=object.websites.all %}
+            {% if website_list %}
+                {% for website in website_list %}
+                    <a href="{{ website.url }}" target="_blank">{{ website.get_category_display }}</a>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <a href="{{ object.url }}" target="_blank">IGDB</a>
+    </div>    
 {% endblock %}

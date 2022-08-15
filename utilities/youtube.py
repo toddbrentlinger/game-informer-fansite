@@ -130,7 +130,7 @@ class YouTube:
             index += 50
         return video_data_list
 
-def main():
+def save_gi_youtube_data():
     youtube_inst = YouTube()
 
     # Game Informer Uploads Playlist ID: UUK-65DO2oOxxMwphl2tYtcw
@@ -141,6 +141,13 @@ def main():
 
     with open('utilities/gi_youtube_video_data.json', 'w') as outfile:
             json.dump(video_data, outfile, indent=2)
+
+def main():
+    youtube_inst = YouTube()
+    pprint.pprint(
+        youtube_inst.get_youtube_video_data('o5mi4ckGAgg'),
+        indent=4
+    )
 
 if __name__ == "__main__":
     main()

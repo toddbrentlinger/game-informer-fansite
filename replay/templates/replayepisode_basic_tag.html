@@ -1,8 +1,8 @@
 {% load static %}
 {% load fansite_tags %}
 
-<div class="replay-episode-basic">
-    <div class="replay-episode-basic-header">
+<div class="episode-basic">
+    <div class="episode-basic-header">
         <h2><a href="{{ replayepisode.get_absolute_url }}">{{ replayepisode.title }}</a></h2>
         {% with season_tuple=replayepisode.get_season %}
             <span title="Season {{ season_tuple.0 }} Episode {{ season_tuple.1 }}">
@@ -11,45 +11,36 @@
         {% endwith %}
     </div>
 
-    {% if replayepisode.youtube_video and replayepisode.youtube_video.thumbnails %}
-        <div class="replay-episode-basic-thumbnail">
-            <div class="thumbnail-aspect-ratio">
-                <div class="thumbnail-img-container">
-                    <img
+    <div class="episode-basic-thumbnail">
+        <div class="thumbnail-aspect-ratio">
+            <div class="thumbnail-img-container">
+                <img
+                    {% if replayepisode.youtube_video and replayepisode.youtube_video.thumbnails %}
                         srcset="{% for thumbnail in replayepisode.youtube_video.thumbnails.all %}{{ thumbnail.create_srcset_entry }}, {% endfor %}"
                         alt="Thumbnail image for Replay Episode: {{ replayepisode.title }}"
-                        loading="lazy"
-                    >
-                    <time class="replay-episode-runtime" datetime="">{{ replayepisode.runtime }}</time>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <div class="replay-episode-basic-thumbnail">
-            <div class="thumbnail-aspect-ratio">
-                <div class="thumbnail-img-container">
-                    <img
+                    {% else %}
                         src="{% static 'replay/img/Replay_new_logo_orig_300x169.png' %}"
                         alt="Default thumbnail image for Replay Episode: {{ replayepisode.title }}"
-                        loading="lazy"
-                    >
-                    <time class="replay-episode-runtime" datetime="">{{ replayepisode.runtime }}</time>
-                </div>
+                    {% endif %}
+                    
+                    loading="lazy"
+                >
+                <time class="episode-runtime" datetime="">{{ replayepisode.runtime }}</time>
             </div>
         </div>
-    {% endif %}
+    </div>
 
-    <div class="replay-episode-basic-details">
-        <div class="replay-episode-basic-details-video">
+    <div class="episode-basic-details">
+        <div class="episode-basic-details-video">
             <div><span>Air Date: </span>{{ replayepisode.airdate }}</div>
 
-            <div id="replay-episode-basic-details-video-counts">
+            <div id="episode-basic-details-video-counts">
                 <span><i class="fas fa-eye"></i> {{ replayepisode.youtube_video.views|add_commas_to_num }} views</span>
                 <span><i class="fas fa-thumbs-up"></i> {{ replayepisode.youtube_video.likes|add_commas_to_num }}</span>
             </div>
         </div>
 
-        <div class="replay-episode-basic-details-people">
+        <div class="episode-basic-details-people">
             <div><span>Host: </span><a href="{{ replayepisode.host.get_absolute_url }}">{{ replayepisode.host }}</a></div>
 
             <div>
@@ -61,8 +52,8 @@
             </div>
         </div>
 
-        <div class="replay-episode-basic-details-segments">
-            <div class="replay-episode-segment-inst">
+        <div class="episode-basic-details-segments">
+            <div class="episode-segment-inst">
                 <div class="segment-type">Main Segment</div>
                 <div class="segment-games-container">
                     <ul class="segment-games-list">
@@ -77,10 +68,10 @@
                                                 height="{{ game.cover.height }}"
                                                 alt="Cover image of video game {{ game.name }}"
                                                 loading="lazy"
+                                                title="{{ game.name }}"
                                             >
                                         </div>
                                     {% endif %}
-                                    {{ game.name }}
                                 </a>
                             </li>
                         {% endfor %}
@@ -90,7 +81,7 @@
     
             {% if replayepisode.other_segments.all %}
                 {% for segment in replayepisode.other_segments.all %}
-                    <div class="replay-episode-segment-inst" >
+                    <div class="episode-segment-inst" >
                         <div class="segment-type">
                             <a href="{{ segment.type.get_absolute_url }}">{{ segment.type }}</a>
                         </div>
@@ -108,10 +99,10 @@
                                                             width="{{ game.cover.width }}"
                                                             alt="Cover image of video game {{ game.name }}"
                                                             loading="lazy"
+                                                            title="{{ game.name }}"
                                                         >
                                                     </div>
                                                 {% endif %}
-                                                <span>{{ game.name }}</span>
                                             </a>
                                         </li>
                                     {% endfor %}

@@ -220,7 +220,7 @@ class IGDB:
 
 def main():
     igdb = IGDB()
-    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,keywords.*,name,platforms.*,platforms.platform_logo.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,screenshots.*,slug,storyline,summary,themes.*,url,videos.*,websites.*'
+    fields = 'artworks.*,collection.*,cover.*,first_release_date,genres.*,franchise.*,franchises.*,id,involved_companies.*,involved_companies.company.*,involved_companies.company.logo.*,involved_companies.company.websites.*,keywords.*,name,platforms.*,platforms.platform_logo.*,platforms.websites.*,release_dates.*,release_dates.platform.*,release_dates.platform.platform_logo.*,release_dates.platform.websites.*,screenshots.*,slug,storyline,summary,themes.*,url,videos.*,websites.*'
     exclude = 'collection.games,franchise.games,franchises.games,involved_companies.company.published, involved_companies.company.developed'
     
     # data = 'fields {fields};', f'search "*"; where involved_companies'
@@ -251,19 +251,22 @@ def main():
     # pprint.pprint(igdb.get_game_data('Pokemon Snap', None, None, fields)[0], indent=2) # é \u00e9
 
     try:
+        game_data = igdb.get_game_data(
+            'Goldeneye 007',
+            igdb.get_platform_data('Nintendo 64', '*,platform_logo.*')[0]['id'], #igdb.get_platform_data('PlayStation 2', '*,platform_logo.*')[0]['id'],
+            None,
+            fields=fields,
+            exclude=exclude
+        )[0]
         pprint.pprint(
-            igdb.get_game_data(
-                'Bioshock Infinite',
-                None,
-                None,
-                fields=fields,
-                exclude=exclude
-            )[0], 
+            game_data['release_dates'], 
             indent=2
         )
     except TypeError:
         print('No game returned from IGDB!')
-    
+
+    return
+
     try:
         pprint.pprint(
             igdb.get_game_data_by_id(
@@ -275,8 +278,6 @@ def main():
         )
     except TypeError:
         print('No game returned from IGDB using ID!')
-
-    return
 
     pprint.pprint(
         igdb.get_platform_data('Game Boy Color', '*,platform_logo.*')[0]

@@ -1,11 +1,27 @@
 {% extends "base_game_detail.html" %}
 
 {% block details %}
-    <p><strong>Country: </strong>{{ object.country }}</p>
+    {% if object.start_date %}
+        <p><strong>Start Date: </strong>{{ object.start_date }}</p>
+    {% endif %}
+
+    {% if object.country %}
+        <p><strong>Country: </strong>{{ object.country }}</p>
+    {% endif %}
 
     {% if object.description %}
         <p><strong>Description: </strong>{{ object.description }}</p>
     {% endif %}
 
-    <p><strong>URL: </strong><a href="{{ object.url }}" target="_blank">{{ object.name }}</a></p>
+    <h2>Websites:</h2>
+    <div id="websites">
+        {% with website_list=object.websites.all %}
+            {% if website_list %}
+                {% for website in website_list %}
+                    <a href="{{ website.url }}" target="_blank">{{ website.get_category_display }}</a>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <a href="{{ object.url }}" target="_blank">IGDB</a>
+    </div>
 {% endblock %}

@@ -4,6 +4,7 @@ from django.db.models import Q
 from games.models import Game, Platform, Developer, Collection, Franchise, Genre, Theme, Keyword
 from replay.models import ReplayEpisode, SegmentType
 from people.models import Person
+from shows.models import YouTubeVideo
 from superreplay.models import SuperReplay, SuperReplayEpisode
 
 from random import choice
@@ -25,6 +26,8 @@ def index(request):
 
         'num_super_replays': SuperReplay.objects.count(),
         'num_super_replay_episodes': SuperReplayEpisode.objects.count(),
+
+        'num_youtube_videos': YouTubeVideo.objects.count(),
 
         'num_games': Game.objects.count(),
         'num_game_platforms': Platform.objects.count(),

@@ -3,8 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.ReplayEpisodeListView.as_view(), name='replay'),
-    # path('<uuid:pk>/', views.ReplayEpisodeDetailView.as_view(), name='replay-detail'),
-    path('<uuid:pk>/', views.replay_episode_detail_view, name='replay-detail'),
+    # path('<int:pk>/', views.ReplayEpisodeDetailView.as_view(), name='replay-detail'),
+    path('<int:pk>/', views.replay_episode_detail_view, name='replay-detail'),
     path('s<int:season>/<int:number>/', views.ReplayEpisodeDetailView.as_view()),
 
     # Replay Segments
