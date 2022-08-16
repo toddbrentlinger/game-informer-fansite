@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load replayepisode_tags %}
+{% load fansite_tags %}
 
 {% block title %}
     <title>Game Informer Fansite - Replay</title>
@@ -9,5 +10,7 @@
 
 {% block content %}
     <h1>Replay Episode List</h1>
+    {% create_page_selection page_obj %}
     {% replayepisode_basic_list_display replayepisode_list %}
+    {% create_page_selection page_obj %}
 {% endblock %}
