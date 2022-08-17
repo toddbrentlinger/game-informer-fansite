@@ -4,11 +4,11 @@ register = template.Library()
 
 @register.inclusion_tag('replayepisode_basic_tag.html')
 def replayepisode_basic_display(replayepisode):
-    return {'replayepisode': replayepisode}
+    return {'episode': replayepisode}
 
 @register.inclusion_tag('replayepisode_basic_list_tag.html')
-def replayepisode_basic_list_display(replayepisode_list):
-    return {'replayepisode_list': replayepisode_list}
+def replayepisode_basic_list_display(replayepisode_page_obj):
+    return {'episode_page_obj': replayepisode_page_obj}
 
 @register.inclusion_tag('heading_tag.html')
 def display_heading_json(key, value):

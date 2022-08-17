@@ -8,5 +8,6 @@
 
 {% block content %}
     <h1>{{ show.name }}</h1>
-    {% episode_basic_list_display show.episode_set.all %}
+    
+    {% episode_basic_list_display episode_page_obj %}
 {% endblock %}

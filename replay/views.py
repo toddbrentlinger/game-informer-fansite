@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.views import generic
 from .models import ReplayEpisode, SegmentType
@@ -7,6 +8,19 @@ from .models import ReplayEpisode, SegmentType
 class ReplayEpisodeListView(generic.ListView):
     model = ReplayEpisode
     paginate_by = 20
+
+def replay_episode_list_view(request):
+    replay_episode_list = ReplayEpisode.objects.all()
+    paginator = Paginator(replay_episode_list, 20)
+
+    page_number = request.GET.get('page')
+    replay_episode_page_obj = paginator.get_page(page_number)
+
+    context = {
+        'episode_page_obj': replay_episode_page_obj,
+    }
+
+    return render(request, 'replay/replayepisode_list.html', context=context)
 
 class ReplayEpisodeDetailView(generic.DetailView):
     model = ReplayEpisode
@@ -39,9 +53,19 @@ def segment_type_detail_slug_view(request, slug):
     segmenttype = get_object_or_404(SegmentType, slug=slug)
 
     replayepisode_list = ReplayEpisode.objects.filter(other_segments__type=segmenttype.id).distinct()
+    paginator = Paginator(replayepisode_list, 20)
+
+    page_number = request.GET.get('page')
+    replayepisode_page_obj = paginator.get_page(page_number)
 
     context = {
         'segmenttype': segmenttype,
-        'replayepisode_list': replayepisode_list
+        'episode_page_obj': replayepisode_page_obj,
     }
+
+    # context = {
+    #     'segmenttype': segmenttype,
+    #     'replayepisode_list': replayepisode_list
+    # }
+    
     return render(request, 'replay/segmenttype_detail.html', context=context)

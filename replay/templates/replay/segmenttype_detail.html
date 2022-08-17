@@ -17,9 +17,8 @@
         <p><strong>Description: </strong>{{ segmenttype.description|linebreaks }}</p>
     {% endif %}
 
-    <h2>{{ replayepisode_list|length }} Replay Episode{{ replayepisode_list|pluralize }} featuring {{ segmenttype.title }} Played By Game Informer:</h2>
-    {% for replayepisode in replayepisode_list %}
-        <hr>
-        {% replayepisode_basic_display replayepisode %}
-    {% endfor %}
+    <h2>{{ episode_page_obj.count }} Replay Episode{{ episode_page_obj.count|pluralize }} featuring {{ segmenttype.title }} Played By Game Informer:</h2>
+    
+    {% replayepisode_basic_list_display episode_page_obj %}
+
 {% endblock %}

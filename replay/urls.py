@@ -2,7 +2,7 @@ from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
-    path('', views.ReplayEpisodeListView.as_view(), name='replay'),
+    path('', views.replay_episode_list_view, name='replay'),
     # path('<int:pk>/', views.ReplayEpisodeDetailView.as_view(), name='replay-detail'),
     path('<int:pk>/', views.replay_episode_detail_view, name='replay-detail'),
     path('s<int:season>/<int:number>/', views.ReplayEpisodeDetailView.as_view()),
