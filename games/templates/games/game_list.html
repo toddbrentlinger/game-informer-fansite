@@ -12,6 +12,15 @@
 {% endblock %}
 
 {% block content %}
+    <a href="{% url 'platforms' %}">All Game Platforms</a>
+    <a href="{% url 'developers' %}">All Game Developers</a>
+    <a href="{% url 'collections' %}">All Game Collections/Series</a>
+    <a href="{% url 'franchises' %}">All Game Franchises</a>
+    <a href="{% url 'genres' %}">All Game Genres</a>
+    <a href="{% url 'themes' %}">All Game Themes</a>
+    <a href="{% url 'keywords' %}">All Game Keywords</a>
+
     <h1>Game List View</h1>
+    
     {% game_basic_list_display game_list %}
 {% endblock %}

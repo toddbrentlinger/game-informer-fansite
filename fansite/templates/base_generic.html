@@ -50,23 +50,13 @@
                 <div id="sidenav-list">
                     <a href="{% url 'index' %}">Home</a>
                     <hr>
-                    <a href="{% url 'replay' %}">All Replay Episodes</a>
-                    <a href="{% url 'segments' %}">All Replay Segments</a>
-                    <hr>
-                    <a href="{% url 'super-replay' %}">All Super Replays</a>
-                    <hr>
+                    <a href="{% url 'replay' %}">Replay</a>
+                    <a href="{% url 'super-replay' %}">Super Replay</a>
                     <a href="{% url 'shows' %}">All Shows</a>
                     <hr>
-                    <a href="{% url 'games' %}">All Games</a>
-                    <a href="{% url 'platforms' %}">All Game Platforms</a>
-                    <a href="{% url 'developers' %}">All Game Developers</a>
-                    <a href="{% url 'collections' %}">All Game Collections/Series</a>
-                    <a href="{% url 'franchises' %}">All Game Franchises</a>
-                    <a href="{% url 'genres' %}">All Game Genres</a>
-                    <a href="{% url 'themes' %}">All Game Themes</a>
-                    <a href="{% url 'keywords' %}">All Game Keywords</a>
+                    <a href="{% url 'games' %}">Games</a>
                     <hr>
-                    <a href="{% url 'people' %}">All People</a>
+                    <a href="{% url 'people' %}">People</a>
                     <hr>
                     {% if user.is_authenticated %}
                         <div>
