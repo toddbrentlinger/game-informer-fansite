@@ -1,0 +1,18 @@
+{% load shows_tags %}
+{% load fansite_tags %}
+
+{% if episode_page_obj %}
+    {% create_page_selection episode_page_obj %}
+    <ul>
+        {% for episode in episode_page_obj %}
+                <li>
+                    {% block episode_basic_display %}
+                        {% episode_basic_display episode %}
+                    {% endblock %}
+                </li>
+        {% empty %}
+            <li>There are no Episodes!</li>
+        {% endfor %}
+    </ul>
+    {% create_page_selection episode_page_obj %}
+{% endif %}
