@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.template.defaultfilters import slugify
 from games.models import Game
 from people.models import Person
-from shows.models import Episode
+from episodes.models import Episode
 
 # Create your models here.
 

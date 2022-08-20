@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-from shows.models import Episode
+from episodes.models import Episode
 
 # Create your models here.
 
@@ -13,7 +13,7 @@ class SuperReplay(models.Model):
     number = models.SmallIntegerField(unique=True, help_text='Enter Super Replay number (unofficial Super Replays use negative numbers).')
     article = models.OneToOneField('replay.Article', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter article for the Super Replay.')
     headings = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
-    external_links = models.ManyToManyField('shows.ExternalLink', blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
+    external_links = models.ManyToManyField('episodes.ExternalLink', blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including Game Informer article OR YouTube video).')
     slug = models.SlugField(max_length=100, unique=True, null=False)
 
     # Metadata

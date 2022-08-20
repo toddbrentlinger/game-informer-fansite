@@ -2,6 +2,7 @@ from django.db import models
 from django.urls import reverse
 
 from people.models import Person
+from shows.models import Show
 
 # TODO: Convert external_links to JSON field instead. Saving unique instances of links does not seem necessary.
 # X TODO: Combine 'description' and 'other_headings' to 'headings'
@@ -15,11 +16,11 @@ from people.models import Person
 # 2/21/22 - Could use HStoreField importing from django.contrib.postgres.fields which stores key/value pairs for 'headings' field.
 # 3/6/22 - Headings Issue: Could create abstract model 'Heading', then create different type of headings (Text, Quotes, Gallery, etc)
 # with ForeignKey field 'episode'. Episode could have multiple TextHeadings but TextHeading has only one episode.
-# ISSUE: How to reference abstract field Episode inside TextHeading, QuotesHeading, etc.?
+# 8/19/22 - Move main_segment_games field from ReplayEpisode to Episode?
 class Episode(models.Model):
     # Fields
 
-    shows = models.ManyToManyField('Show', blank=True, help_text='Enter shows that include the episode.')
+    shows = models.ManyToManyField(Show, blank=True, help_text='Enter shows that include the episode.')
     title = models.CharField(max_length=100, help_text='Enter title of the episode.')
     host = models.ForeignKey(Person, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter person who hosts the episode.')
     featuring = models.ManyToManyField(Person, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter people who feature in the episode (NOT including the host).')

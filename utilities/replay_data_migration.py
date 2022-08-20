@@ -48,12 +48,14 @@ class Models:
         self.Segment = apps.get_model('replay', 'Segment')
         self.SegmentType = apps.get_model('replay', 'SegmentType')
 
+        # Episodes app
+        self.Episode = apps.get_model('episodes', 'Episode')
+        self.ExternalLink = apps.get_model('episodes', 'ExternalLink')
+        self.Thumbnail = apps.get_model('episodes', 'Thumbnail')
+        self.YouTubeVideo = apps.get_model('episodes', 'YouTubeVideo')
+
         # Shows app
-        self.Episode = apps.get_model('shows', 'Episode')
-        self.ExternalLink = apps.get_model('shows', 'ExternalLink')
         self.Show = apps.get_model('shows', 'Show')
-        self.Thumbnail = apps.get_model('shows', 'Thumbnail')
-        self.YouTubeVideo = apps.get_model('shows', 'YouTubeVideo')
 
         # Super Replay app
         self.SuperReplay = apps.get_model('superreplay', 'SuperReplay')

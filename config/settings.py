@@ -47,8 +47,9 @@ INSTALLED_APPS = [
     'games.apps.GamesConfig',
     'fansite.apps.FansiteConfig',
     'people.apps.PeopleConfig',
-    'replay.apps.ReplayConfig',
+    'episodes.apps.EpisodesConfig',
     'shows.apps.ShowsConfig',
+    'replay.apps.ReplayConfig',
     'superreplay.apps.SuperreplayConfig',
 ]
 

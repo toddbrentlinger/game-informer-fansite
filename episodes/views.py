@@ -31,4 +31,3 @@ def episode_detail_slug_view(request, slug):
     }
 
     return render(request, 'episodes/episode_detail.html', context=context)
-

@@ -57,6 +57,12 @@
             {% endwith %}
         </div>
 
-        {% block details_extra %}{% endblock %}
+        {% block details_extra %}
+            {% if 'description' in episode.headings %}
+                <p>{{ episode.headings.description }}</p>
+            {% elif episode.youtube_video.description %}
+                <p>{{ episode.youtube_video.description }}</p>
+            {% endif %}
+        {% endblock %}
     </div>
 </div>

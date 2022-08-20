@@ -23,7 +23,7 @@
                     title="YouTube video player"
                     width="640"
                     height="360"
-                    src="https://www.youtube.com/embed/{% if episode.youtube_video %}{{ episode.youtube_video.youtube_id }}{% else %}0ZtEkX8m6yg{% endif %}"
+                    src="https://www.youtube.com/embed/{% if episode.youtube_video %}{{ episode.youtube_video.youtube_id }}{% else %}7o4MVgsl0ho{% endif %}"
                 ></iframe>
             </div>
         </div>
@@ -51,16 +51,22 @@
     <hr>
 
     <div id="people-in-episode">
-        <span>
-            <strong>Host: </strong>
-            <a href="{{ episode.host.get_absolute_url }}">{{ episode.host }}</a>
-        </span>
-        <span>
-            <strong>Featuring: </strong>
-            {% for person in episode.featuring.all %}
-                <a href="{{ person.get_absolute_url }}">{{ person }}</a>{% if not forloop.last %}, {% endif %}
-            {% endfor %}
-        </span>
+        {% if episode.host %}
+            <span>
+                <strong>Host: </strong>
+                <a href="{{ episode.host.get_absolute_url }}">{{ episode.host }}</a>
+            </span>
+        {% endif %}
+        {% with people=episode.featuring.all %}
+            {% if people %}
+                <span>
+                    <strong>Featuring: </strong>
+                    {% for person in people %}
+                        <a href="{{ person.get_absolute_url }}">{{ person }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </span>
+            {% endif %}
+        {% endwith %}
     </div>
 
     <hr>

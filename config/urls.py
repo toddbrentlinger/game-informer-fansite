@@ -32,6 +32,7 @@ urlpatterns = [
     path('replay/', include('replay.urls')),
     path('super-replay/', include('superreplay.urls')),
     path('search/', fansite_views.search, name='search'),
-    path('shows/', include('shows.urls')),
+    path('episodes/', include('episodes.urls')),
+    path('shows/', shows_views.ShowListView.as_view(), name='shows'),
     re_path(r'(?P<slug>[-\w]+)/', shows_views.show_detail_slug_view, name='show-detail-slug'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
