@@ -1,15 +1,7 @@
-{% extends "base_generic.html" %}
-
-{% load static %}
-{% load replayepisode_tags %}
-{% load fansite_tags %}
+{% extends "episodes/episode_detail.html" %}
 
 {% block title %}
-    <title>Game Informer Fansite - Replay - {{ replayepisode.title }}</title>
-{% endblock %}
-
-{% block custom-css %}
-    <link rel="stylesheet" href="{% static 'replay/css/replayepisode_detail.css' %}">
+    <title>Game Informer Fansite - Replay - {{ episode.title }}</title>
 {% endblock %}
 
 {% block videoplayer %}
@@ -23,58 +15,28 @@
                     title="YouTube video player"
                     width="640"
                     height="360"
-                    src="https://www.youtube.com/embed/{% if replayepisode.youtube_video %}{{ replayepisode.youtube_video.youtube_id }}{% else %}0ZtEkX8m6yg{% endif %}"
+                    src="https://www.youtube.com/embed/{% if episode.youtube_video %}{{ episode.youtube_video.youtube_id }}{% else %}0ZtEkX8m6yg{% endif %}"
                 ></iframe>
             </div>
         </div>
     </div>
 {% endblock %}
 
-{% block content %}
-    <div id="primary-info">
-        <div id="primary-info-header">
-            <h1>{{ replayepisode.title }}</h1>
-            {% with season_tuple=replayepisode.get_season %}
-                <span title="Season {{ season_tuple.0 }} Episode {{ season_tuple.1 }}">
-                    S{{ season_tuple.0 }} E{{ season_tuple.1 }} (#{{ replayepisode.number }})
-                </span>
-            {% endwith %}
-        </div>
-
-        <div id="primary-info-details">
-            <div id="primary-info-details-time">
-                <span><i class="fas fa-calendar-alt"></i> {{ replayepisode.airdate }}</span>
-                <span><i class="fas fa-clock"></i> {{ replayepisode.runtime }}</span>
-            </div>
-            <div id="primary-info-details-counts">
-                <span><i class="fas fa-eye"></i> {{ replayepisode.youtube_video.views|add_commas_to_num }} views</span>
-                <span><i class="fas fa-thumbs-up"></i> {{ replayepisode.youtube_video.likes|add_commas_to_num }}</span>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div id="people-in-episode">
-        <span>
-            <strong>Host: </strong>
-            <a href="{{ replayepisode.host.get_absolute_url }}">{{ replayepisode.host }}</a>
+{% block primary_info_header %}
+    <h1>{{ episode.title }}</h1>
+    {% with season_tuple=episode.get_season %}
+        <span title="Season {{ season_tuple.0 }} Episode {{ season_tuple.1 }}">
+            S{{ season_tuple.0 }} E{{ season_tuple.1 }} (#{{ episode.number }})
         </span>
-        <span>
-            <strong>Featuring: </strong>
-            {% for person in replayepisode.featuring.all %}
-                <a href="{{ person.get_absolute_url }}">{{ person }}</a>{% if not forloop.last %}, {% endif %}
-            {% endfor %}
-        </span>
-    </div>
+    {% endwith %}
+{% endblock %}
 
-    <hr>
-
+{% block games %}
     <div id="replay-episode-segments">
         <div class="replay-episode-segment-inst" id="replay-episode-segment-main">
             <h2>Main Segment</h2>
             <ul class="segment-games">
-                {% for game in replayepisode.main_segment_games.all %}
+                {% for game in episode.main_segment_games.all %}
                     <li>
                         <a href="{{ game.get_absolute_url }}">
                             {% if game.cover %}
@@ -95,8 +57,8 @@
             </ul>
         </div>
 
-        {% if replayepisode.other_segments.all %}
-            {% for segment in replayepisode.other_segments.all %}
+        {% if episode.other_segments.all %}
+            {% for segment in episode.other_segments.all %}
                 <div class="replay-episode-segment-inst" >
                     <h2>
                         <a href="{{ segment.type.get_absolute_url }}">{{ segment.type }}</a>
@@ -124,46 +86,16 @@
             {% endfor %}
         {% endif %}
     </div>
+{% endblock %}
 
-    {% if replayepisode.article %}
+{% block article %}
+    {% if episode.article %}
         <hr>
 
         <div class="replay-episode-article">
-            <h2>{{ replayepisode.article.title }}</h2>
-            <span>by <a href="{{ replayepisode.article.author.get_absolute_url }}">{{ replayepisode.article.author }}</a> on {{ replayepisode.article.datetime }}</span>
-            <p>{{ replayepisode.article.content }}</p>
+            <h2>{{ episode.article.title }}</h2>
+            <span>by <a href="{{ episode.article.author.get_absolute_url }}">{{ episode.article.author }}</a> on {{ episode.article.datetime }}</span>
+            <p>{{ episode.article.content }}</p>
         </div>
-    {% endif %}
-
-    {% if replayepisode.headings %}
-        {% if replayepisode.headings.description %}
-            <hr>
-            <div class="replay-episode-heading">
-                <h2>Description:</h2>
-                {% for entry in replayepisode.headings.description %}
-                    <p>{{ entry }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        {% for key, value in replayepisode.headings.items %}
-            {% if key != 'description' %}
-                <hr>
-                {% display_heading_json key value %}
-            {% endif %}
-        {% endfor %}
-    {% endif %}
-
-    {% if replayepisode.external_links.all %}
-        <hr>
-
-        <h2>External Links:</h2>
-        <ul>
-            {% for external_link in replayepisode.external_links.all %}
-                <li>
-                    <p><a href="{{ external_link.url }}" target="_blank">{{ external_link.title }}</a> on {{ external_link.getLinkSource }}</p>
-                </li>
-            {% endfor %}
-        </ul>
     {% endif %}
 {% endblock %}

@@ -1,9 +1,27 @@
-{% extends "base_generic.html" %}
+{% extends "episodes/episode_detail.html" %}
 
 {% block title %}
     <title>Game Informer Fansite - Super Replay - {{ superreplayepisode.super_replay.title }} - Episode {{ superreplayepisode.episode_number }}</title>
 {% endblock %}
 
-{% block content %}
-    <h1>{{ superreplayepisode.super_replay.title }} - Episode {{ superreplayepisode.episode_number }}</h1>
+{% block videoplayer %}
+    <div id="video-player-container">
+        <div id="video-player">
+            <div id="video-player-set-aspect-ratio">
+                <iframe
+                    frameborder="0"
+                    allowfullscreen="1"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    title="YouTube video player"
+                    width="640"
+                    height="360"
+                    src="https://www.youtube.com/embed/{% if episode.youtube_video %}{{ episode.youtube_video.youtube_id }}{% else %}0ZtEkX8m6yg{% endif %}"
+                ></iframe>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block primary_info_header %}
+    <h1>{{ episode.super_replay.title }} - Episode {{ episode.episode_number }}</h1>
 {% endblock %}

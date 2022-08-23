@@ -1,7 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% load static %}
-{% load replayepisode_tags %}
+{% load episodes_tags %}
 {% load fansite_tags %}
 
 {% block title %}
@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block custom-css %}
-    <link rel="stylesheet" href="{% static 'replay/css/replayepisode_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'episodes/css/episode_detail.css' %}">
 {% endblock %}
 
 {% block videoplayer %}
@@ -32,10 +32,11 @@
 
 {% block content %}
     <div id="primary-info">
-        <div id="primary-info-header">
-            <h1>{{ episode.title }}</h1>
-        </div>
-
+        {% block primary_info_header %}
+            <div id="primary-info-header">
+                <h1>{{ episode.title }}</h1>
+            </div>
+        {% endblock %}
         <div id="primary-info-details">
             <div id="primary-info-details-time">
                 <span><i class="fas fa-calendar-alt"></i> {{ episode.airdate }}</span>
@@ -69,7 +70,7 @@
         {% endwith %}
     </div>
 
-    <hr>
+    {% block games %}{% endblock %}
 
     {% if episode.headings %}
         {% if episode.headings.description %}
