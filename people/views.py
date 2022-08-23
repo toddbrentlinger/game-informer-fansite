@@ -1,24 +1,33 @@
+from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
-from django.views import generic
 from django.db.models import Q
 from .models import Person
 from replay.models import ReplayEpisode
+from episodes.models import Episode
 
-# Create your views here.
+def person_list_view(request):
+    person_list = Person.objects.all()
+    paginator = Paginator(person_list, 20)
 
-class PersonListView(generic.ListView):
-    model = Person
-    paginate_by = 20
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-class PersonDetailView(generic.DetailView):
-    model = Person
+    context = {
+        'page_obj': page_obj,
+    }
+
+    return render(request, 'people/person_list.html', context=context)
 
 def get_person_detail_view(request, person):
-    replayepisode_list = ReplayEpisode.objects.filter(Q(host=person) | Q(featuring=person)).distinct()
+    episode_list = ReplayEpisode.objects.filter(Q(host=person) | Q(featuring=person)).distinct()
+    paginator = Paginator(episode_list, 20)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'person': person,
-        'replayepisode_list': replayepisode_list
+        'page_obj': page_obj,
     }
     return render(request, 'people/person_detail.html', context=context)
 

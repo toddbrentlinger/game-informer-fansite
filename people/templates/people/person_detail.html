@@ -45,10 +45,6 @@
 
     <hr>
 
-    <h2>{{ replayepisode_list|length }} Replay Episode{{ replayepisode_list|pluralize }} featuring {{ person.full_name }} Played By Game Informer:</h2>
-    {% for replayepisode in replayepisode_list %}
-        <hr>
-        {% replayepisode_basic_display replayepisode %}
-    {% endfor %}
-
+    <h2>{{ page_obj.paginator.count }} Replay Episode{{ page_obj.paginator.count|pluralize }} featuring {{ person.full_name }} Played By Game Informer:</h2>
+    {% replayepisode_basic_list_display page_obj %}
 {% endblock %}

@@ -8,16 +8,5 @@
 
 {% block content %}
     <h1>People List View</h1>
-    {% person_basic_list_display person_list %}
-    <!-- {% if person_list %}
-    <ul>
-        {% for person in person_list %}
-        <li>
-            <a href="{{ person.get_absolute_url }}">{{ person.full_name }}</a>
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>There are no people!</p>
-    {% endif %} -->
+    {% person_basic_list_display page_obj %}
 {% endblock %}

@@ -6,7 +6,7 @@ from . import views
 # super-replay/bloodborne/5
 # super-replay/bloodborne-episode-5
 urlpatterns = [
-    path('', views.SuperReplayListView.as_view(), name='super-replay'),
+    path('', views.superreplay_list_view, name='super-replay'),
     # path('<int:pk>/', views.SuperReplayDetailView.as_view(), name='super-replay-detail'),
     path('<int:pk>/', views.super_replay_detail_view, name='super-replay-detail'),
     re_path(r'(?P<slug>[-\w]+)/$', views.super_replay_detail_slug_view, name='super-replay-detail-slug'),

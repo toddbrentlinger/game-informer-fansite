@@ -1,11 +1,14 @@
 {% load superreplay_tags %}
+{% load fansite_tags %}
 
-{% if superreplay_list %}
+{% if superreplay_page_obj %}
+    {% create_page_selection superreplay_page_obj %}
     <ul>
-        {% for superreplay in superreplay_list %}
+        {% for superreplay in superreplay_page_obj %}
             <li>{% superreplay_basic_display superreplay %}</li>
         {% empty %}
             <li>There are no Super Replays!</li>
         {% endfor %}
     </ul>
+    {% create_page_selection superreplay_page_obj %}
 {% endif %}

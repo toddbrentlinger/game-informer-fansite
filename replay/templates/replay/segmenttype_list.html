@@ -1,20 +1,24 @@
 {% extends "base_generic.html" %}
 
+{% load fansite_tags %}
+
 {% block title %}
     <title>Game Informer Fansite - Replay - Segment Types</title>
 {% endblock %}
 
 {% block content %}
     <h1>Segment Type List View</h1>
-    {% if segmenttype_list %}
-    <ul>
-        {% for segmenttype in segmenttype_list %}
-        <li>
-            <a href="{{ segmenttype.get_absolute_url }}">{{ segmenttype.title }}</a>
-        </li>
-        {% endfor %}
-    </ul>
+    {% if page_obj %}
+        {% create_page_selection page_obj %}
+        <ul>
+            {% for segmenttype in page_obj %}
+            <li>
+                <a href="{{ segmenttype.get_absolute_url }}">{{ segmenttype.title }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% create_page_selection page_obj %}
     {% else %}
-    <p>There are no Replay segment types!</p>
+        <p>There are no Replay segment types!</p>
     {% endif %}
 {% endblock %}

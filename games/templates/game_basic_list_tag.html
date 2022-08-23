@@ -1,9 +1,12 @@
-{% if game_list %}
+{% load fansite_tags %}
+
+{% if page_obj %}
+    {% create_page_selection page_obj %}
     <ul 
         class="game-basic-list"
         style="display: grid;grid-template-columns: repeat(auto-fill, minmax(250px, 20%));justify-content: space-around;gap: 1em;"
     >
-        {% for game in game_list %}
+        {% for game in page_obj %}
             <li style="border: 2px solid var(--base-white);">
                 <a 
                     href="{{ game.get_absolute_url }}" 
@@ -42,4 +45,5 @@
             <li>There are no video games!</li>
         {% endfor %}
     </ul>
+    {% create_page_selection page_obj %}
 {% endif %}

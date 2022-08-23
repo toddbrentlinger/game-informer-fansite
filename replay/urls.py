@@ -8,7 +8,8 @@ urlpatterns = [
     path('s<int:season>/<int:number>/', views.ReplayEpisodeDetailView.as_view()),
 
     # Replay Segments
-    path('segments/', views.SegmentTypeListView.as_view(), name='segments'),
+    path('segments/', views.segment_type_list_view, name='segments'),
+    # path('segments/', views.SegmentTypeListView.as_view(), name='segments'),
     path('segments/<int:pk>', views.SegmentTypeDetailView.as_view(), name='segment-type-detail'),
 
     # Regex

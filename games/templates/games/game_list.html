@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% load static %}
+{% load fansite_tags %}
 {% load game_tags %}
 
 {% block title %}
@@ -22,5 +23,5 @@
 
     <h1>Game List View</h1>
     
-    {% game_basic_list_display game_list %}
+    {% game_basic_list_display page_obj %}
 {% endblock %}

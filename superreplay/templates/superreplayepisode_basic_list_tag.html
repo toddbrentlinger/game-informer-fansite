@@ -1,11 +1,21 @@
+{% extends "episode_basic_list_tag.html" %}
+
 {% load superreplay_tags %}
 
-{% if superreplayepisode_list %}
+{% block episode_basic_display %}
+    {% superreplayepisode_basic_display episode %}
+{% endblock %}
+
+{% load fansite_tags %}
+
+{% if episode_page_obj %}
+    {% create_page_selection episode_page_obj %}
     <ul>
-        {% for superreplayepisode in superreplayepisode_list %}
+        {% for superreplayepisode in episode_page_obj %}
             <li>{% superreplayepisode_basic_display superreplayepisode %}</li>
         {% empty %}
             <li>There are no Super Replay Episodes!</li>
         {% endfor %}
     </ul>
+    {% create_page_selection episode_page_obj %}
 {% endif %}
