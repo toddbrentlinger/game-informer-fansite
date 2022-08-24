@@ -8,7 +8,12 @@ class EpisodeListView(generic.ListView):
     paginate_by = 20
 
 def episode_list_view(request):
-    episode_list = Episode.objects.all()
+    sort = request.GET.get('sort', 'airdate')
+    direction = request.GET.get('dir', 'desc')
+    if direction == 'desc':
+        sort = '-' + sort
+    
+    episode_list = Episode.objects.all().order_by(sort)
     paginator = Paginator(episode_list, 20)
 
     page_number = request.GET.get('page')
@@ -16,6 +21,8 @@ def episode_list_view(request):
 
     context = {
         'episode_page_obj': episode_page_obj,
+        'sort': sort,
+        'direction': direction,
     }
 
     return render(request, 'episodes/episode_list.html', context=context)

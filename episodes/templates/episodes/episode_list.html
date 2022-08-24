@@ -8,6 +8,8 @@
 
 {% block content %}
     <h1>Episodes List</h1>
+    <p>{{ sort }}</p>
+    <p>{{ request.get_full_path }}</p>
     
     {% episode_basic_list_display episode_page_obj %}
 {% endblock %}

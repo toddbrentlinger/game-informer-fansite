@@ -3,6 +3,46 @@
 
 {% if episode_page_obj %}
     {% create_page_selection episode_page_obj %}
+
+    <div class="sort-main">
+        <div class="sort-container">
+            <label for="sort-type-select">
+                Sort:
+                <select name="sort-type" id="sort-type-select">
+                    <option value="none">-- Sort By --</option>
+                    <option value="airdate" selected=""><a href="">Air Date</a></option>
+                    <option value="views">Views</option>
+                    <option value="likes">Likes</option>
+                    <option value="video-length">Video Length</option>
+                </select>
+            </label>
+
+            <label for="sort-direction-select">
+                Direction:
+                <select name="sort-direction" id="sort-direction-select">
+                    <option value="descending" selected="">Descending</option>
+                    <option value="ascending">Ascending</option>
+                </select>
+            </label>
+
+            <label for="max-displayed-select">
+                Per Page:
+                <select name="max-displayed" id="max-displayed-select">
+                    <option selected="">10</option>
+                    <option>25</option>
+                    <option>50</option>
+                    <option>100</option>
+                    <option>200</option>
+                    <option value="0">All</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="number-displayed-container">
+            <div>Showing {{ episode_page_obj.start_index }} - {{ episode_page_obj.end_index }} of {{ episode_page_obj.paginator.count|add_commas_to_num }} replay episodes</div>
+        </div>
+    </div>
+
     <ul>
         {% for episode in episode_page_obj %}
                 <li>
