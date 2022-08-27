@@ -40,7 +40,7 @@
         <div id="primary-info-details">
             <div id="primary-info-details-time">
                 <span><i class="fas fa-calendar-alt"></i> {{ episode.airdate }}</span>
-                <span><i class="fas fa-clock"></i> {{ episode.runtime }}</span>
+                <span><i class="fas fa-clock"></i> {% firstof episode.youtube_video.duration_formatted episode.runtime %}</span>
             </div>
             <div id="primary-info-details-counts">
                 <span><i class="fas fa-eye"></i> {{ episode.youtube_video.views|add_commas_to_num }} views</span>
@@ -71,6 +71,10 @@
     </div>
 
     {% block games %}{% endblock %}
+
+    {% if episode.youtube_video.tags %}
+        <p>{{ episode.youtube_video.tags }}</p>
+    {% endif %}
 
     {% if episode.headings %}
         {% if episode.headings.description %}

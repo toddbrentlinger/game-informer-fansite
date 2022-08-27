@@ -21,7 +21,7 @@
                     
                     loading="lazy"
                 >
-                <time class="episode-runtime" datetime="">{{ episode.runtime }}</time>
+                <time class="episode-runtime" datetime="">{% firstof episode.youtube_video.duration_formatted episode.runtime %}</time>
             </div>
         </div>
     </div>

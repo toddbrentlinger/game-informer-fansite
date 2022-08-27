@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 from django.urls import reverse
 
@@ -228,3 +230,23 @@ class YouTubeVideo(models.Model):
             return 0
 
         return round(round(self.likes/(self.likes + self.dislikes)) * 100, 1)
+
+    @property
+    def duration_formatted(self):
+        pattern = r'^PT(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+)S)?$'
+        match = re.search(pattern, self.duration)
+        groups = list(match.groups())
+
+        # Remove any None from beginning of groups tuple
+        first_index_not_none = 0
+        for index, match_group in enumerate(groups):
+            if match_group is None:
+                if first_index_not_none == index:
+                    first_index_not_none += 1
+                else: # Else first_index_not_none != index
+                    groups[index] = '00'
+            else: # match_group is not None
+                if len(match_group) == 1 and first_index_not_none != index:
+                    groups[index] = '0' + match_group
+
+        return ':'.join(groups[slice(first_index_not_none, len(groups))])
