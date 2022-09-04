@@ -6,7 +6,8 @@ from django.urls import reverse
 from django.template.defaultfilters import slugify
 from games.models import Game
 from people.models import Person
-from episodes.models import Episode
+from shows.models import ShowEpisode
+#from episodes.models import Episode
 
 # Create your models here.
 
@@ -45,7 +46,7 @@ class Article(models.Model):
 
 # TODO: Replace 'middle_segment' and 'second_segment' with 'segments' ManyToManyField.
 # Should add main segment inside segments instead of having separate field just for main segment games?
-class ReplayEpisode(Episode):
+class ReplayEpisode(ShowEpisode):
     """Model representing an episode of Replay."""
 
     # Fields
@@ -66,7 +67,7 @@ class ReplayEpisode(Episode):
     # Methods
     
     def __str__(self):
-        return Episode.__str__(self)
+        return ShowEpisode.__str__(self)
 
     def get_absolute_url(self):
         # replay/378 -> Replay Episode 378

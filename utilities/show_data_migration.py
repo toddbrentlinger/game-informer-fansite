@@ -14,6 +14,154 @@ from utilities.youtube import YouTube # Make requests to YouTube Data API
 
 # TODO:
 # - Search tags to find different Show instances to add to 'shows' field
+# - Move imports from replay_data_migration into this file instead
+
+def slugify_unique(model, title):
+    slug_title = slugify(title)
+
+    while model.objects.filter(slug=slug_title).count():
+        # Add incremented number after two dashes to end
+        slug_title_match = re.fullmatch(r'(.+)--(\d)$', slug_title, re.IGNORECASE)
+
+        # If matching slug title increment number already present
+        if slug_title_match:
+            slug_title = f'{slug_title_match.group(1)}--{int(slug_title_match.group(2)) + 1}'
+        else: # Else NO matching slug title increment number already present
+            slug_title += '--1'
+
+    return slug_title
+
+def create_episode(models, episode_data):
+    '''
+    Converts dictionary of key/value pairs into defined models inside database for data migration.
+
+    Parameters:
+        models (Models): 
+        episode_data (dict):
+    '''
+    # Check if Episode already exists with matching YouTubeVideo ID.
+    try:
+        youtube_id = episode_data['id']
+        episode = models.Episode.objects.get(
+            youtube_video__youtube_id=youtube_id
+        )
+    except models.Episode.DoesNotExist:
+        # Create Episode object
+        episode = models.Episode()
+
+        # Dictionary to hold model instances for ManyToManyFields.
+        # Key is field name and value is list of model instances.
+        # After other fields in Episode instance are set and it's saved to database,
+        # can then add to the actual ManyToManyFields.
+        manytomany_instances_dict = {
+            'featuring': [],
+            'external_links': [],
+        }
+
+        # Title - snippet.title
+        episode.title = episode_data['snippet']['title']
+
+        # Slug
+        episode.slug = slugify_unique(models.Episode, episode.title)
+
+        # YouTube Video
+        try:
+            youtube_video_inst = models.YouTubeVideo.objects.get(youtube_id=episode_data['id'])
+        except models.YouTubeVideo.DoesNotExist:
+            youtube_video_inst = models.YouTubeVideo()
+
+            # YouTube ID
+            youtube_video_inst.youtube_id = youtube_id
+
+            if 'contentDetails' in episode_data:
+                # Duration - episode_data['contentDetails']['duration']
+                if 'duration' in episode_data['contentDetails']:
+                    youtube_video_inst.duration = episode_data['contentDetails']['duration']
+
+            if 'statistics' in episode_data:
+                # Views - episode_data['statistics']['viewCount']
+                if 'viewCount' in episode_data['statistics']:
+                    youtube_video_inst.views = int(episode_data['statistics']['viewCount'])
+
+                # Likes - episode_data['statistics']['likeCount]
+                if 'likeCount' in episode_data['statistics']:
+                    youtube_video_inst.likes = int(episode_data['statistics']['likeCount'])
+
+            if 'snippet' in episode_data:
+                # Title - episode_data['snippet']['title']
+                if 'title' in episode_data['snippet']:
+                    youtube_video_inst.title = episode_data['snippet']['title']
+
+                # Description - episode_data['snippet']['description']
+                if 'description' in episode_data['snippet']:
+                    youtube_video_inst.description = episode_data['snippet']['description']
+
+                # Tags - episode_data['snippet']['tags']
+                if 'tags' in episode_data['snippet']:
+                    youtube_video_inst.tags = episode_data['snippet']['tags']
+
+                # Published At - episode_data['snippet']['publishedAt']
+                # Example Format: 2015-08-08T16:03:03Z
+                if 'publishedAt' in episode_data['snippet']:
+                    youtube_video_inst.published_at = timezone.make_aware(
+                        datetime.datetime.strptime(episode_data['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
+                        timezone=timezone.get_current_timezone()
+                    )
+
+            # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
+            youtube_video_inst.save()
+
+            # Thumbnails - episode_data['snippet']['thumbnails']
+            if 'snippet' in episode_data and 'thumbnails' in episode_data['snippet']:
+                for key, value in episode_data['snippet']['thumbnails'].items():
+                    try:
+                        thumbnail = models.Thumbnail.objects.get(url=value['url'])
+                    except models.Thumbnail.DoesNotExist:
+                        thumbnail = models.Thumbnail.objects.create(
+                            quality=key.upper(),
+                            url=value['url'],
+                            width=value['width'],
+                            height=value['height']
+                        )
+                    youtube_video_inst.thumbnails.add(thumbnail)
+
+        # Add YouTubeVideo instance to Episode instance
+        episode.youtube_video = youtube_video_inst
+
+        # Runtime
+        episode.runtime = youtube_video_inst.duration
+
+        # Airdate
+        episode.airdate = youtube_video_inst.published_at
+
+        # Host
+        # Featuring - snippet.tags
+        if youtube_video_inst.tags:
+            for name in STAFF:
+                if name.lower() in youtube_video_inst.tags:
+                    person = get_person_inst(models, {'name': name})
+                    manytomany_instances_dict['featuring'].append(person)
+
+        # External Links
+        # Headings
+
+        # Save Episode instance to database
+        episode.save()
+
+        # Now that SuperReplayEpisode is saved to database, add ManyToManyFields
+        add_model_inst_list_to_field(episode.featuring, manytomany_instances_dict['featuring'])
+        add_model_inst_list_to_field(episode.external_links, manytomany_instances_dict['external_links'])
+
+    # Return Episode instance
+    return episode
+
+def create_show_episode_new(models, episode):
+    # Show
+    # Use YouTube video tags, title, and/or description to determine Show types
+
+    # Slug
+    # Remove show name from title and slugify
+    pass
 
 def create_show_episode(models, episode_data, show_inst, igdb, youtube):
     '''

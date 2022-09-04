@@ -56,6 +56,7 @@ class Models:
 
         # Shows app
         self.Show = apps.get_model('shows', 'Show')
+        self.ShowEpisode = apps.get_model('shows', 'ShowEpisode')
 
         # Super Replay app
         self.SuperReplay = apps.get_model('superreplay', 'SuperReplay')

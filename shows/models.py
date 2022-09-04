@@ -27,7 +27,7 @@ class ShowEpisode(models.Model):
     # Fields
 
     show = models.ForeignKey(Show, on_delete=models.CASCADE, help_text='Enter show type of the episode.')
-    episode = models.ForeignKey('episodes.Episode', on_delete=models.CASCADE, help_text='Enter base episode.')
+    episode = models.ForeignKey('episodes.Episode', on_delete=models.CASCADE, help_text='Enter episode.')
     slug = models.SlugField(max_length=100, unique=True, null=False, help_text='Enter a url-safe, unique, lower-case version of the show episode.')
 
     # Metadata
@@ -40,4 +40,5 @@ class ShowEpisode(models.Model):
         # <show-slug>/<slug>
         # test-chamber/tomb-raider -> Episode: episodes/test-chamber-tomb-raider
         # replay/overblood -> Episode: episodes/replay-overblood
+        # game-informer-show/most-anticipated-games-of-2022 -> Episode: episodes/most-anticipated-games-of-2022-gi-show
         pass

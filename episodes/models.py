@@ -4,7 +4,6 @@ from django.db import models
 from django.urls import reverse
 
 from people.models import Person
-from shows.models import Show
 
 # TODO: Convert external_links to JSON field instead. Saving unique instances of links does not seem necessary.
 # X TODO: Combine 'description' and 'other_headings' to 'headings'
@@ -22,7 +21,7 @@ from shows.models import Show
 class Episode(models.Model):
     # Fields
 
-    shows = models.ManyToManyField(Show, blank=True, help_text='Enter shows that include the episode.')
+    #shows = models.ManyToManyField('shows.Show', blank=True, help_text='Enter shows that include the episode.')
     title = models.CharField(max_length=100, help_text='Enter title of the episode.')
     host = models.ForeignKey(Person, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter person who hosts the episode.')
     featuring = models.ManyToManyField(Person, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter people who feature in the episode (NOT including the host).')
