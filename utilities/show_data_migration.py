@@ -155,13 +155,50 @@ def create_episode(models, episode_data):
     # Return Episode instance
     return episode
 
-def create_show_episode_new(models, episode):
-    # Show
-    # Use YouTube video tags, title, and/or description to determine Show types
+def convert_episode_slug_to_show_episode_slug(episode, show):
+    #TODO: Remove show title from episode title and then slugify
+    return episode.slug
 
-    # Slug
-    # Remove show name from title and slugify
-    pass
+def create_show_episodes_new(models, episode):
+    # Return if episode has NO YouTubeVideo instance
+    # TODO: Could instead just search episode.title for Show types
+    if not episode.youtube_video:
+        return
+
+    # Use YouTube video tags, title, and/or description to determine Show types
+    shows = set()
+    youtube_tags_lowercase = map(lambda tag: tag.lower(), episode.youtube_video.tags) if episode.youtube_video.tags else []
+    for show_key, show_dict in SHOWS.items():
+        for show_tag in show_dict['tags']:
+            # YouTubeVideo tags
+            if show_tag.lower() in youtube_tags_lowercase:
+                # Add show to list
+                shows.add(show_key)
+                break
+            # YouTubeVideo title
+            if show_tag.lower() in episode.youtube_video.title.lower():
+                # Add show to list
+                shows.add(show_key)
+                break
+
+    # Remove any shows by prioritization
+    if len(shows) > 1:
+        def handle_matching_show_filter(show):
+            for priority_show in SHOWS[show]['higher_priority_shows']:
+                if priority_show in shows:
+                    return False
+            return True
+        # Remove duplicates by checking for priorities
+        shows = list(filter(handle_matching_show_filter, shows))
+
+    # Create ShowEpisode for every matching Show
+    for show_key in shows:
+        show_inst = get_or_create_show(models, SHOWS[show_key])
+        models.ShowEpisode.objects.create(
+            show=show_inst,
+            episode=episode,
+            slug=convert_episode_slug_to_show_episode_slug(episode, show_inst)
+        )
 
 def create_show_episode(models, episode_data, show_inst, igdb, youtube):
     '''
@@ -318,19 +355,22 @@ def create_show_episode(models, episode_data, show_inst, igdb, youtube):
     # Return Episode instance
     return episode
 
+def get_or_create_show(models, show_dict):
+    try:
+        return models.Show.objects.get(name=show_dict['name'])
+    except models.Show.DoesNotExist:
+        return models.Show.objects.create(
+            name=show_dict['name'],
+            description=show_dict['description'],
+            slug=show_dict['slug']
+        )
+
 def initialize_database(apps, schema_editor):
     models = Models(apps)
 
     # Add known shows from SHOWS constant
     for show in SHOWS:
-        try:
-            models.Show.objects.get(name=show['name'])
-        except models.Show.DoesNotExist:
-            models.Show.objects.create(
-                name=show['name'],
-                description=show['description'],
-                slug=show['slug']
-            )
+        get_or_create_show(models, show)
 
     with open('utilities/gi_youtube_video_sorted_by_shows_data.json', 'r', encoding='utf-8') as outfile:
 

@@ -157,55 +157,75 @@ GAME_NAME_ALTERNATIVES = {
     "Tweety's Hearty Party (トゥイーティーのハーティーパーティー)": "Tweety's High-Flying Adventure"
 }
 
-SHOWS = [
-    {
+SHOWS = {
+    "chronicles": {
         "name": "Chronicles",
         "description": "",
         "slug": "chronicles",
+        "tags": ['chronicles',],
+        "higher_priority_shows": ['super_replay',],
     },
-    {
+    "game_informer_show": {
         "name": "Game Informer Show",
         "description": "",
         "slug": "game-informer-show",
+        "tags": ['gi show', 'game informer show', 'the game informer show',],
+        "higher_priority_shows": ['spoiled',],
     },
-    {
+    "new_gameplay_today": {
         "name": "New Gameplay Today",
         "description": "New Gameplay Today is a GI video series, hosted by Jeff Cork and Leo Vader, showing off gameplay from upcoming games and new releases. It replaces Test Chamber, which had a similar premise. The first episode aired on October 16, 2017.",
         "slug": "new-gameplay-today",
+        "tags": ['new gameplay today', 'new gameplay',],
+        "higher_priority_shows": ['test_chamber',],
     },
-    {
+    "reiner_and_phil": {
         "name": "Reiner and Phil",
         "description": "",
         "slug": "reiner-and-phil",
+        "tags": ['Reiner and Phil',],
+        "higher_priority_shows": [],
     },
-    {
+    "replay": {
         "name": "Replay",
         "description": "Replay is a weekly web video series produced by Game Informer in which the publication's editors play bits of older video games while providing commentary. The series premiered on January 27, 2010 with Replay: Twisted Metal 1–4 and has more than one hundred episodes. A spin-off series in which they play through an entire game, Super Replay, debuted in May 2010.",
         "slug": "replay",
+        "tags": ['replay', 'replayshow',],
+        "higher_priority_shows": ['super_replay'],
     },
-    {
+    "review": {
         "name": "Review",
         "description": "",
         "slug": "review",
+        "tags": ['review', 'game review',],
+        "higher_priority_shows": ['game_informer_show', 'new_gameplay_today', 'test_chamber',],
     },
-    {
+    "spoiled": {
         "name": "Spoiled",
         "description": "",
         "slug": "spoiled",
+        "tags": ['spoiled',],
+        "higher_priority_shows": [],
     },
-    {
+    "super_replay": {
         "name": "Super Replay",
         "description": "Super Replay is a web video series from Game Informer in which the publication's editors play through the entirety of a video game from a previous console generation while providing commentary. Each entry in the series is broken up into episodes, which are usually about one hour in length. The series' premiere game is The Legend of Zelda: A Link to the Past, which aired its first episode on May 24, 2010. Super Replay is a spin-off of Replay.",
         "slug": "super-replay",
+        "tags": ['super replay',],
+        "higher_priority_shows": [],
     },
-    {
+    "test_chamber": {
         "name": "Test Chamber",
         "description": "",
         "slug": "test-chamber",
+        "tags": ['test chamber',],
+        "higher_priority_shows": [],
     },
-    {
+    "what_the_heck_is_this": {
         "name": "What The Heck Is This?",
         "description": "",
         "slug": "what-the-heck-is-this",
+        "tags": ['what the heck', 'what the heck is this', 'what the heck is this?',],
+        "higher_priority_shows": [],
     },
-]
+}
