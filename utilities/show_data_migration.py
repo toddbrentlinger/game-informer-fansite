@@ -152,34 +152,63 @@ def create_episode(models, episode_data):
         add_model_inst_list_to_field(episode.featuring, manytomany_instances_dict['featuring'])
         add_model_inst_list_to_field(episode.external_links, manytomany_instances_dict['external_links'])
 
+        # Create Show Episodes using base Episode
+        create_show_episodes_from_episode(models, episode)
+
     # Return Episode instance
     return episode
 
-def convert_episode_slug_to_show_episode_slug(episode, show):
-    #TODO: Remove show title from episode title and then slugify
-    return episode.slug
+def create_show_episode_slug(models, episode, show_tags):
+    # Initialize title with base episode title
+    show_episode_title = episode.title
 
-def create_show_episodes_new(models, episode):
-    # Return if episode has NO YouTubeVideo instance
-    # TODO: Could instead just search episode.title for Show types
-    if not episode.youtube_video:
-        return
+    # Sort tags by length from max to min so don't match a shortened version and leave a portion of the longer version.
+    # Ex. 'New Gameplay Today | Last of Us 2'
+    # tags: 'new gameplay', 'new gameplay today'
+    # If 'new gameplay' is matched first, title would be 'Today | Last of Us 2'
+    # Should first match 'new gameplay today' and title would be '| Last of Us 2'
+    sorted_tags = sorted(show_tags, key=lambda s: len(s), reverse=True)
 
+    # Check beginning of title for show name
+    for tag in sorted_tags:
+        pattern = r'(?:^' + tag + ')(.*)'
+        match = re.match(pattern, show_episode_title, flags=re.IGNORECASE)
+        if match is not None:
+            show_episode_title = match.group(1)
+            break
+
+    # Check end of title for show name
+    for tag in sorted_tags:
+        pattern = r'(.*)(?:' + tag + '$)'
+        match = re.match(pattern, show_episode_title, flags=re.IGNORECASE)
+        if match is not None:
+            show_episode_title = match.group(1)
+            break
+
+    return slugify_unique(models.ShowEpisode, show_episode_title)
+
+def create_show_episodes_from_episode(models, episode):
     # Use YouTube video tags, title, and/or description to determine Show types
     shows = set()
-    youtube_tags_lowercase = map(lambda tag: tag.lower(), episode.youtube_video.tags) if episode.youtube_video.tags else []
-    for show_key, show_dict in SHOWS.items():
-        for show_tag in show_dict['tags']:
-            # YouTubeVideo tags
-            if show_tag.lower() in youtube_tags_lowercase:
-                # Add show to list
-                shows.add(show_key)
-                break
-            # YouTubeVideo title
-            if show_tag.lower() in episode.youtube_video.title.lower():
-                # Add show to list
-                shows.add(show_key)
-                break
+
+    # YouTube tags
+    if episode.youtube_video:
+        youtube_tags_lowercase = map(lambda tag: tag.lower(), episode.youtube_video.tags) if episode.youtube_video.tags else []
+        for show_key, show_dict in SHOWS.items():
+            for show_tag in show_dict['tags']:
+                # YouTubeVideo tags
+                if show_tag.lower() in youtube_tags_lowercase:
+                    # Add show to list
+                    shows.add(show_key)
+                    break
+                # YouTubeVideo title
+                if show_tag.lower() in episode.youtube_video.title.lower():
+                    # Add show to list
+                    shows.add(show_key)
+                    break
+
+    # Episode Title
+    # TODO
 
     # Remove any shows by prioritization
     if len(shows) > 1:
@@ -193,14 +222,14 @@ def create_show_episodes_new(models, episode):
 
     # Create ShowEpisode for every matching Show
     for show_key in shows:
-        show_inst = get_or_create_show(models, SHOWS[show_key])
         models.ShowEpisode.objects.create(
-            show=show_inst,
+            show=get_or_create_show(models, SHOWS[show_key]),
             episode=episode,
-            slug=convert_episode_slug_to_show_episode_slug(episode, show_inst)
+            slug=create_show_episode_slug(models, episode, SHOWS[show_key]['tags'])
         )
 
-def create_show_episode(models, episode_data, show_inst, igdb, youtube):
+# TODO: Remove after using as reference to write other methods
+def create_episode_old(models, episode_data, show_inst, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
 
@@ -249,19 +278,7 @@ def create_show_episode(models, episode_data, show_inst, igdb, youtube):
         episode.title = episode_data['snippet']['title']
 
         # Slug
-        slug_title = slugify(episode.title)
-
-        while models.Episode.objects.filter(slug=slug_title).count():
-            # Add incremented number after two dashes to end
-            slug_title_match = re.fullmatch(r'(.+)--(\d)$', slug_title, re.IGNORECASE)
-
-            # If matching slug title increment number already present
-            if slug_title_match:
-                slug_title = f'{slug_title_match.group(1)}--{int(slug_title_match.group(2)) + 1}'
-            else: # Else NO matching slug title increment number already present
-                slug_title += '--1'
-
-        episode.slug = slug_title
+        episode.slug = slugify_unique(models.Episode, episode.title)
 
         # YouTube Video
         try:
@@ -372,60 +389,33 @@ def initialize_database(apps, schema_editor):
     for show in SHOWS:
         get_or_create_show(models, show)
 
-    with open('utilities/gi_youtube_video_sorted_by_shows_data.json', 'r', encoding='utf-8') as outfile:
+    with open('utilities/gi_youtube_video_data.json', 'r', encoding='utf-8') as outfile:
 
         # Get episode data
-        allEpisodeData = json.load(outfile)
+        all_episode_data = json.load(outfile)
 
         # If there is episode data
-        if (allEpisodeData):
+        if (all_episode_data):
             # IGDB instance initialization creates API access_token
-            igdb = IGDB()
+            # igdb = IGDB()
 
             # YouTube Data API instance
-            youtube = YouTube()
+            # youtube = YouTube()
 
-            total_count = 0
-            for episode_list in allEpisodeData['matches'].values():
-                total_count += len(episode_list)
-            total_count += len(allEpisodeData['no_matches']) + len(allEpisodeData['no_tags'])
-            
+            total_count = len(all_episode_data)
             curr_count = 0
             start_time = time.time()
 
-            def create_episodes_from_list(episode_list, show_inst):
-                for episode_data in episode_list:
-                    episode_inst = create_show_episode(models, episode_data, show_inst, igdb, youtube)
-                
-                    # Define variables as non-local, causing them to bind
-                    # to the nearest non-global variable with the same name.
-                    nonlocal curr_count
+            for episode_data in all_episode_data:
+                episode_inst = create_episode(models, episode_data)
 
-                    curr_count += 1
-                    avg_seconds_per_item = (time.time() - start_time) / curr_count
-                    est_seconds_remaining = math.floor(avg_seconds_per_item * (total_count - curr_count))
+                curr_count += 1
+                avg_seconds_per_item = (time.time() - start_time) / curr_count
+                est_seconds_remaining = math.floor(avg_seconds_per_item * (total_count - curr_count))
 
-                    print(
-                        f'Episode {curr_count}/{total_count} Completed! - {episode_inst.title} - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}',
-                    )
-
-            # matches
-            for (show, episode_list) in allEpisodeData['matches'].items():
-                # Show instance
-                try:
-                    show_inst = models.Show.objects.get(slug=show.replace('_', '-'))
-                except models.Show.DoesNotExist:
-                    show_inst = None
-
-                create_episodes_from_list(episode_list, show_inst)
-            
-            # duplicates (empty)
-
-            # no_matches
-            create_episodes_from_list(allEpisodeData['no_matches'], None)
-
-            # no_tags
-            create_episodes_from_list(allEpisodeData['no_tags'], None)
+                print(
+                    f'Episode {curr_count}/{total_count} Completed! - {episode_inst.title} - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}',
+                )
 
 def main():
     pass
