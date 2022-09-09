@@ -23,6 +23,19 @@ class Show(models.Model):
         # shows/test-chamber
         return reverse('show-detail-slug', kwargs={'slug': self.slug})
 
+# TODO: 
+# 9/8/22 - Remove unique attribute from slug field. Two ShowEpisodes can have 
+# the same slug if the show is different. 
+# Ex. test-chamber/dishonored and replay/dishonored
+# ISSUE: If remove unique attribute from slug field, two ShowEpisodes in the 
+# same Show could have the same slug. However, a unique slug is created inside 
+# data migration script. Could just use that to make custom check whenever a 
+# new ShowEpisode instance is created or updated.
+# SOLUTION: Could instead remove slug field entirely and use pk value in it's place in 
+# absolute url (ex. test-chamber/23).
+# SOLUTION: Refactor slugify_unique function to only increment number on end 
+# of slug when the Show is the same. Need to also remove unique attribute in 
+# slug field.
 class ShowEpisode(models.Model):
     # Fields
 
@@ -41,4 +54,7 @@ class ShowEpisode(models.Model):
         # test-chamber/tomb-raider -> Episode: episodes/test-chamber-tomb-raider
         # replay/overblood -> Episode: episodes/replay-overblood
         # game-informer-show/most-anticipated-games-of-2022 -> Episode: episodes/most-anticipated-games-of-2022-gi-show
-        pass
+        return reverse('showepisode-detail-slug', kwargs={
+            'show_slug': self.show.slug,
+            'showepisode_slug': self.slug
+        })

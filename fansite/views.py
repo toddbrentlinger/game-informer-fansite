@@ -4,8 +4,9 @@ from django.db.models import Q
 from games.models import Game, Platform, Developer, Collection, Franchise, Genre, Theme, Keyword
 from replay.models import ReplayEpisode, SegmentType
 from people.models import Person
-from episodes.models import YouTubeVideo
+from episodes.models import Episode, YouTubeVideo
 from superreplay.models import SuperReplay, SuperReplayEpisode
+from shows.models import ShowEpisode
 
 from random import choice
 
@@ -16,11 +17,16 @@ def index(request):
 
     # Random items
     pks = ReplayEpisode.objects.values_list('pk', flat=True)
-    random_pk = choice(pks)
-    random_replayepisode = ReplayEpisode.objects.get(pk=random_pk)
+    if pks:
+        random_pk = choice(pks)
+        random_replayepisode = ReplayEpisode.objects.get(pk=random_pk)
+    else:
+        random_replayepisode = None
 
     # Generate counts of some objects
     context = {
+        'num_episodes': Episode.objects.count(),
+
         'num_replay_episodes': ReplayEpisode.objects.count(),
         'num_replay_segment_types': SegmentType.objects.count(),
 

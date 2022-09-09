@@ -1,7 +1,7 @@
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.views import generic
-from .models import Show
+from .models import Show, ShowEpisode
 from episodes.models import Episode
 
 class ShowListView(generic.ListView):
@@ -17,7 +17,7 @@ def show_detail_slug_view(request, slug):
         show_episodes_list = Episode.objects.filter(shows__isnull=True)
     else:
         show = get_object_or_404(Show, slug=slug)
-        show_episodes_list = show.episode_set.all()
+        show_episodes_list = show.showepisode_set.all()
 
     paginator = Paginator(show_episodes_list, 20)
     page_number = request.GET.get('page')
@@ -29,3 +29,18 @@ def show_detail_slug_view(request, slug):
     }
 
     return render(request, 'shows/show_detail.html', context=context)
+
+def showepisode_detail_slug_view(request, *args, **kwargs):
+    # show_slug
+    #show = get_object_or_404(Show, slug=kwargs['show_slug'])
+    show = Show.objects.get(slug=kwargs['show_slug'])
+    
+    # showepisode_slug
+    #showepisode = get_object_or_404(show=show, slug=kwargs['showepisode_slug'])
+    showepisode = ShowEpisode.objects.get(show=show, slug=kwargs['showepisode_slug'])
+
+    context = {
+        'showepisode': showepisode,
+    }
+
+    return render(request, 'shows/showepisode_detail.html', context=context)

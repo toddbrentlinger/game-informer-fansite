@@ -1,9 +1,13 @@
 {% load static %}
 {% load fansite_tags %}
 
-<div class="episode-basic">    
+<div class="episode-basic">  
     <div class="episode-basic-header">
-        <h2><a href="{{ episode.get_absolute_url }}">{{ episode.title }}</a></h2>
+        <h2><a href="
+            {% block episode_title_link %}
+                {{ episode.get_absolute_url }}
+            {% endblock %}
+        ">{{ episode.title }}</a></h2>
         {% block header_extra %}{% endblock %}
     </div>
 

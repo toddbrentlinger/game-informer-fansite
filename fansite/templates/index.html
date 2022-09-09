@@ -8,6 +8,7 @@
 
     <p>The fansite has the following record counts:</p>
     <ul>
+        <li><strong>Episodes: </strong> {{ num_episodes }}</li>
         <br>
         <li><strong>Replay Episodes:</strong> {{ num_replay_episodes }}</li>
         <li><strong>Replay Segment Types:</strong> {{ num_replay_segment_types }}</li>
@@ -30,9 +31,11 @@
     </ul>
 
     <article id="random-items">
-        <section id="random-replay-episode">
-            <h2>Random Replay Episode</h3>
-            {% replayepisode_basic_display random_replayepisode %}
-        </section>
+        {% if random_replayepisode %}
+            <section id="random-replay-episode">
+                <h2>Random Replay Episode</h3>
+                {% replayepisode_basic_display random_replayepisode %}
+            </section>
+        {% endif %}
     </article>
 {% endblock %}

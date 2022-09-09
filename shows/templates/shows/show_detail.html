@@ -1,6 +1,6 @@
 {% extends "base_generic.html" %}
 
-{% load episodes_tags %}
+{% load shows_tags %}
 
 {% block title %}
     <title>Game Informer Fansite - {{ show.name }}</title>
@@ -9,5 +9,5 @@
 {% block content %}
     <h1>{{ show.name }}</h1>
     
-    {% episode_basic_list_display episode_page_obj %}
+    {% showepisode_basic_list_display episode_page_obj %}
 {% endblock %}
