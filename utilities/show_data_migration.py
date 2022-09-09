@@ -129,6 +129,7 @@ def create_episode(models, episode_data):
         episode.youtube_video = youtube_video_inst
 
         # Runtime
+        # TODO: Convert to HH:MM:SS
         episode.runtime = youtube_video_inst.duration
 
         # Airdate
@@ -386,8 +387,8 @@ def initialize_database(apps, schema_editor):
     models = Models(apps)
 
     # Add known shows from SHOWS constant
-    for show in SHOWS:
-        get_or_create_show(models, show)
+    for show_dict in SHOWS.values():
+        get_or_create_show(models, show_dict)
 
     with open('utilities/gi_youtube_video_data.json', 'r', encoding='utf-8') as outfile:
 
