@@ -14,7 +14,7 @@ class ShowDetailView(generic.DetailView):
 def show_detail_slug_view(request, slug):
     if slug is None or slug == 'other':
         show = None
-        show_episodes_list = Episode.objects.filter(shows__isnull=True)
+        show_episodes_list = Episode.objects.exclude(id__in=ShowEpisode.objects.all().values_list('id', flat=True))
     else:
         show = get_object_or_404(Show, slug=slug)
         show_episodes_list = show.showepisode_set.all()
@@ -28,7 +28,11 @@ def show_detail_slug_view(request, slug):
         'episode_page_obj': episode_page_obj,
     }
 
-    return render(request, 'shows/show_detail.html', context=context)
+    return render(
+        request, 
+        'shows/show_detail.html' if show else 'shows/no_show_detail.html', 
+        context=context
+    )
 
 def showepisode_detail_slug_view(request, *args, **kwargs):
     # show_slug
@@ -40,7 +44,7 @@ def showepisode_detail_slug_view(request, *args, **kwargs):
     showepisode = ShowEpisode.objects.get(show=show, slug=kwargs['showepisode_slug'])
 
     context = {
-        'showepisode': showepisode,
+        'episode': showepisode.episode,
     }
 
     return render(request, 'shows/showepisode_detail.html', context=context)

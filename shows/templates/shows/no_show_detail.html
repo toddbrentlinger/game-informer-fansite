@@ -1,0 +1,13 @@
+{% extends "base_generic.html" %}
+
+{% load episodes_tags %}
+
+{% block title %}
+    <title>Game Informer Fansite - No Shows</title>
+{% endblock %}
+
+{% block content %}
+    <h1>No Shows</h1>
+    
+    {% episode_basic_list_display episode_page_obj %}
+{% endblock %}
