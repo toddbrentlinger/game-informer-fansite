@@ -7,61 +7,11 @@ import re
 from django.db.models import Q
 from django.utils import timezone
 from utilities.igdb import IGDB # Make requests from IGDB API
-from utilities.data_migration_constants import SEGMENT_TYPES, STAFF, GAME_NAME_ALTERNATIVES # Separate file to hold constants
+from utilities.data_migration_constants import SEGMENT_TYPES, GAME_NAME_ALTERNATIVES # Separate file to hold constants
+from utilities.show_data_migration import Models, add_model_inst_list_to_field, get_person_inst
 from utilities.misc import create_total_time_message # misc utility functions
 from utilities.youtube import YouTube
 from django.template.defaultfilters import slugify
-
-class Models:
-    def __init__(self, apps):
-        # Cannot import models directly as it may be a newer version
-        # than this migration expects. Use historical versions instead.
-        
-        # Fansite app
-
-        # People app
-        self.Person = apps.get_model('people', 'Person')
-        # self.Guest = apps.get_model('people', 'Guest')
-        # self.StaffPosition = apps.get_model('people', 'StaffPosition')
-        # self.StaffPositionInstance = apps.get_model('people', 'StaffPositionInstance')
-        self.Staff = apps.get_model('people', 'Staff')
-
-        # Game app
-        self.Artwork = apps.get_model('games', 'Artwork')
-        self.Collection = apps.get_model('games', 'Collection')
-        self.Developer = apps.get_model('games', 'Developer')
-        self.Franchise = apps.get_model('games', 'Franchise')
-        self.Game = apps.get_model('games', 'Game')
-        self.GameVideo = apps.get_model('games', 'GameVideo')
-        self.Genre = apps.get_model('games', 'Genre')
-        self.ImageIGDB = apps.get_model('games', 'ImageIGDB')
-        self.Keyword = apps.get_model('games', 'Keyword')
-        self.Platform = apps.get_model('games', 'Platform')
-        self.Screenshot = apps.get_model('games', 'Screenshot')
-        self.Theme = apps.get_model('games', 'Theme')
-        self.Website = apps.get_model('games', 'Website')
-
-        # Replay app
-        self.Article = apps.get_model('replay', 'Article')
-        self.ReplayEpisode = apps.get_model('replay', 'ReplayEpisode')
-        self.ReplaySeason = apps.get_model('replay', 'ReplaySeason')
-        self.Segment = apps.get_model('replay', 'Segment')
-        self.SegmentType = apps.get_model('replay', 'SegmentType')
-
-        # Episodes app
-        self.Episode = apps.get_model('episodes', 'Episode')
-        self.ExternalLink = apps.get_model('episodes', 'ExternalLink')
-        self.Thumbnail = apps.get_model('episodes', 'Thumbnail')
-        self.YouTubeVideo = apps.get_model('episodes', 'YouTubeVideo')
-
-        # Shows app
-        self.Show = apps.get_model('shows', 'Show')
-        self.ShowEpisode = apps.get_model('shows', 'ShowEpisode')
-
-        # Super Replay app
-        self.SuperReplay = apps.get_model('superreplay', 'SuperReplay')
-        self.SuperReplayEpisode = apps.get_model('superreplay', 'SuperReplayEpisode')
-        self.SuperReplayGame = apps.get_model('superreplay', 'SuperReplayGame')
 
 def is_franchise_in_list(franchise, franchise_list):
     '''
@@ -655,54 +605,6 @@ def get_game_inst(models, igdb, name, platform_name = None, year_released = None
     # # If reach here, could not find game
     # return None
 
-def get_person_inst(models, person_data):
-    '''
-    Get existing Person model from database or add a new model instance if not in database.
-
-    Parameters:
-        models (Models): 
-        person_data (dict): Dictionary of data about specific person
-        person_data.name (str): Name of person
-
-    Returns:
-        (Person): Matching Person model already existing in database or created and added to the database
-    '''
-    '''
-    info_box_details
-        company
-        position
-        years
-        twitter
-        website
-        ...
-    '''
-    try:
-        return models.Person.objects.get(full_name=person_data['name'])
-    except models.Person.DoesNotExist:
-        try:
-            thumbnail_inst = models.Thumbnail.objects.get(url=person_data['image']['srcset'][0])
-        except KeyError:
-            thumbnail_inst = None
-        except models.Thumbnail.DoesNotExist:
-            thumbnail_inst = models.Thumbnail.objects.create(
-                url=person_data['image']['srcset'][0],
-                width=int(person_data['image']['width']),
-                height=int(person_data['image']['height'])
-            )
-
-        person = models.Person.objects.create(
-            full_name=person_data['name'],
-            slug=slugify(person_data['name']),
-            thumbnail=thumbnail_inst,
-            description='\n\n'.join(person_data['description']) if 'description' in person_data else '',
-            headings=person_data['headings'] if 'headings' in person_data else None,
-            infobox_details=person_data['info_box_details'] if 'info_box_details' in person_data else None
-        )
-        # TODO: If person is part of staff, create Staff model as well.
-        if person_data['name'] in STAFF:
-            models.Staff.objects.create(person=person)
-        return person
-
 def get_segment_inst(models, platform, igdb, segmentType, segmentContent):
     '''
     Creates instance of Segment model, saves to database, and returns.
@@ -842,19 +744,7 @@ def get_segment_inst(models, platform, igdb, segmentType, segmentContent):
 
     return segment
 
-def add_model_inst_list_to_field(m2m_field, model_inst_list):
-    '''
-    Adds list of model instances to ManyToManyField.
-
-    Parameters:
-        m2m_field (ManyToManyField):
-        model_inst_list (Model[]):
-    '''
-    for model_inst in model_inst_list:
-        model_inst.save()
-        m2m_field.add(model_inst)
-
-def get_or_create_youtube_video(models, youtube_id, youtube):
+def create_youtube_video(models, youtube_id, youtube):
     '''
     Parameters:
         models (Models): Contains historical version of database models
@@ -929,6 +819,58 @@ def get_or_create_youtube_video(models, youtube_id, youtube):
         # Return newly created YouTubeVideo instance
         return youtube_video_inst
 
+def update_or_create_episode_from_json(models, replay_episode_data, youtube):
+    '''
+    Updates existing Episode, or create a new one, with JSON data.
+
+    Parameters:
+        models (Models): 
+        episode_data (dict): 
+    '''
+    # Get or create YouTubeVideo
+    # Get YouTube ID and title (if needed later to create Episode)
+    youtube_id = None
+    youtube_title = None
+    if 'details' in replay_episode_data and 'external_links' in replay_episode_data['details'] and replay_episode_data['details']['external_links']:
+        for link in replay_episode_data['details']['external_links']:
+            # If link contains YouTube url, set ID, title, and break loop
+            if 'youtube.com' in link['href']:
+                # youtubeVideo.youtube_id = link['href'].split('watch?v=', 1)[1]
+                # youtubeVideo.title = link['title']
+                youtube_id = link['href'].split('watch?v=', 1)[1]
+                youtube_title = link['title']
+                break
+
+    try:
+        youtube_inst = models.YouTubeVideo.objects.get(youtube_id=youtube_id)
+    except models.YouTubeVideo.DoesNotExist:
+        youtube_inst = create_youtube_video(models, youtube_id, youtube)
+
+        # If youtube_inst is still None, add only details in JSON data
+        if youtube_inst is None:
+            youtube_inst = models.YouTubeVideo()
+            # ID
+            # Title
+            # Views
+            # Likes
+            # Thumbnails
+            # Description
+            # Duration
+            # Published At
+            youtube_inst.save()
+
+    # Add dislikes to YouTubeVideo instance
+    try:
+        youtube_inst.dislikes = replay_episode_data['youtube']['dislikes']
+    except KeyError:
+        pass
+    
+    try:
+        episode = models.Episode.objects.get(youtube_video=youtube_inst)
+    except models.Episode.DoesNotExist:
+        episode = models.Episode()
+        episode.save()
+
 def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
@@ -949,7 +891,6 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     # After other fields in Replay instance are set and it's saved to database,
     # can then add to the actual ManyToManyFields.
     manytomany_instances_dict = {
-        'shows': [],
         'featuring': [],
         'external_links': [],
         'main_segment_games': [],
@@ -957,10 +898,6 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     }
 
     # ---------- Episode ----------
-
-    # Add Show instance
-    # replay.show = show_inst
-    manytomany_instances_dict['shows'].append(show_inst)
 
     # Title - replayData.episodeTitle
     replay.title = replayData['episodeTitle']
@@ -1013,7 +950,7 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
                     # youtubeVideo.title = link['title']
                     youtube_id = link['href'].split('watch?v=', 1)[1]
                     youtube_title = link['title']
-                    youtube_video_inst = get_or_create_youtube_video(models, youtube_id, youtube)
+                    youtube_video_inst = create_youtube_video(models, youtube_id, youtube)
                     break
 
         # If failed to find or create YouTube video

@@ -8,13 +8,124 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 
 from utilities.data_migration_constants import SHOWS, STAFF
-from utilities.replay_data_migration import Models, create_total_time_message, add_model_inst_list_to_field, get_person_inst
 from utilities.igdb import IGDB # Make requests to IGDB API
 from utilities.youtube import YouTube # Make requests to YouTube Data API
+from utilities.misc import create_total_time_message # misc utility functions
 
 # TODO:
 # - Search tags to find different Show instances to add to 'shows' field
 # - Move imports from replay_data_migration into this file instead
+
+class Models:
+    def __init__(self, apps):
+        # Cannot import models directly as it may be a newer version
+        # than this migration expects. Use historical versions instead.
+        
+        # Fansite app
+
+        # People app
+        self.Person = apps.get_model('people', 'Person')
+        # self.Guest = apps.get_model('people', 'Guest')
+        # self.StaffPosition = apps.get_model('people', 'StaffPosition')
+        # self.StaffPositionInstance = apps.get_model('people', 'StaffPositionInstance')
+        self.Staff = apps.get_model('people', 'Staff')
+
+        # Game app
+        self.Artwork = apps.get_model('games', 'Artwork')
+        self.Collection = apps.get_model('games', 'Collection')
+        self.Developer = apps.get_model('games', 'Developer')
+        self.Franchise = apps.get_model('games', 'Franchise')
+        self.Game = apps.get_model('games', 'Game')
+        self.GameVideo = apps.get_model('games', 'GameVideo')
+        self.Genre = apps.get_model('games', 'Genre')
+        self.ImageIGDB = apps.get_model('games', 'ImageIGDB')
+        self.Keyword = apps.get_model('games', 'Keyword')
+        self.Platform = apps.get_model('games', 'Platform')
+        self.Screenshot = apps.get_model('games', 'Screenshot')
+        self.Theme = apps.get_model('games', 'Theme')
+        self.Website = apps.get_model('games', 'Website')
+
+        # Replay app
+        self.Article = apps.get_model('replay', 'Article')
+        self.ReplayEpisode = apps.get_model('replay', 'ReplayEpisode')
+        self.ReplaySeason = apps.get_model('replay', 'ReplaySeason')
+        self.Segment = apps.get_model('replay', 'Segment')
+        self.SegmentType = apps.get_model('replay', 'SegmentType')
+
+        # Episodes app
+        self.Episode = apps.get_model('episodes', 'Episode')
+        self.ExternalLink = apps.get_model('episodes', 'ExternalLink')
+        self.Thumbnail = apps.get_model('episodes', 'Thumbnail')
+        self.YouTubeVideo = apps.get_model('episodes', 'YouTubeVideo')
+
+        # Shows app
+        self.Show = apps.get_model('shows', 'Show')
+        self.ShowEpisode = apps.get_model('shows', 'ShowEpisode')
+
+        # Super Replay app
+        self.SuperReplay = apps.get_model('superreplay', 'SuperReplay')
+        self.SuperReplayEpisode = apps.get_model('superreplay', 'SuperReplayEpisode')
+        self.SuperReplayGame = apps.get_model('superreplay', 'SuperReplayGame')
+
+def add_model_inst_list_to_field(m2m_field, model_inst_list):
+    '''
+    Adds list of model instances to ManyToManyField.
+
+    Parameters:
+        m2m_field (ManyToManyField):
+        model_inst_list (Model[]):
+    '''
+    for model_inst in model_inst_list:
+        model_inst.save()
+        m2m_field.add(model_inst)
+
+def get_person_inst(models, person_data):
+    '''
+    Get existing Person model from database or add a new model instance if not in database.
+
+    Parameters:
+        models (Models): 
+        person_data (dict): Dictionary of data about specific person
+        person_data.name (str): Name of person
+
+    Returns:
+        (Person): Matching Person model already existing in database or created and added to the database
+    '''
+    '''
+    info_box_details
+        company
+        position
+        years
+        twitter
+        website
+        ...
+    '''
+    try:
+        return models.Person.objects.get(full_name=person_data['name'])
+    except models.Person.DoesNotExist:
+        try:
+            thumbnail_inst = models.Thumbnail.objects.get(url=person_data['image']['srcset'][0])
+        except KeyError:
+            thumbnail_inst = None
+        except models.Thumbnail.DoesNotExist:
+            thumbnail_inst = models.Thumbnail.objects.create(
+                url=person_data['image']['srcset'][0],
+                width=int(person_data['image']['width']),
+                height=int(person_data['image']['height'])
+            )
+
+        person = models.Person.objects.create(
+            full_name=person_data['name'],
+            slug=slugify(person_data['name']),
+            thumbnail=thumbnail_inst,
+            description='\n\n'.join(person_data['description']) if 'description' in person_data else '',
+            headings=person_data['headings'] if 'headings' in person_data else None,
+            infobox_details=person_data['info_box_details'] if 'info_box_details' in person_data else None
+        )
+        # TODO: If person is part of staff, create Staff model as well.
+        if person_data['name'] in STAFF:
+            models.Staff.objects.create(person=person)
+        return person
 
 def slugify_unique(model, title):
     slug_title = slugify(title)
@@ -38,6 +149,10 @@ def create_episode(models, episode_data):
     Parameters:
         models (Models): 
         episode_data (dict):
+        episode_data.id (string): 
+        episode_data.snippet (dict): 
+        episode_data.contentDetails (dict): 
+        episode_data.statistics (dict):
     '''
     # Check if Episode already exists with matching YouTubeVideo ID.
     try:
@@ -142,6 +257,7 @@ def create_episode(models, episode_data):
                 if name.lower() in youtube_video_inst.tags:
                     person = get_person_inst(models, {'name': name})
                     manytomany_instances_dict['featuring'].append(person)
+                # TODO: Check for names in description 
 
         # External Links
         # Headings
@@ -197,13 +313,19 @@ def create_show_episodes_from_episode(models, episode):
         youtube_tags_lowercase = map(lambda tag: tag.lower(), episode.youtube_video.tags) if episode.youtube_video.tags else []
         for show_key, show_dict in SHOWS.items():
             for show_tag in show_dict['tags']:
+                show_tag_lowercase = show_tag.lower()
                 # YouTubeVideo tags
-                if show_tag.lower() in youtube_tags_lowercase:
+                if show_tag_lowercase in youtube_tags_lowercase:
                     # Add show to list
                     shows.add(show_key)
                     break
                 # YouTubeVideo title
-                if show_tag.lower() in episode.youtube_video.title.lower():
+                # TODO
+                # ISSUE: 'Chronicles' Show matches with video titles of games 
+                # with 'chronicles' in the title (ex. Xenoblade Chronicles).
+                # SOLUTION: Only check for show title at beginning or end of title.
+                youtube_title_lowercase = episode.youtube_video.title.lower()
+                if youtube_title_lowercase.startswith(show_tag_lowercase) or youtube_title_lowercase.endswith(show_tag_lowercase):
                     # Add show to list
                     shows.add(show_key)
                     break
@@ -407,7 +529,7 @@ def initialize_database(apps, schema_editor):
             curr_count = 0
             start_time = time.time()
 
-            for episode_data in all_episode_data:
+            for episode_data in reversed(all_episode_data):
                 episode_inst = create_episode(models, episode_data)
 
                 curr_count += 1
