@@ -842,34 +842,116 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
                 break
 
     try:
-        youtube_inst = models.YouTubeVideo.objects.get(youtube_id=youtube_id)
+        youtube_video_inst = models.YouTubeVideo.objects.get(youtube_id=youtube_id)
     except models.YouTubeVideo.DoesNotExist:
-        youtube_inst = create_youtube_video(models, youtube_id, youtube)
+        youtube_video_inst = create_youtube_video(models, youtube_id, youtube)
 
-        # If youtube_inst is still None, add only details in JSON data
-        if youtube_inst is None:
-            youtube_inst = models.YouTubeVideo()
-            # ID
-            # Title
-            # Views
-            # Likes
-            # Thumbnails
-            # Description
-            # Duration
-            # Published At
-            youtube_inst.save()
+    # If youtube_inst is still None, add only details in JSON data
+    if youtube_video_inst is None:
+        youtube_video_inst = models.YouTubeVideo()
+        # Description - left blank
+        # Duration - left blank
+        # Published At - left blank
+
+        # ID
+        if youtube_id:
+            youtube_video_inst.youtube_id = youtube_id
+
+        # Title
+        if youtube_title:
+            youtube_video_inst.title = youtube_title
+
+        # Views
+        youtube_video_inst.views = replay_episode_data['youtube']['views']
+        
+        # Likes
+        youtube_video_inst.likes = replay_episode_data['youtube']['likes']
+
+        # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
+        youtube_video_inst.save()
+
+        # Thumbnails
+        for key, value in replay_episode_data['youtube']['thumbnails'].items():
+            try:
+                thumbnail = models.Thumbnail.objects.get(url=value['url'])
+            except models.Thumbnail.DoesNotExist:
+                thumbnail = models.Thumbnail.objects.create(
+                    quality=key.upper(),
+                    url=value['url'],
+                    width=value['width'],
+                    height=value['height']
+                )
+            youtube_video_inst.thumbnails.add(thumbnail)
 
     # Add dislikes to YouTubeVideo instance
     try:
-        youtube_inst.dislikes = replay_episode_data['youtube']['dislikes']
+        youtube_video_inst.dislikes = replay_episode_data['youtube']['dislikes']
     except KeyError:
         pass
     
+    # Update or create Episode using YouTubeVideo instance
     try:
-        episode = models.Episode.objects.get(youtube_video=youtube_inst)
+        episode = models.Episode.objects.get(youtube_video=youtube_video_inst)
     except models.Episode.DoesNotExist:
         episode = models.Episode()
+
+        # Add YouTubeVideo to Episode
+        episode.youtube_video = youtube_video_inst
+
         episode.save()
+
+    # Dictionary to hold model instances for ManyToManyFields.
+    # Key is field name and value is list of model instances.
+    # After other fields in Replay instance are set and it's saved to database,
+    # can then add to the actual ManyToManyFields.
+    manytomany_instances_dict = {
+        'featuring': [],
+        'external_links': [],
+    }
+
+    # Title
+    if not episode.title:
+        episode.title = replay_episode_data['episodeTitle']
+
+    # Host
+    # Featuring
+    # External Links
+    # Headings
+    # Runtime
+    # Airdate
+
+    return episode
+
+def create_replay_episode_from_json(models, replay_episode_data, replay_show_inst, igdb, youtube):
+    '''
+    Converts dictionary of key/value pairs into defined models inside database for data migration.
+
+    Parameters:
+        models (Models):
+        replay_episode_data (dict):
+        replay_show_inst (Show):
+        igdb (IGDB): 
+        youtube (YouTube): 
+    '''
+    # Create Replay episode object
+    replay_episode = models.ReplayEpisode()
+
+    # Dictionary to hold model instances for ManyToManyFields.
+    # Key is field name and value is list of model instances.
+    # After other fields in Replay instance are set and it's saved to database,
+    # can then add to the actual ManyToManyFields.
+    manytomany_instances_dict = {
+        'main_segment_games': [],
+        'other_segments': [],
+    }
+
+    # ReplayEpisode Slug - convert 'title' field
+    replay_episode.slug = slugify(re.sub(r'Replay:\s?', '', replay_episode.title, 1, re.IGNORECASE))
+    
+    # Create or get updated Episode instance using JSON data
+    replay_episode.episode = update_or_create_episode_from_json(models, replay_episode_data, youtube)
+
+    replay_episode.save()
 
 def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     '''
