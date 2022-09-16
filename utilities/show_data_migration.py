@@ -79,9 +79,9 @@ def add_model_inst_list_to_field(m2m_field, model_inst_list):
         model_inst.save()
         m2m_field.add(model_inst)
 
-def get_person_inst(models, person_data):
+def get_or_create_person_inst(models, person_data):
     '''
-    Get existing Person model from database or add a new model instance if not in database.
+    Get existing Person model from database or create a new model instance if not in database.
 
     Parameters:
         models (Models): 
@@ -255,7 +255,7 @@ def create_episode(models, episode_data):
         if youtube_video_inst.tags:
             for name in STAFF:
                 if name.lower() in youtube_video_inst.tags:
-                    person = get_person_inst(models, {'name': name})
+                    person = get_or_create_person_inst(models, {'name': name})
                     manytomany_instances_dict['featuring'].append(person)
                 # TODO: Check for names in description 
 
@@ -478,7 +478,7 @@ def create_episode_old(models, episode_data, show_inst, igdb, youtube):
         if youtube_video_inst.tags:
             for name in STAFF:
                 if name.lower() in youtube_video_inst.tags:
-                    person = get_person_inst(models, {'name': name})
+                    person = get_or_create_person_inst(models, {'name': name})
                     manytomany_instances_dict['featuring'].append(person)
 
         # External Links
