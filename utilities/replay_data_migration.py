@@ -7,8 +7,8 @@ import re
 from django.db.models import Q
 from django.utils import timezone
 from utilities.igdb import IGDB # Make requests from IGDB API
-from utilities.data_migration_constants import SEGMENT_TYPES, GAME_NAME_ALTERNATIVES # Separate file to hold constants
-from utilities.show_data_migration import Models, add_model_inst_list_to_field, get_or_create_person_inst
+from utilities.data_migration_constants import SEGMENT_TYPES, GAME_NAME_ALTERNATIVES, SHOWS # Separate file to hold constants
+from utilities.show_data_migration import Models, add_model_inst_list_to_field, get_or_create_person_inst, get_or_create_show
 from utilities.misc import create_total_time_message # misc utility functions
 from utilities.youtube import YouTube
 from django.template.defaultfilters import slugify
@@ -999,16 +999,22 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
                 timezone=timezone.get_current_timezone()
             )
 
+    # Save Episode to database
+    episode.save()
+
+    # Now that Replay is saved to database, add ManyToManyFields
+    add_model_inst_list_to_field(episode.featuring, manytomany_instances_dict['featuring'])
+    add_model_inst_list_to_field(episode.external_links, manytomany_instances_dict['external_links'])
+
     return episode
 
-def create_replay_episode_from_json(models, replay_episode_data, replay_show_inst, igdb, youtube):
+def create_replay_episode_from_json(models, replay_episode_data, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
 
     Parameters:
         models (Models):
         replay_episode_data (dict):
-        replay_show_inst (Show):
         igdb (IGDB): 
         youtube (YouTube): 
     '''
@@ -1030,15 +1036,158 @@ def create_replay_episode_from_json(models, replay_episode_data, replay_show_ins
     # Create or get updated Episode instance using JSON data
     replay_episode.episode = update_or_create_episode_from_json(models, replay_episode_data, youtube)
 
-    # Replay Show
+    # Show
+    replay_episode.show = get_or_create_show(models, SHOWS['replay'])
 
-    # Season
-    # Number
+    # Season and Number
+    if 'episodeNumber' in replay_episode_data and replay_episode_data['episodeNumber']:
+        # Check for unofficial episodes (number is str and between 0 exclusive to 1 exclusive)
+        # 0.01 to 0.14 converted to -1 to -14
+        episode_number = replay_episode_data['episodeNumber']
+        if type(episode_number) is str:
+            episode_number = -int(float(episode_number) * 100)
+        replay_episode.number = episode_number
+
+        # Season - calculate using replay_episode_data.episodeNumber (ForeignKey)
+        season = get_season(replay_episode)[0]
+        try:
+            replay_episode.season = models.ReplaySeason.objects.get(pk=season)
+        except models.ReplaySeason.DoesNotExist:
+            replay_episode.season = models.ReplaySeason.objects.create(
+                number=season
+            )
+    
     # Main Segment Games
-    # Other Segments
-    # Article
+    # Main Segment Games - replay_episode_data.mainSegmentGamesAdv, replay_episode_data.details.system, replay_episode_data.details.gamedate (ManyToMany)
+    if 'mainSegmentGamesAdv' in replay_episode_data:
+        for game in replay_episode_data['mainSegmentGamesAdv']:
+            # Game - Name
+            game_name = game['title']
 
+            # Game - Year Released
+            game_year_released = game['yearReleased']
+
+            # Game - Platform
+            platform_name = game['system']
+
+            game_inst = get_game_inst(
+                models,
+                igdb=igdb, 
+                name=game_name, 
+                platform_name=platform_name, 
+                year_released=game_year_released
+            )
+            if game_inst is not None:
+                manytomany_instances_dict['main_segment_games'].append(game_inst)
+    
+    # Use most played platform from main_segment_games field to search for games in other segments
+    # TODO: Why not search all platforms?
+    platform = None # Platform string OR number of IGDB platform code
+    if manytomany_instances_dict['main_segment_games']:
+        # key: IGDB platform ID
+        # value: number of games with this platform in main_segment_games
+        platform_count = {}
+        
+        for game in manytomany_instances_dict['main_segment_games']:
+            for platform in game.platforms.all():
+                if platform is None:
+                    continue
+                if platform.id in platform_count:
+                    platform_count[platform.id] += 1
+                else:
+                    platform_count[platform.id] = 1
+        
+        # Use platform id with highest count
+        max_count = 0
+        for id, count in platform_count.items():
+            if count > max_count:
+                max_count = count
+                platform = int(id)
+
+    # Other Segments - replay_episode_data.details (ManyToMany)
+    # replay_episode_data.middleSegment, replay_episode_data.middleSegmentContent
+    # If middleSegment or middleSegmentContent are NOT blank
+    if 'middleSegment' in replay_episode_data and (replay_episode_data['middleSegment'] or replay_episode_data['middleSegmentContent']):
+        # - middleSegment could be blank while middleSegmentContent has value
+        # - middleSegment is blank if middleSegmentContent is blank
+        # - both can be blank
+        # - Could have games or description
+
+        # If middleSegment is blank AND middleSegmentContent is NOT blank
+        #     Segment is 'Ad' OR RR game OR Red Faction D&D Skit
+
+        # Ads do not always have middleSegment blank. Could be labeled under 'Moments'.
+        # Should instead add Ads to Moments segment rather then Advertisement
+        # OR add single Moments advertisement to Advertisement segment.
+
+        segmentType = replay_episode_data['middleSegment']
+        segmentContent = replay_episode_data['middleSegmentContent']
+        
+        if segmentContent:
+            manytomany_instances_dict['other_segments'].append(
+                get_segment_inst(
+                    models,
+                    platform, 
+                    igdb, 
+                    segmentType, 
+                    [segmentContent] # Add content to list
+                )
+            )
+
+    # replay_episode_data.secondSegment, replay_episode_data.secondSegmentGames
+    if 'secondSegment' in replay_episode_data:
+        segmentType = replay_episode_data['secondSegment']
+        segmentContent = replay_episode_data['secondSegmentGames']
+
+        if segmentContent:
+            manytomany_instances_dict['other_segments'].append(
+                get_segment_inst(
+                    models,
+                    platform, 
+                    igdb, 
+                    segmentType, 
+                    segmentContent # Assuming content is list
+                )
+            )
+
+    # Article - replay_episode_data.article  (OneToOne)
+    if 'article' in replay_episode_data:
+        article = models.Article()
+
+        # Title - replay_episode_data.article.title
+        article.title = replay_episode_data['article']['title']
+
+        # Author - replay_episode_data.article.author
+        # TODO: Add Staff to author field
+        article.author = get_or_create_person_inst(models, {'name': replay_episode_data['article']['author']})
+
+        # Datetime - replay_episode_data.article.date
+        # " on Sep 26, 2015 at 03:00 AM"
+        article.datetime = timezone.make_aware(
+            datetime.datetime.strptime(replay_episode_data['article']['date'], ' on %b %d, %Y at %I:%M %p'),
+            timezone=timezone.get_current_timezone()
+        )
+
+        # Content - replay_episode_data.article.content
+        article.content = '\n\n'.join(replay_episode_data['article']['content'])
+
+        # URL - replay_episode_data.details.external_links
+        if 'details' in replay_episode_data and 'external_links' in replay_episode_data['details'] and replay_episode_data['details']['external_links']:
+            for link in replay_episode_data['details']['external_links']:
+                # If link contains GameInformer url, set ID, title, and break loop
+                if 'gameinformer.com' in link['href']:
+                    article.url = link['href']
+                    break
+
+        article.save()
+        replay_episode.article = article
+
+    # Save Replay episode object to database
     replay_episode.save()
+
+    # Now that Replay is saved to database, add ManyToManyFields
+    add_model_inst_list_to_field(replay_episode.main_segment_games, manytomany_instances_dict['main_segment_games'])
+    add_model_inst_list_to_field(replay_episode.other_segments, manytomany_instances_dict['other_segments'])
 
 def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     '''
@@ -1354,9 +1503,9 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     add_model_inst_list_to_field(replay.main_segment_games, manytomany_instances_dict['main_segment_games'])
     add_model_inst_list_to_field(replay.other_segments, manytomany_instances_dict['other_segments'])
 
-def database_init(apps):
+def initialize_segmenttype_database(apps):
     '''
-    Initializes database with known data.
+    Initializes database with known data of Replay segment types.
 
     Parameters:
         apps (): 
@@ -1370,8 +1519,6 @@ def database_init(apps):
             slug=slugify(title),
             description=segment_content_dict['description'] if 'description' in segment_content_dict else ''
         )
-
-    # Create Person and Staff models
 
 def create_person_from_json(person_data, models):
     '''
@@ -1419,6 +1566,8 @@ def initialize_database(apps, schema_editor):
 
     initialize_people_database(models)
 
+    initialize_segmenttype_database(apps)
+
     with open('utilities/replay_data.json', 'r', encoding='utf-8') as dataFile:
 
         # Get Replay episode data
@@ -1437,16 +1586,17 @@ def initialize_database(apps, schema_editor):
             youtube = YouTube()
 
             # Replay Show instance
-            try:
-                show_inst = models.Show.objects.get(name='Replay')
-            except models.Show.DoesNotExist:
-                show_inst = models.Show.objects.create(
-                    name='Replay',
-                    slug='replay'
-                )
+            # try:
+            #     show_inst = models.Show.objects.get(name='Replay')
+            # except models.Show.DoesNotExist:
+            #     show_inst = models.Show.objects.create(
+            #         name='Replay',
+            #         slug='replay'
+            #     )
 
             for replayData in reversed(allReplayData):
-                createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube)
+                # createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube)
+                create_replay_episode_from_json(models, replayData, igdb, youtube)
 
                 curr_replay_count += 1
                 avg_seconds_per_replay = (time.time() - start_time) / curr_replay_count
