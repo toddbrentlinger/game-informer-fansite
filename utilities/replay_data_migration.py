@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 from utilities.igdb import IGDB # Make requests from IGDB API
 from utilities.data_migration_constants import SEGMENT_TYPES, GAME_NAME_ALTERNATIVES, SHOWS # Separate file to hold constants
-from utilities.show_data_migration import Models, add_model_inst_list_to_field, get_or_create_person_inst, get_or_create_show
+from utilities.show_data_migration import Models, add_model_inst_list_to_field, update_or_create_person_inst, get_or_create_show
 from utilities.misc import create_total_time_message # misc utility functions
 from utilities.youtube import YouTube
 from django.template.defaultfilters import slugify
@@ -918,7 +918,7 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
         # Featuring - replay_episode_data.details.featuring (ManyToMany)
         if 'featuring' in replay_episode_data['details'] and replay_episode_data['details']['featuring']:
             for personName in replay_episode_data['details']['featuring']:
-                person = get_or_create_person_inst(models, {'name': personName})
+                person = update_or_create_person_inst(models, {'name': personName})
                 
                 # If person is NOT already in featuring property, add to dict of ManyToMany instances
                 if person not in episode.featuring.all():
@@ -926,7 +926,7 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
 
         # Host - replay_episode_data.details.host (ForeignKey)
         if 'host' in replay_episode_data['details'] and replay_episode_data['details']['host']:
-            episode.host = get_or_create_person_inst(models, {'name': replay_episode_data['details']['host'][0]})
+            episode.host = update_or_create_person_inst(models, {'name': replay_episode_data['details']['host'][0]})
             
             # If same person is listed in featuring property, remove it
             if episode.host in episode.featuring_set.all():
@@ -1159,7 +1159,7 @@ def create_replay_episode_from_json(models, replay_episode_data, igdb, youtube):
 
         # Author - replay_episode_data.article.author
         # TODO: Add Staff to author field
-        article.author = get_or_create_person_inst(models, {'name': replay_episode_data['article']['author']})
+        article.author = update_or_create_person_inst(models, {'name': replay_episode_data['article']['author']})
 
         # Datetime - replay_episode_data.article.date
         # " on Sep 26, 2015 at 03:00 AM"
@@ -1189,6 +1189,7 @@ def create_replay_episode_from_json(models, replay_episode_data, igdb, youtube):
     add_model_inst_list_to_field(replay_episode.main_segment_games, manytomany_instances_dict['main_segment_games'])
     add_model_inst_list_to_field(replay_episode.other_segments, manytomany_instances_dict['other_segments'])
 
+# TODO: Delete this method? No longer used.
 def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     '''
     Converts dictionary of key/value pairs into defined models inside database for data migration.
@@ -1245,12 +1246,12 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
     if 'details' in replayData:
         # Host - replayData.details.host (ForeignKey)
         if 'host' in replayData['details'] and replayData['details']['host']:
-            replay.host = get_or_create_person_inst(models, {'name': replayData['details']['host'][0]})
+            replay.host = update_or_create_person_inst(models, {'name': replayData['details']['host'][0]})
 
         # Featuring - replayData.details.featuring (ManyToMany)
         if 'featuring' in replayData['details'] and replayData['details']['featuring']:
             for personName in replayData['details']['featuring']:
-                person = get_or_create_person_inst(models, {'name': personName})
+                person = update_or_create_person_inst(models, {'name': personName})
                 manytomany_instances_dict['featuring'].append(person)
 
     # YouTube Video - replayData.youtube (OneToOne)
@@ -1470,7 +1471,7 @@ def createReplayEpisodeFromJSON(models, replayData, show_inst, igdb, youtube):
 
         # Author - replayData.article.author
         # TODO: Add Staff to author field
-        article.author = get_or_create_person_inst(models, {'name': replayData['article']['author']})
+        article.author = update_or_create_person_inst(models, {'name': replayData['article']['author']})
 
         # Datetime - replayData.article.date
         # " on Sep 26, 2015 at 03:00 AM"
@@ -1520,6 +1521,7 @@ def initialize_segmenttype_database(apps):
             description=segment_content_dict['description'] if 'description' in segment_content_dict else ''
         )
 
+# TODO: Delete method? Not called anymore.
 def create_person_from_json(person_data, models):
     '''
     Converts dictionary of key/value pairs of Game Informer staff/guest into defined models inside database for data migration.
@@ -1529,7 +1531,7 @@ def create_person_from_json(person_data, models):
         models (Models):
     '''
 
-    get_or_create_person_inst(models, person_data)
+    update_or_create_person_inst(models, person_data)
 
 def initialize_people_database(models):
     '''
@@ -1552,7 +1554,7 @@ def initialize_people_database(models):
         start_time = time.time()
 
         for person_data in reversed(people_data):
-            create_person_from_json(person_data, models)
+            update_or_create_person_inst(models, person_data)
 
             curr_count += 1
 

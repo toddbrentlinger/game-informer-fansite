@@ -79,9 +79,9 @@ def add_model_inst_list_to_field(m2m_field, model_inst_list):
         model_inst.save()
         m2m_field.add(model_inst)
 
-def get_or_create_person_inst(models, person_data):
+def update_or_create_person_inst(models, person_data):
     '''
-    Get existing Person model from database or create a new model instance if not in database.
+    Update existing Person model from database or create a new model instance if not in database.
 
     Parameters:
         models (Models): 
@@ -101,31 +101,36 @@ def get_or_create_person_inst(models, person_data):
         ...
     '''
     try:
-        return models.Person.objects.get(full_name=person_data['name'])
+        person = models.Person.objects.get(full_name=person_data['name'])
     except models.Person.DoesNotExist:
-        try:
-            thumbnail_inst = models.Thumbnail.objects.get(url=person_data['image']['srcset'][0])
-        except KeyError:
-            thumbnail_inst = None
-        except models.Thumbnail.DoesNotExist:
-            thumbnail_inst = models.Thumbnail.objects.create(
-                url=person_data['image']['srcset'][0],
-                width=int(person_data['image']['width']),
-                height=int(person_data['image']['height'])
-            )
+        person = models.Person()
 
-        person = models.Person.objects.create(
-            full_name=person_data['name'],
-            slug=slugify(person_data['name']),
-            thumbnail=thumbnail_inst,
-            description='\n\n'.join(person_data['description']) if 'description' in person_data else '',
-            headings=person_data['headings'] if 'headings' in person_data else None,
-            infobox_details=person_data['info_box_details'] if 'info_box_details' in person_data else None
+    try:
+        thumbnail_inst = models.Thumbnail.objects.get(url=person_data['image']['srcset'][0])
+    except KeyError:
+        thumbnail_inst = None
+    except models.Thumbnail.DoesNotExist:
+        thumbnail_inst = models.Thumbnail.objects.create(
+            url=person_data['image']['srcset'][0],
+            width=int(person_data['image']['width']),
+            height=int(person_data['image']['height'])
         )
-        # TODO: If person is part of staff, create Staff model as well.
-        if person_data['name'] in STAFF:
-            models.Staff.objects.create(person=person)
-        return person
+    person.thumbnail = thumbnail_inst
+
+    person.full_name = person_data['name']
+    person.slug = slugify(person_data['name'])
+    person.description = '\n\n'.join(person_data['description']) if 'description' in person_data else ''
+    person.headings = person_data['headings'] if 'headings' in person_data else None
+    person.infobox_details = person_data['info_box_details'] if 'info_box_details' in person_data else None
+    
+    # Save person instance in case it was just created
+    person.save()
+
+    # TODO: If person is part of staff, create Staff model as well.
+    if person_data['name'] in STAFF:
+        models.Staff.objects.create(person=person)
+    
+    return person
 
 def slugify_unique(model, title):
     slug_title = slugify(title)
@@ -255,7 +260,7 @@ def create_episode(models, episode_data):
         if youtube_video_inst.tags:
             for name in STAFF:
                 if name.lower() in youtube_video_inst.tags:
-                    person = get_or_create_person_inst(models, {'name': name})
+                    person = update_or_create_person_inst(models, {'name': name})
                     manytomany_instances_dict['featuring'].append(person)
                 # TODO: Check for names in description 
 
@@ -478,7 +483,7 @@ def create_episode_old(models, episode_data, show_inst, igdb, youtube):
         if youtube_video_inst.tags:
             for name in STAFF:
                 if name.lower() in youtube_video_inst.tags:
-                    person = get_or_create_person_inst(models, {'name': name})
+                    person = update_or_create_person_inst(models, {'name': name})
                     manytomany_instances_dict['featuring'].append(person)
 
         # External Links
