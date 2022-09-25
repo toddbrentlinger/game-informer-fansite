@@ -127,7 +127,7 @@ def update_or_create_person_inst(models, person_data):
     person.save()
 
     # TODO: If person is part of staff, create Staff model as well.
-    if person_data['name'] in STAFF:
+    if person_data['name'] in STAFF and not models.Staff.objects.filter(person=person).exists():
         models.Staff.objects.create(person=person)
     
     return person
@@ -550,3 +550,23 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+'''
+from django.db import migrations
+from django.contrib.postgres.operations import TrigramExtension, UnaccentExtension
+from utilities.show_data_migration import initialize_database as show_init
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('episodes', '0002_initial'),
+        ('people', '0001_initial'),
+        ('shows', '0001_initial'),
+    ]
+
+    operations = [
+        TrigramExtension(),
+        UnaccentExtension(),
+        migrations.RunPython(show_init),
+    ]
+'''

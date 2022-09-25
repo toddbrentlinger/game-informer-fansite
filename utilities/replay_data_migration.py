@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 from utilities.igdb import IGDB # Make requests from IGDB API
 from utilities.data_migration_constants import SEGMENT_TYPES, GAME_NAME_ALTERNATIVES, SHOWS # Separate file to hold constants
-from utilities.show_data_migration import Models, add_model_inst_list_to_field, update_or_create_person_inst, get_or_create_show
+from utilities.show_data_migration import Models, add_model_inst_list_to_field, slugify_unique, update_or_create_person_inst, get_or_create_show
 from utilities.misc import create_total_time_message # misc utility functions
 from utilities.youtube import YouTube
 from django.template.defaultfilters import slugify
@@ -751,6 +751,10 @@ def create_youtube_video(models, youtube_id, youtube):
         youtube_id (str): YouTube video ID
         youtube (YouTube): Used to request data from YouTube Data API
     '''
+    # Check YouTube ID validity
+    if youtube_id is None:
+        return None
+
     # Get video data using YouTube Data API
     youtube_response = youtube.get_youtube_video_data(youtube_id)
 
@@ -829,6 +833,7 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
     '''
     # Get or create YouTubeVideo
     # Get YouTube ID and title (if needed later to create Episode)
+    #print('Episode Data: ', pprint.pprint(replay_episode_data, indent=2))
     youtube_id = None
     youtube_title = None
     if 'details' in replay_episode_data and 'external_links' in replay_episode_data['details'] and replay_episode_data['details']['external_links']:
@@ -861,11 +866,14 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
         if youtube_title:
             youtube_video_inst.title = youtube_title
 
-        # Views
-        youtube_video_inst.views = replay_episode_data['youtube']['views']
-        
-        # Likes
-        youtube_video_inst.likes = replay_episode_data['youtube']['likes']
+        if 'youtube' in replay_episode_data:
+            # Views
+            if 'views' in replay_episode_data['youtube']:
+                youtube_video_inst.views = replay_episode_data['youtube']['views']
+            
+            # Likes
+            if 'likes' in replay_episode_data['youtube']:
+                youtube_video_inst.likes = replay_episode_data['youtube']['likes']
 
         # Save YouTubeVideo before adding Thumbnails through Many-to-Many relationship
         youtube_video_inst.save()
@@ -898,8 +906,6 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
         # Add YouTubeVideo to Episode
         episode.youtube_video = youtube_video_inst
 
-        episode.save()
-
     # Dictionary to hold model instances for ManyToManyFields.
     # Key is field name and value is list of model instances.
     # After other fields in Replay instance are set and it's saved to database,
@@ -912,6 +918,33 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
     # Title
     if not episode.title:
         episode.title = replay_episode_data['episodeTitle']
+
+    # Slug
+    if not episode.slug:
+        episode.slug = slugify_unique(models.Episode, episode.title)
+
+    # Runtime - replayData.details.runtime AND replayData.videoLength
+    if not episode.runtime:
+        if 'details' in replay_episode_data and 'runtime' in replay_episode_data['details']:
+            episode.runtime = replay_episode_data['details']['runtime']
+        elif 'videoLength' in replay_episode_data and replay_episode_data['videoLength']:
+            episode.runtime = replay_episode_data['videoLength']
+
+    # Airdate - replayData.airDate AND replayData.details.airdate
+    if not episode.airdate:
+        if 'airdate' in replay_episode_data and replay_episode_data['airDate']:
+            episode.airdate = timezone.make_aware(
+                datetime.datetime.strptime(replay_episode_data['airDate'],'%m/%d/%y'), # month/day/year
+                timezone=timezone.get_current_timezone()
+            )
+        elif 'details' in replay_episode_data and 'airdate' in replay_episode_data['details'] and replay_episode_data['details']['airdate']:
+            episode.airdate = timezone.make_aware(
+                datetime.datetime.strptime(replay_episode_data['details']['airdate'], '%B %d, %Y'), # month day, year
+                timezone=timezone.get_current_timezone()
+            )
+
+    # Save Episode to database before accessing Many-To-Many fields
+    episode.save()
 
     # Host/Featuring/Guests inside 'details'
     if 'details' in replay_episode_data:
@@ -929,8 +962,8 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
             episode.host = update_or_create_person_inst(models, {'name': replay_episode_data['details']['host'][0]})
             
             # If same person is listed in featuring property, remove it
-            if episode.host in episode.featuring_set.all():
-                episode.featuring_set.remove(episode.host)
+            if episode.host in episode.featuring.all():
+                episode.featuring.remove(episode.host)
 
     # External Links and Other Headings inside 'details'
     if 'details' in replay_episode_data:
@@ -960,7 +993,7 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
                     )
                     
                 # If external link is NOT already in external links property, add to dict of ManyToMany instances
-                if external_link not in episode.external_links_set.all():
+                if external_link not in episode.external_links.all():
                     manytomany_instances_dict['external_links'].append(external_link)
             
     # Fandom Link - replayData.fandomWikiURL (ManyToMany)
@@ -976,31 +1009,11 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
             )
             
         # If external link is NOT already in external links property, add to dict of ManyToMany instances
-        if external_link not in episode.external_links_set.all():
+        if external_link not in episode.external_links.all():
             manytomany_instances_dict['external_links'].append(external_link)
 
-    # Runtime - replayData.details.runtime AND replayData.videoLength
-    if not episode.runtime:
-        if 'details' in replay_episode_data and 'runtime' in replay_episode_data['details']:
-            episode.runtime = replay_episode_data['details']['runtime']
-        elif 'videoLength' in replay_episode_data and replay_episode_data['videoLength']:
-            episode.runtime = replay_episode_data['videoLength']
-
-    # Airdate - replayData.airDate AND replayData.details.airdate
-    if not episode.airdate:
-        if 'airdate' in replay_episode_data and replay_episode_data['airDate']:
-            episode.airdate = timezone.make_aware(
-                datetime.datetime.strptime(replay_episode_data['airDate'],'%m/%d/%y'), # month/day/year
-                timezone=timezone.get_current_timezone()
-            )
-        elif 'details' in replay_episode_data and 'airdate' in replay_episode_data['details'] and replay_episode_data['details']['airdate']:
-            episode.airdate = timezone.make_aware(
-                datetime.datetime.strptime(replay_episode_data['details']['airdate'], '%B %d, %Y'), # month day, year
-                timezone=timezone.get_current_timezone()
-            )
-
     # Save Episode to database
-    episode.save()
+    #episode.save()
 
     # Now that Replay is saved to database, add ManyToManyFields
     add_model_inst_list_to_field(episode.featuring, manytomany_instances_dict['featuring'])
@@ -1030,14 +1043,27 @@ def create_replay_episode_from_json(models, replay_episode_data, igdb, youtube):
         'other_segments': [],
     }
 
-    # ReplayEpisode Slug - convert 'title' field
-    replay_episode.slug = slugify(re.sub(r'Replay:\s?', '', replay_episode.title, 1, re.IGNORECASE))
+    # ShowEpisode
     
     # Create or get updated Episode instance using JSON data
-    replay_episode.episode = update_or_create_episode_from_json(models, replay_episode_data, youtube)
-
+    episode = update_or_create_episode_from_json(models, replay_episode_data, youtube)
     # Show
-    replay_episode.show = get_or_create_show(models, SHOWS['replay'])
+    replay_show = get_or_create_show(models, SHOWS['replay'])
+
+    try:
+        showepisode = models.ShowEpisode.objects.get(
+            episode=episode, 
+            show=replay_show
+        )
+        # If ShowEpisode was found, delete from database to create ReplayEpisode instead
+    except models.ShowEpisode.DoesNotExist:
+        pass
+
+    replay_episode.episode = episode
+    replay_episode.show = replay_show
+
+    # ReplayEpisode Slug - convert 'title' field
+    replay_episode.slug = slugify(re.sub(r'Replay:\s?', '', replay_episode.episode.title, 1, re.IGNORECASE))
 
     # Season and Number
     if 'episodeNumber' in replay_episode_data and replay_episode_data['episodeNumber']:
@@ -1513,7 +1539,7 @@ def initialize_segmenttype_database(apps):
     '''
     # Create Segment models
     SegmentType = apps.get_model('replay', 'SegmentType')
-    for title, abbreviation, gameTextID, segment_content_dict in SEGMENT_TYPES.items():
+    for title, abbreviation, gameTextID, segment_content_dict in SEGMENT_TYPES:
         SegmentType.objects.create(
             title=title, 
             abbreviation=abbreviation if abbreviation is not None else '', 
@@ -1676,4 +1702,23 @@ class Migration(migrations.Migration):
         TrigramExtension(),
         UnaccentExtension(),
     ]
+
+from django.db import migrations
+from utilities.replay_data_migration import initialize_database as replay_init
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('fansite', '0001_initial'),
+        ('episodes', '0002_initial'),
+        ('games', '0001_initial'),
+        ('people', '0001_initial'),
+        ('replay', '0001_initial'),
+        ('shows', '0001_initial'),
+    ]
+
+    operations = [
+        migrations.RunPython(replay_init),
+    ]
+
 '''

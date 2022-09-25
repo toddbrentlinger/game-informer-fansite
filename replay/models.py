@@ -46,11 +46,12 @@ class Article(models.Model):
 
 # TODO: Replace 'middle_segment' and 'second_segment' with 'segments' ManyToManyField.
 # Should add main segment inside segments instead of having separate field just for main segment games?
-class ReplayEpisode(ShowEpisode):
+class ReplayEpisode(models.Model):
     """Model representing an episode of Replay."""
 
     # Fields
 
+    show_episode = models.OneToOneField(ShowEpisode, on_delete=models.PROTECT, help_text='Enter show episode for the Replay episode.')
     season = models.ForeignKey('ReplaySeason', on_delete=models.CASCADE, verbose_name='Replay Season', help_text='Enter season of the Replay episode.')
     number = models.SmallIntegerField(unique=True, help_text='Enter Replay episode number (unofficial episodes use negative numbers).')
     main_segment_games = models.ManyToManyField(Game, verbose_name='Main Segment Games', help_text='Enter any games part of the main segment of the Replay episode.')
