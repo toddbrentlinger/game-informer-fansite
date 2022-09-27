@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 from utilities.igdb import IGDB # Make requests from IGDB API
 from utilities.data_migration_constants import SEGMENT_TYPES, GAME_NAME_ALTERNATIVES, SHOWS # Separate file to hold constants
-from utilities.show_data_migration import Models, add_model_inst_list_to_field, slugify_unique, update_or_create_person_inst, get_or_create_show
+from utilities.show_data_migration import Models, add_model_inst_list_to_field, slugify_unique, update_or_create_person_inst, get_or_create_show, create_show_episode_slug
 from utilities.misc import create_total_time_message # misc utility functions
 from utilities.youtube import YouTube
 from django.template.defaultfilters import slugify
@@ -1051,20 +1051,17 @@ def create_replay_episode_from_json(models, replay_episode_data, igdb, youtube):
     replay_show = get_or_create_show(models, SHOWS['replay'])
 
     try:
-        showepisode = models.ShowEpisode.objects.get(
+        replay_episode.show_episode = models.ShowEpisode.objects.get(
             episode=episode, 
             show=replay_show
         )
-        # If ShowEpisode was found, delete from database to create ReplayEpisode instead
     except models.ShowEpisode.DoesNotExist:
-        pass
-
-    replay_episode.episode = episode
-    replay_episode.show = replay_show
-
-    # ReplayEpisode Slug - convert 'title' field
-    replay_episode.slug = slugify(re.sub(r'Replay:\s?', '', replay_episode.episode.title, 1, re.IGNORECASE))
-
+        replay_episode.show_episode = models.ShowEpisode.objects.create(
+            episode=episode,
+            show=replay_show,
+            slug=create_show_episode_slug(models, episode, SHOWS['replay']['tags'])
+        )
+    
     # Season and Number
     if 'episodeNumber' in replay_episode_data and replay_episode_data['episodeNumber']:
         # Check for unofficial episodes (number is str and between 0 exclusive to 1 exclusive)
