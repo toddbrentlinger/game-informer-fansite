@@ -18,6 +18,7 @@ from people.models import Person
 # 3/6/22 - Headings Issue: Could create abstract model 'Heading', then create different type of headings (Text, Quotes, Gallery, etc)
 # with ForeignKey field 'episode'. Episode could have multiple TextHeadings but TextHeading has only one episode.
 # 8/19/22 - Move main_segment_games field from ReplayEpisode to Episode?
+# 9/13/22 - Make youtube_video field unique. Can field be unique AND blank? Yes, Null !== Null
 class Episode(models.Model):
     # Fields
 
@@ -25,7 +26,7 @@ class Episode(models.Model):
     title = models.CharField(max_length=100, help_text='Enter title of the episode.')
     host = models.ForeignKey(Person, related_name='%(app_label)s_%(class)s_host_related', related_query_name='%(app_label)s_%(class)ss_host', on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter person who hosts the episode.')
     featuring = models.ManyToManyField(Person, related_name='%(app_label)s_%(class)s_featuring_related', related_query_name='%(app_label)s_%(class)ss_featuring', blank=True, help_text='Enter people who feature in the episode (NOT including the host).')
-    youtube_video = models.OneToOneField('YouTubeVideo', blank=True, null=True, on_delete=models.SET_NULL, help_text='Enter YouTube video of the episode.')
+    youtube_video = models.OneToOneField('YouTubeVideo', unique=True, blank=True, null=True, on_delete=models.SET_NULL, help_text='Enter YouTube video of the episode.')
     external_links = models.ManyToManyField('ExternalLink', blank=True, verbose_name='External Links', help_text='Enter any external URL links (NOT including YouTube video).')
     headings = models.JSONField(null=True, blank=True, help_text='Enter JSON of different headings with key being the heading title and value being the content.')
     # TODO: Move slug into ReplayEpisode and SuperReplayEpisode in case of YouTube title duplicates
@@ -233,7 +234,11 @@ class YouTubeVideo(models.Model):
     @property
     def duration_formatted(self):
         pattern = r'^PT(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+)S)?$'
+        
         match = re.search(pattern, self.duration)
+        if match is None:
+            return None
+            
         groups = list(match.groups())
 
         # Remove any None from beginning of groups tuple

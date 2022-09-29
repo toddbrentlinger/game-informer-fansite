@@ -72,6 +72,10 @@
 
     {% block games %}{% endblock %}
 
+    {% if episode.youtube_video.description %}
+        <p>{{ episode.youtube_video.description }}</p>
+    {% endif %}
+
     {% if episode.youtube_video.tags %}
         <p>{{ episode.youtube_video.tags }}</p>
     {% endif %}
@@ -94,6 +98,8 @@
             {% endif %}
         {% endfor %}
     {% endif %}
+
+    {% block article %}{% endblock %}
 
     {% if episode.external_links.all %}
         <hr>
