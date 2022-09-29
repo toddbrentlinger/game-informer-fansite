@@ -68,19 +68,19 @@ class ReplayEpisode(models.Model):
     # Methods
     
     def __str__(self):
-        return ShowEpisode.__str__(self)
+        return f'{ self.show_episode } (S{ self.season }:E{ self.number })'
 
     def get_absolute_url(self):
         # replay/378 -> Replay Episode 378
         # replay/s2/45 -> Replay Season 2 Episode 45
         # replay/metal-gear-solid-3
-        return reverse('replay-detail-slug', kwargs={'slug': self.slug})
+        return reverse('replay-detail-slug', kwargs={'slug': self.show_episode.slug})
         #return reverse('replay-detail', args=[str(self.id)])
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(re.sub(r'Replay:\s?', '', self.title, 1, re.IGNORECASE))
-        return super(ReplayEpisode, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.slug:
+    #         self.slug = slugify(re.sub(r'Replay:\s?', '', self.title, 1, re.IGNORECASE))
+    #     return super(ReplayEpisode, self).save(*args, **kwargs)
 
     def get_season(self):
         # Episode numbers less than 1 are special unofficial episodes

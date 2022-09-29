@@ -25,22 +25,20 @@ def replay_episode_list_view(request):
 class ReplayEpisodeDetailView(generic.DetailView):
     model = ReplayEpisode
 
-def replay_episode_detail_view(request, pk):
-    replayepisode = get_object_or_404(ReplayEpisode, pk=pk)
+def replay_episode_detail_view_base(request, replayepisode):
     context = {
-        'episode': replayepisode
+        'episode': replayepisode.show_episode.episode,
+        'replayepisode': replayepisode
     }
     return render(request, 'replay/replayepisode_detail.html', context=context)
 
+def replay_episode_detail_view(request, pk):
+    replayepisode = get_object_or_404(ReplayEpisode, pk=pk)
+    return replay_episode_detail_view_base(request, replayepisode)
+
 def replay_episode_detail_slug_view(request, slug):
-    replayepisode = get_object_or_404(ReplayEpisode, slug=slug)
-    (season_num, season_episode_num) = replayepisode.get_season()
-    context = {
-        'episode': replayepisode,
-        'season_num': season_num,
-        'season_episode_num': season_episode_num
-    }
-    return render(request, 'replay/replayepisode_detail.html', context=context)
+    replayepisode = get_object_or_404(ReplayEpisode, show_episode__slug=slug)
+    return replay_episode_detail_view_base(request, replayepisode)
 
 class SegmentTypeListView(generic.ListView):
     model = SegmentType

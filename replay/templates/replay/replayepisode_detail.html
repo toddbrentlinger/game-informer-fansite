@@ -24,9 +24,9 @@
 
 {% block primary_info_header %}
     <h1>{{ episode.title }}</h1>
-    {% with season_tuple=episode.get_season %}
+    {% with season_tuple=replayepisode.get_season %}
         <span title="Season {{ season_tuple.0 }} Episode {{ season_tuple.1 }}">
-            S{{ season_tuple.0 }} E{{ season_tuple.1 }} (#{{ episode.number }})
+            S{{ season_tuple.0 }} E{{ season_tuple.1 }} (#{{ replayepisode.number }})
         </span>
     {% endwith %}
 {% endblock %}
@@ -36,7 +36,7 @@
         <div class="replay-episode-segment-inst" id="replay-episode-segment-main">
             <h2>Main Segment</h2>
             <ul class="segment-games">
-                {% for game in episode.main_segment_games.all %}
+                {% for game in replayepisode.main_segment_games.all %}
                     <li>
                         <a href="{{ game.get_absolute_url }}">
                             {% if game.cover %}
@@ -57,8 +57,8 @@
             </ul>
         </div>
 
-        {% if episode.other_segments.all %}
-            {% for segment in episode.other_segments.all %}
+        {% if replayepisode.other_segments.all %}
+            {% for segment in replayepisode.other_segments.all %}
                 <div class="replay-episode-segment-inst" >
                     <h2>
                         <a href="{{ segment.type.get_absolute_url }}">{{ segment.type }}</a>
@@ -89,13 +89,13 @@
 {% endblock %}
 
 {% block article %}
-    {% if episode.article %}
+    {% if replayepisode.article %}
         <hr>
 
         <div class="replay-episode-article">
-            <h2>{{ episode.article.title }}</h2>
-            <span>by <a href="{{ episode.article.author.get_absolute_url }}">{{ episode.article.author }}</a> on {{ episode.article.datetime }}</span>
-            <p>{{ episode.article.content }}</p>
+            <h2>{{ replayepisode.article.title }}</h2>
+            <span>by <a href="{{ replayepisode.article.author.get_absolute_url }}">{{ replayepisode.article.author }}</a> on {{ replayepisode.article.datetime }}</span>
+            <p>{{ replayepisode.article.content }}</p>
         </div>
     {% endif %}
 {% endblock %}
