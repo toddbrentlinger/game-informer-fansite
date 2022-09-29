@@ -863,8 +863,7 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
             youtube_video_inst.youtube_id = youtube_id
 
         # Title
-        if youtube_title:
-            youtube_video_inst.title = youtube_title
+        youtube_video_inst.title = youtube_title if youtube_title else replay_episode_data['episodeTitle']
 
         if 'youtube' in replay_episode_data:
             # Views
@@ -879,17 +878,18 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
         youtube_video_inst.save()
 
         # Thumbnails
-        for key, value in replay_episode_data['youtube']['thumbnails'].items():
-            try:
-                thumbnail = models.Thumbnail.objects.get(url=value['url'])
-            except models.Thumbnail.DoesNotExist:
-                thumbnail = models.Thumbnail.objects.create(
-                    quality=key.upper(),
-                    url=value['url'],
-                    width=value['width'],
-                    height=value['height']
-                )
-            youtube_video_inst.thumbnails.add(thumbnail)
+        if 'youtube' in replay_episode_data:
+            for key, value in replay_episode_data['youtube']['thumbnails'].items():
+                try:
+                    thumbnail = models.Thumbnail.objects.get(url=value['url'])
+                except models.Thumbnail.DoesNotExist:
+                    thumbnail = models.Thumbnail.objects.create(
+                        quality=key.upper(),
+                        url=value['url'],
+                        width=value['width'],
+                        height=value['height']
+                    )
+                youtube_video_inst.thumbnails.add(thumbnail)
 
     # Add dislikes to YouTubeVideo instance
     try:
@@ -965,8 +965,7 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
             if episode.host in episode.featuring.all():
                 episode.featuring.remove(episode.host)
 
-    # External Links and Other Headings inside 'details'
-    if 'details' in replay_episode_data:
+        # External Links and Other Headings inside 'details'
         # Headings - replayData.details
         HEADINGS_TO_IGNORE = ('external_links', 'system', 'gamedate', 'airdate', 'runtime', 'host', 'featuring', 'image')
         headingsJSON = {}
@@ -1013,7 +1012,7 @@ def update_or_create_episode_from_json(models, replay_episode_data, youtube):
             manytomany_instances_dict['external_links'].append(external_link)
 
     # Save Episode to database
-    #episode.save()
+    episode.save()
 
     # Now that Replay is saved to database, add ManyToManyFields
     add_model_inst_list_to_field(episode.featuring, manytomany_instances_dict['featuring'])
