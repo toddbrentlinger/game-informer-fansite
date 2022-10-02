@@ -1,9 +1,13 @@
 {% extends "episode_basic_tag.html" %}
 
+{% block episode_title_link %}
+    {{ replayepisode.get_absolute_url }}
+{% endblock %}
+
 {% block header_extra %}
-    {% with season_tuple=episode.get_season %}
+    {% with season_tuple=replayepisode.get_season %}
     <span title="Season {{ season_tuple.0 }} Episode {{ season_tuple.1 }}">
-        S{{ season_tuple.0 }} E{{ season_tuple.1 }} (#{{ episode.number }})
+        S{{ season_tuple.0 }} E{{ season_tuple.1 }} (#{{ replayepisode.number }})
     </span>
     {% endwith %}
 {% endblock %}
@@ -14,7 +18,7 @@
             <div class="segment-type">Main Segment</div>
             <div class="segment-games-container">
                 <ul class="segment-games-list">
-                    {% for game in episode.main_segment_games.all %}
+                    {% for game in replayepisode.main_segment_games.all %}
                         <li class="segment-game-list-item">
                             <a class="segment-game-link" href="{{ game.get_absolute_url }}">
                                 {% if game.cover %}
@@ -36,8 +40,8 @@
             </div>
         </div>
 
-        {% if episode.other_segments.all %}
-            {% for segment in episode.other_segments.all %}
+        {% if replayepisode.other_segments.all %}
+            {% for segment in replayepisode.other_segments.all %}
                 <div class="episode-segment-inst" >
                     <div class="segment-type">
                         <a href="{{ segment.type.get_absolute_url }}">{{ segment.type }}</a>
