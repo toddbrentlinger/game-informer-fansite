@@ -4,11 +4,16 @@ import time
 import pprint # Used to debug
 import math
 import re
+
 from django.db.models import Q
 from django.utils import timezone
+
 from utilities.igdb import IGDB # Make requests from IGDB API
+from utilities.data_migration_utilities import Models
+from utilities.data_migration_utilities import Models, add_model_inst_list_to_field, slugify_unique
 from utilities.data_migration_constants import SEGMENT_TYPES, GAME_NAME_ALTERNATIVES, SHOWS # Separate file to hold constants
-from utilities.show_data_migration import Models, add_model_inst_list_to_field, slugify_unique, update_or_create_person_inst, get_or_create_show, create_show_episode_slug
+from utilities.people_data_migration import update_or_create_person_inst
+from utilities.show_data_migration import get_or_create_show, create_show_episode_slug
 from utilities.misc import create_total_time_message # misc utility functions
 from utilities.youtube import YouTube
 from django.template.defaultfilters import slugify
@@ -1555,40 +1560,40 @@ def create_person_from_json(person_data, models):
 
     update_or_create_person_inst(models, person_data)
 
-def initialize_people_database(models):
-    '''
-    Adds models to database for Game Informer staff/guests from JSON file.
+# def initialize_people_database(models):
+#     '''
+#     Adds models to database for Game Informer staff/guests from JSON file.
 
-    Parameters:
-        models (Models): Models instance holding historic versions of each model
+#     Parameters:
+#         models (Models): Models instance holding historic versions of each model
 
-    '''
-    with open('utilities/gi_people.json', 'r', encoding='utf-8') as data_file:
+#     '''
+#     with open('utilities/gi_people.json', 'r', encoding='utf-8') as data_file:
 
-        # Get all people data
-        people_data = json.load(data_file)
+#         # Get all people data
+#         people_data = json.load(data_file)
 
-        # Return if no data
-        if not people_data: return
+#         # Return if no data
+#         if not people_data: return
 
-        total_count = len(people_data)
-        curr_count = 0
-        start_time = time.time()
+#         total_count = len(people_data)
+#         curr_count = 0
+#         start_time = time.time()
 
-        for person_data in reversed(people_data):
-            update_or_create_person_inst(models, person_data)
+#         for person_data in reversed(people_data):
+#             update_or_create_person_inst(models, person_data)
 
-            curr_count += 1
+#             curr_count += 1
 
-            avg_seconds_per_item = (time.time() - start_time) / curr_count
-            est_seconds_remaining = math.floor(avg_seconds_per_item * (total_count - curr_count))
+#             avg_seconds_per_item = (time.time() - start_time) / curr_count
+#             est_seconds_remaining = math.floor(avg_seconds_per_item * (total_count - curr_count))
 
-            print(f'Person: {person_data["name"]} - {curr_count}/{total_count} Completed! - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}')
+#             print(f'Person: {person_data["name"]} - {curr_count}/{total_count} Completed! - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}')
 
 def initialize_database(apps, schema_editor):
     models = Models(apps)
 
-    initialize_people_database(models)
+    # initialize_people_database(models)
 
     initialize_segmenttype_database(apps)
 
