@@ -15,7 +15,7 @@ def update_or_create_person_inst(models, person_data):
     Parameters:
         models (Models): 
         person_data (dict): Dictionary of data about specific person
-        person_data.name (str): Name of person
+        person_data.name (str): Name of person (REQUIRED)
 
     Returns:
         (Person): Matching Person model already existing in database or created and added to the database
@@ -35,22 +35,30 @@ def update_or_create_person_inst(models, person_data):
         person = models.Person()
 
     try:
-        thumbnail_inst = models.Thumbnail.objects.get(url=person_data['image']['srcset'][0])
-    except KeyError:
-        thumbnail_inst = None
+        person.thumbnail = models.Thumbnail.objects.get(url=person_data['image']['srcset'][0])
     except models.Thumbnail.DoesNotExist:
-        thumbnail_inst = models.Thumbnail.objects.create(
+        person.thumbnail = models.Thumbnail.objects.create(
             url=person_data['image']['srcset'][0],
             width=int(person_data['image']['width']),
             height=int(person_data['image']['height'])
         )
-    person.thumbnail = thumbnail_inst
+    except KeyError:
+        pass
 
-    person.full_name = person_data['name']
-    person.slug = slugify(person_data['name'])
-    person.description = '\n\n'.join(person_data['description']) if 'description' in person_data else ''
-    person.headings = person_data['headings'] if 'headings' in person_data else None
-    person.infobox_details = person_data['info_box_details'] if 'info_box_details' in person_data else None
+    if not person.full_name:
+        person.full_name = person_data['name']
+
+    if not person.slug:
+        person.slug = slugify(person_data['name'])
+
+    if not person.description:
+        person.description = '\n\n'.join(person_data['description']) if 'description' in person_data else ''
+    
+    if not person.headings:
+        person.headings = person_data['headings'] if 'headings' in person_data else None
+    
+    if not person.infobox_details:
+        person.infobox_details = person_data['info_box_details'] if 'info_box_details' in person_data else None
     
     # Save person instance in case it was just created
     person.save()

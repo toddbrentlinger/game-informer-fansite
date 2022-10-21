@@ -1548,48 +1548,6 @@ def initialize_segmenttype_database(apps):
             description=segment_content_dict['description'] if 'description' in segment_content_dict else ''
         )
 
-# TODO: Delete method? Not called anymore.
-def create_person_from_json(person_data, models):
-    '''
-    Converts dictionary of key/value pairs of Game Informer staff/guest into defined models inside database for data migration.
-
-    Parameters:
-        person_data (dict):
-        models (Models):
-    '''
-
-    update_or_create_person_inst(models, person_data)
-
-# def initialize_people_database(models):
-#     '''
-#     Adds models to database for Game Informer staff/guests from JSON file.
-
-#     Parameters:
-#         models (Models): Models instance holding historic versions of each model
-
-#     '''
-#     with open('utilities/gi_people.json', 'r', encoding='utf-8') as data_file:
-
-#         # Get all people data
-#         people_data = json.load(data_file)
-
-#         # Return if no data
-#         if not people_data: return
-
-#         total_count = len(people_data)
-#         curr_count = 0
-#         start_time = time.time()
-
-#         for person_data in reversed(people_data):
-#             update_or_create_person_inst(models, person_data)
-
-#             curr_count += 1
-
-#             avg_seconds_per_item = (time.time() - start_time) / curr_count
-#             est_seconds_remaining = math.floor(avg_seconds_per_item * (total_count - curr_count))
-
-#             print(f'Person: {person_data["name"]} - {curr_count}/{total_count} Completed! - Est. Time Remaining: {create_total_time_message(est_seconds_remaining)}')
-
 def initialize_database(apps, schema_editor):
     models = Models(apps)
 
