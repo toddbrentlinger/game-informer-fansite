@@ -19,7 +19,7 @@ def person_list_view(request):
     return render(request, 'people/person_list.html', context=context)
 
 def get_person_detail_view(request, person):
-    episode_list = ReplayEpisode.objects.filter(Q(host=person) | Q(featuring=person)).distinct()
+    episode_list = ReplayEpisode.objects.filter(Q(show_episode__episode__host=person) | Q(show_episode__episode__featuring=person)).distinct()
     paginator = Paginator(episode_list, 20)
 
     page_number = request.GET.get('page')
