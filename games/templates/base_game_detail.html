@@ -27,8 +27,8 @@
 
     {% block details %}{% endblock %}
 
-    <h2>{{ game_list|length }} {{ object.name }} Game{{ game_list|pluralize }} Played By Game Informer:</h2>
+    <h2>{{ page_obj.paginator.count }} {{ object.name }} Game{{ page_obj.paginator.count|pluralize }} Played By Game Informer:</h2>
 
-    {% game_basic_list_display game_list %}
+    {% game_basic_list_display page_obj %}
     
 {% endblock %}
