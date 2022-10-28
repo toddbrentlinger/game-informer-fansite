@@ -95,7 +95,7 @@ class CollectionDetailView(generic.DetailView):
 def collection_detail_slug_view(request, slug):
     collection = get_object_or_404(Collection, slug=slug)
 
-    paginator = Paginator(collection.game_set.all(), 20)
+    paginator = Paginator(collection.games.all(), 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -115,7 +115,7 @@ class FranchiseDetailView(generic.DetailView):
 def franchise_detail_slug_view(request, slug):
     franchise = get_object_or_404(Franchise, slug=slug)
 
-    paginator = Paginator(franchise.game_set.all(), 20)
+    paginator = Paginator(franchise.games.all(), 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
