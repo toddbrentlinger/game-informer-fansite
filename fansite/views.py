@@ -57,7 +57,7 @@ def search(request):
     search_input = request.GET['q']
 
     replayepisodes = ReplayEpisode.objects.filter(
-        Q(title__unaccent__icontains=search_input) 
+        Q(show_episode__episode__title__unaccent__icontains=search_input) 
         | Q(main_segment_games__name__unaccent__icontains=search_input)
         | Q(other_segments__games__name__unaccent__icontains=search_input)
     ).distinct()
