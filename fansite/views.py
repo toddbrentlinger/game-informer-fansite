@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import HttpResponse
 from games.models import Game, Platform, Developer, Collection, Franchise, Genre, Theme, Keyword
 from replay.models import ReplayEpisode, SegmentType
 from people.models import Person
@@ -12,16 +13,24 @@ from random import choice
 
 # Create your views here.
 
-def index(request):
-    '''View function for home page of site.'''
-
-    # Random items
+def get_random_replay_episode_inst():
     pks = ReplayEpisode.objects.values_list('pk', flat=True)
     if pks:
         random_pk = choice(pks)
-        random_replayepisode = ReplayEpisode.objects.get(pk=random_pk)
+        return ReplayEpisode.objects.get(pk=random_pk)
     else:
-        random_replayepisode = None
+        return None
+
+def get_random_replay_episode(request):
+    if request.method == 'GET':
+        response = HttpResponse()
+        response.write(get_random_replay_episode_inst())
+        return response
+    else:
+        return HttpResponse('Request method is NOT a GET')
+
+def index(request):
+    '''View function for home page of site.'''
 
     # Generate counts of some objects
     context = {
@@ -45,7 +54,7 @@ def index(request):
         'num_game_themes': Theme.objects.count(),
         'num_game_keywords': Keyword.objects.count(),
 
-        'random_replayepisode': random_replayepisode,
+        'random_replayepisode': get_random_replay_episode_inst(),
     }
 
     # Render the HTML template index.html with the data in the context variable
@@ -90,3 +99,13 @@ def search(request):
     }
 
     return render(request, 'search.html', context=context)
+
+def get_episodes(request):
+    if request.method == 'GET':
+        sort = request.GET.get('sort', '-airdate')
+        episode_list = Episode.objects.all().order_by(sort)
+
+        response = HttpResponse()
+        response.write(episode_list)
+    else:
+        return HttpResponse('Request method is NOT a GET')

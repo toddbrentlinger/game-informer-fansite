@@ -1,10 +1,17 @@
 {% extends "base_generic.html" %}
 
+{% load static %}
 {% load replayepisode_tags %}
+
+{% block custom-js %}
+    <script defer src="{% static 'fansite/js/requestReplayEpisodes.js' %}"></script>
+{% endblock %}
 
 {% block content %}
     <h1>Game Informer Fansite</h1>
     <p>Welcome to this fansite for Game Informer!</p>
+
+    <button id="get-replay-episodes-btn">Get Replay Episodes</button>
 
     <p>The fansite has the following record counts:</p>
     <ul>
