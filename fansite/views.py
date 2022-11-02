@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 from games.models import Game, Platform, Developer, Collection, Franchise, Genre, Theme, Keyword
 from replay.models import ReplayEpisode, SegmentType
 from people.models import Person
@@ -104,8 +105,19 @@ def get_episodes(request):
     if request.method == 'GET':
         sort = request.GET.get('sort', '-airdate')
         episode_list = Episode.objects.all().order_by(sort)
+        paginator = Paginator(episode_list, 20)
+        page_number = request.GET.get('page')
+        episode_page_obj = paginator.get_page(page_number)
 
-        response = HttpResponse()
-        response.write(episode_list)
+        response = HttpResponse(
+            render_to_string(
+                'episode_basic_list_tag.html',
+                context={
+                    'episode_page_obj': episode_page_obj,
+                }
+            )
+        )
+        
+        return response
     else:
         return HttpResponse('Request method is NOT a GET')
