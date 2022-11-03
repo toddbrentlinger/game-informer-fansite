@@ -5,30 +5,13 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from games.models import Game, Platform, Developer, Collection, Franchise, Genre, Theme, Keyword
 from replay.models import ReplayEpisode, SegmentType
+from replay.views import get_random_replay_episode_inst
 from people.models import Person
 from episodes.models import Episode, YouTubeVideo
 from superreplay.models import SuperReplay, SuperReplayEpisode
 from shows.models import ShowEpisode
 
-from random import choice
-
 # Create your views here.
-
-def get_random_replay_episode_inst():
-    pks = ReplayEpisode.objects.values_list('pk', flat=True)
-    if pks:
-        random_pk = choice(pks)
-        return ReplayEpisode.objects.get(pk=random_pk)
-    else:
-        return None
-
-def get_random_replay_episode(request):
-    if request.method == 'GET':
-        response = HttpResponse()
-        response.write(get_random_replay_episode_inst())
-        return response
-    else:
-        return HttpResponse('Request method is NOT a GET')
 
 def index(request):
     '''View function for home page of site.'''

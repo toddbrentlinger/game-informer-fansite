@@ -2,25 +2,17 @@
 
 (function() {
     const btn = document.getElementById('get-replay-episodes-btn');
+    const randReplayEpisodeElement = document.getElementById('rand-replay-episode');
+    const url = '/replay/get/ajax/random-replay-episode';
 
-    if (btn) {
+    if (btn && randReplayEpisodeElement) {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-
-            console.log('Get Replay Episodes!');
-
-            const url = 'get/ajax/episodes';
 
             fetch(url)
                 .then((response) => response.text())
                 .then((data) => {
-                    window.data = data;
-                    const tempElement = document.createElement('div');
-                    tempElement.innerHTML = data;
-                    btn.insertAdjacentElement(
-                        'afterend',
-                        tempElement
-                    );
+                    randReplayEpisodeElement.innerHTML = data;
                 });
         });
     }

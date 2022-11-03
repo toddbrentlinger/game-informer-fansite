@@ -1,7 +1,10 @@
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
+from django.template.loader import render_to_string
 from django.views import generic
 from .models import ReplayEpisode, Segment, SegmentType
+from random import choice
 
 # Create your views here.
 
@@ -80,3 +83,27 @@ def segment_type_detail_slug_view(request, slug):
     # }
     
     return render(request, 'replay/segmenttype_detail.html', context=context)
+
+def get_random_replay_episode_inst():
+    pks = ReplayEpisode.objects.values_list('pk', flat=True)
+    if pks:
+        random_pk = choice(pks)
+        return ReplayEpisode.objects.get(pk=random_pk)
+    else:
+        return None
+
+def get_random_replay_episode(request):
+    if request.method == 'GET':
+        replayepisode = get_random_replay_episode_inst()
+        response = HttpResponse(
+            render_to_string(
+                'replayepisode_basic_tag.html',
+                context={
+                    'episode': replayepisode.show_episode.episode,
+                    'replayepisode': replayepisode,
+                }
+            )
+        )
+        return response
+    else:
+        return HttpResponse('Request method is NOT a GET')

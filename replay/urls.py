@@ -15,4 +15,8 @@ urlpatterns = [
     # Regex
     re_path(r'segments/(?P<slug>[-\w]+)/$', views.segment_type_detail_slug_view, name='segment-type-detail-slug'),
     re_path(r'(?P<slug>[-\w]+)/$', views.replay_episode_detail_slug_view, name='replay-detail-slug'),
+
+    # AJAX
+    path('get/ajax/random-replay-episode', views.get_random_replay_episode, name='get_random_replay_episode'),
+
 ]
