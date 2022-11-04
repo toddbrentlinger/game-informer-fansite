@@ -145,7 +145,6 @@ def print_segment_types():
         for segment in sorted(segments):
             print(segment)
 
-
 def create_total_time_message(total_seconds):
     '''
     Creates time message given number of seconds (ex. 15 days, 18 hours, 45 minutes, 38 seconds)
@@ -233,6 +232,7 @@ def get_gi_shows():
         }
 
         for youtube_video_data in all_youtube_video_data:
+            # Check video tags
             if 'snippet' in youtube_video_data and 'tags' in youtube_video_data['snippet']:
                 matching_shows = set()
 
@@ -307,7 +307,6 @@ def main():
     #clean_json_file()
     #display_middle_segment_data()
     #display_second_segment_data()
-    pass
 
 if __name__ == '__main__':
     main()

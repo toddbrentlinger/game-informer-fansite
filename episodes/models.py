@@ -18,7 +18,6 @@ from people.models import Person
 # 3/6/22 - Headings Issue: Could create abstract model 'Heading', then create different type of headings (Text, Quotes, Gallery, etc)
 # with ForeignKey field 'episode'. Episode could have multiple TextHeadings but TextHeading has only one episode.
 # 8/19/22 - Move main_segment_games field from ReplayEpisode to Episode?
-# 9/13/22 - Make youtube_video field unique. Can field be unique AND blank? Yes, Null !== Null
 class Episode(models.Model):
     # Fields
 
@@ -221,7 +220,7 @@ class YouTubeVideo(models.Model):
 
     @property
     def like_ratio(self):
-        # 
+        # Return 0 if either 'likes' or 'dislikes' is blank
         if (self.dislikes is None or self.likes is None):
             return 0
 

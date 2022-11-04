@@ -103,6 +103,10 @@ footer {
   padding: 1.8rem;
 }
 
+#sidenav-list {
+  margin-right: 2rem;
+}
+
 header {
   border-bottom: 2px solid white;
 }

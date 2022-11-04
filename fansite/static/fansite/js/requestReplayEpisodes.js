@@ -13,7 +13,8 @@
                 .then((response) => response.text())
                 .then((data) => {
                     randReplayEpisodeElement.innerHTML = data;
-                });
+                })
+                .catch((err) => console.log(err));
         });
     }
 })();

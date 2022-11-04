@@ -1,5 +1,13 @@
 TODO:
 
+8/18/22
+
+- Add separate slug field for special episodes (ReplayEpisode and SuperReplayEpisode) to add to 
+end of special url which would be different than default Episode slug. 
+EX: 
+/super-replay/overblood/2 -> /episodes/super-replay-overblood-episode-2
+/replay/metal-gear-solid -> /episodes/replay-metal-gear-solid
+
 7/25/22
 
 - Change 'host' field in Episode abstract model from ForeignKey to ManyToManyField 
