@@ -8,8 +8,11 @@
 
 {% block content %}
     <h1>Episodes List</h1>
-    <p>{{ sort }}</p>
-    <p>{{ request.get_full_path }}</p>
+    <p>Sort: {{ sort }}</p>
+    <p>Full Path: {{ request.get_full_path }}</p>
+    <p>Sort Type: {{ sort_type }}</p>
+    <p>Ascending: {{ ascending }}</p>
+    <p>Max Displayed: {{ max_displayed }}</p>
     
     {% episode_basic_list_display episode_page_obj %}
 {% endblock %}

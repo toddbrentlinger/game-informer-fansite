@@ -9,7 +9,15 @@ def episode_basic_display(episode):
 @register.inclusion_tag('episode_basic_list_tag.html')
 def episode_basic_list_display(episode_page_obj):
     return {
-        'episode_page_obj': episode_page_obj
+        'episode_page_obj': episode_page_obj,
+    }
+
+@register.inclusion_tag('episode_basic_list_tag.html')
+def episode_basic_list_display_ajax(episode_page_obj, sort, filter):
+    return {
+        'episode_page_obj': episode_page_obj,
+        'sort': sort,
+        'filter': filter,
     }
 
 @register.inclusion_tag('heading_tag.html')

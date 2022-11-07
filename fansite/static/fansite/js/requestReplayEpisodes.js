@@ -1,7 +1,7 @@
 'use strict';
 
 (function() {
-    const btn = document.getElementById('get-replay-episodes-btn');
+    const btn = document.getElementById('get-rand-replay-episode-btn');
     const randReplayEpisodeElement = document.getElementById('rand-replay-episode');
     const url = '/replay/get/ajax/random-replay-episode';
 
