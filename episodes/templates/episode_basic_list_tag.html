@@ -2,7 +2,7 @@
 {% load fansite_tags %}
 
 {% if episode_page_obj %}
-    {% create_page_selection episode_page_obj %}
+    {% create_page_selection page_obj=episode_page_obj get_query=get_query %}
 
     <div class="sort-main">
         <div class="sort-container">
@@ -54,5 +54,5 @@
             <li>There are no Episodes!</li>
         {% endfor %}
     </ul>
-    {% create_page_selection episode_page_obj %}
+    {% create_page_selection page_obj=episode_page_obj get_query=get_query %}
 {% endif %}

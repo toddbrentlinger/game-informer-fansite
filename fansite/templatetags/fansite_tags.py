@@ -4,6 +4,13 @@ from django import template
 
 register = template.Library()
 
+@register.simple_tag
+def query_transform(get_query, **kwargs):
+    query = get_query.copy()
+    for key, value in kwargs.items():
+        query[key] = value
+    return query.urlencode()
+
 @register.inclusion_tag('img_gallery_slider_tag.html')
 def create_img_gallery_slider(img_list, src_base, file_type = 'png', alt_append = ''):
     return {
@@ -21,7 +28,7 @@ def create_video_gallery_slider(gamevideo_list):
     }
 
 @register.inclusion_tag('page_selection_tag.html')
-def create_page_selection(page_obj, num_page_btns = 5):
+def create_page_selection(page_obj, get_query, num_page_btns = 5):
     curr_page = page_obj.number
     last_page = page_obj.paginator.num_pages
     middle_page = math.ceil(num_page_btns / 2)
@@ -53,6 +60,7 @@ def create_page_selection(page_obj, num_page_btns = 5):
         'first': first,
         'last': last,
         'range': range(start, end + 1),
+        'get_query': get_query,
     }
 
 @register.filter

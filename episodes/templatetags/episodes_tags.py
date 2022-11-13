@@ -13,11 +13,12 @@ def episode_basic_list_display(episode_page_obj):
     }
 
 @register.inclusion_tag('episode_basic_list_tag.html')
-def episode_basic_list_display_ajax(episode_page_obj, sort, filter):
+def episode_basic_list_display_ajax(episode_page_obj, sort, filter, get_query):
     return {
         'episode_page_obj': episode_page_obj,
         'sort': sort,
         'filter': filter,
+        'get_query': get_query,
     }
 
 @register.inclusion_tag('heading_tag.html')

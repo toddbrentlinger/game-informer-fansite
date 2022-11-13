@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% load episodes_tags %}
+{% load fansite_tags %}
 
 {% block title %}
     <title>Game Informer Fansite - Episodes</title>
@@ -8,11 +9,10 @@
 
 {% block content %}
     <h1>Episodes List</h1>
-    <p>Sort: {{ sort }}</p>
     <p>Full Path: {{ request.get_full_path }}</p>
-    <p>Sort Type: {{ sort_type }}</p>
-    <p>Ascending: {{ ascending }}</p>
+    <p>Sort Type: {{ sort.type }}</p>
+    <p>Descending: {{ sort.descending }}</p>
     <p>Max Displayed: {{ max_displayed }}</p>
     
-    {% episode_basic_list_display episode_page_obj %}
+    {% episode_basic_list_display_ajax episode_page_obj=episode_page_obj sort=sort filter="" get_query=get_query %}
 {% endblock %}

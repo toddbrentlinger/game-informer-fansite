@@ -36,9 +36,9 @@ def episode_list_view_ajax(request):
     sort_type = request.GET.get('sort', '-airdate')
 
     # Sort direction using '-' prefix in sort_type
-    ascending = sort_type.startswith('-')
-    # If ascending is True, remove '-' prefix from sort_type
-    if ascending:
+    descending = sort_type.startswith('-')
+    # If descending is True, remove '-' prefix from sort_type
+    if descending:
         sort_type = sort_type.removeprefix('-')
 
     # TODO: Confirm sort type validity. If not, set to 'airdate' OR raise error
@@ -51,8 +51,8 @@ def episode_list_view_ajax(request):
     else:
         sort = sort_type
 
-    # Add '-' prefix to sort string if ascending is true
-    if ascending:
+    # Add '-' prefix to sort string if descending is True
+    if descending:
         sort = '-' + sort_type
 
     max_displayed = request.GET.get('display', 25)
@@ -67,9 +67,12 @@ def episode_list_view_ajax(request):
 
     context = {
         'episode_page_obj': episode_page_obj,
-        'sort_type': sort_type,
-        'ascending': ascending,
+        'sort': {
+            'type': sort_type,
+            'descending': descending,
+        },
         'max_displayed': max_displayed,
+        'get_query': request.GET.copy(),
     }
 
     return render(request, 'episodes/episode_list.html', context=context)
