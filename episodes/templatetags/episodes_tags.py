@@ -17,7 +17,14 @@ def episode_basic_list_display_ajax(episode_page_obj, sort, filter, get_query):
     return {
         'episode_page_obj': episode_page_obj,
         'sort': sort,
+        'sort_options_dict': {
+            'airdate': 'Airdate',
+            'views': 'Views',
+            'likes': 'Likes',
+            'video-length': 'Video Length', 
+        },
         'filter': filter,
+        'max_displayed_options': [10, 25, 50, 100, 200,],
         'get_query': get_query,
     }
 

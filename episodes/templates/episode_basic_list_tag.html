@@ -10,29 +10,41 @@
                 Sort:
                 <select name="sort-type" id="sort-type-select">
                     <option value="none">-- Sort By --</option>
-                    <option value="airdate" selected=""><a href="">Air Date</a></option>
-                    <option value="views">Views</option>
-                    <option value="likes">Likes</option>
-                    <option value="video-length">Video Length</option>
+                    {% for key, value in sort_options_dict.items %}
+                        <option 
+                            value={{ key }}
+                            {% if sort.type == key %}selected=""{% endif %}
+                        >
+                            {{ value }}
+                        </option>
+                    {% endfor %}
                 </select>
             </label>
 
             <label for="sort-direction-select">
                 Direction:
                 <select name="sort-direction" id="sort-direction-select">
-                    <option value="descending" selected="">Descending</option>
-                    <option value="ascending">Ascending</option>
+                    <option 
+                        value="descending"
+                        {% if sort.descending %}selected=""{% endif %}
+                    >Descending</option>
+                    <option 
+                        value="ascending"
+                        {% if not sort.descending %}selected=""{% endif %}
+                    >Ascending</option>
                 </select>
             </label>
 
             <label for="max-displayed-select">
                 Per Page:
                 <select name="max-displayed" id="max-displayed-select">
-                    <option selected="">10</option>
-                    <option>25</option>
-                    <option>50</option>
-                    <option>100</option>
-                    <option>200</option>
+                    {% for max_displayed_num in max_displayed_options %}
+                        <option
+                            {% if max_displayed_num == episode_page_obj.paginator.per_page %}
+                                selected=""
+                            {% endif %}
+                        >{{ max_displayed_num }}</option>
+                    {% endfor %}
                     <option value="0">All</option>
                 </select>
             </label>
