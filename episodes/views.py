@@ -53,7 +53,7 @@ def episode_list_view_ajax(request):
 
     # Add '-' prefix to sort string if descending is True
     if descending:
-        sort = '-' + sort_type
+        sort = '-' + sort
 
     max_displayed = request.GET.get('display', 25)
     # TODO: Limit between 0 to max value (100?)
