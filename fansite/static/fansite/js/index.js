@@ -150,10 +150,12 @@
     }
 
     // URL Search Param On Change Handlers
+
+    // TODO: Add section if URLSearchParams is NOT supported?
     function urlSearchParamOnChange(e) {
         const searchParams = new URLSearchParams(location.search);
 
-        if (searchParams.has(e.target.name) && searchParams.get(e.target.name) !== e.target.value) {
+        if (!searchParams.has(e.target.name) || searchParams.get(e.target.name) !== e.target.value) {
             searchParams.set(e.target.name, e.target.value);
             location.href = location.origin + location.pathname + '?' + searchParams.toString();
         }
