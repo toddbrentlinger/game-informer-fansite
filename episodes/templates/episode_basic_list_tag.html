@@ -5,10 +5,10 @@
     {% create_page_selection page_obj=episode_page_obj get_query=get_query %}
 
     <div class="sort-main">
-        <div class="sort-container">
+        <form class="sort-container">
             <label for="sort-type-select">
                 Sort:
-                <select name="sort-type" id="sort-type-select">
+                <select name="sort" id="sort-type-select">
                     <option value="none">-- Sort By --</option>
                     {% for key, value in sort_options_dict.items %}
                         <option 
@@ -23,21 +23,21 @@
 
             <label for="sort-direction-select">
                 Direction:
-                <select name="sort-direction" id="sort-direction-select">
+                <select name="dir" id="sort-direction-select">
                     <option 
-                        value="descending"
-                        {% if sort.descending %}selected=""{% endif %}
+                        value="desc"
+                        {% if sort.direction == "desc" %}selected=""{% endif %}
                     >Descending</option>
                     <option 
-                        value="ascending"
-                        {% if not sort.descending %}selected=""{% endif %}
+                        value="asc"
+                        {% if sort.direction == "asc" %}selected=""{% endif %}
                     >Ascending</option>
                 </select>
             </label>
 
             <label for="max-displayed-select">
                 Per Page:
-                <select name="max-displayed" id="max-displayed-select">
+                <select name="display" id="max-displayed-select">
                     {% for max_displayed_num in max_displayed_options %}
                         <option
                             {% if max_displayed_num == episode_page_obj.paginator.per_page %}
@@ -48,7 +48,7 @@
                     <option value="0">All</option>
                 </select>
             </label>
-        </div>
+        </form>
 
         <div class="number-displayed-container">
             <div>Showing {{ episode_page_obj.start_index }} - {{ episode_page_obj.end_index }} of {{ episode_page_obj.paginator.count|add_commas_to_num }} replay episodes</div>

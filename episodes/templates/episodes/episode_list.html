@@ -11,7 +11,7 @@
     <h1>Episodes List</h1>
     <p>Full Path: {{ request.get_full_path }}</p>
     <p>Sort Type: {{ sort.type }}</p>
-    <p>Descending: {{ sort.descending }}</p>
+    <p>Direction: {{ sort.direction }}</p>
     <p>Max Displayed: {{ max_displayed }}</p>
     
     {% episode_basic_list_display_ajax episode_page_obj=episode_page_obj sort=sort filter="" get_query=get_query %}

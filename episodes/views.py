@@ -32,15 +32,9 @@ def episode_list_view_ajax(request):
         'views': 'youtube_video__views',
     }
 
-    # Sort type initialized with optional '-' prefix
-    sort_type = request.GET.get('sort', '-airdate')
-
-    # Sort direction using '-' prefix in sort_type
-    descending = sort_type.startswith('-')
-    # If descending is True, remove '-' prefix from sort_type
-    if descending:
-        sort_type = sort_type.removeprefix('-')
-
+    # Sort type initialized with default 'airdate'
+    sort_type = request.GET.get('sort', 'airdate')
+    
     # TODO: Confirm sort type validity. If not, set to 'airdate' OR raise error
     # Could use Form object instead Or try-catch if sort type NOT valid
     
@@ -51,8 +45,11 @@ def episode_list_view_ajax(request):
     else:
         sort = sort_type
 
+    # Sort direction initialized with default 'ascending'
+    sort_direction = request.GET.get('dir', 'asc')
+
     # Add '-' prefix to sort string if descending is True
-    if descending:
+    if sort_direction == 'desc':
         sort = '-' + sort
 
     max_displayed = request.GET.get('display', 25)
@@ -69,7 +66,7 @@ def episode_list_view_ajax(request):
         'episode_page_obj': episode_page_obj,
         'sort': {
             'type': sort_type,
-            'descending': descending,
+            'direction': sort_direction,
         },
         'max_displayed': max_displayed,
         'get_query': request.GET.copy(),

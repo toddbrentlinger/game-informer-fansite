@@ -148,4 +148,23 @@
             new ImageSlider(imgSliderElement).init();
         });
     }
+
+    // URL Search Param On Change Handlers
+    function urlSearchParamOnChange(e) {
+        const searchParams = new URLSearchParams(location.search);
+
+        if (searchParams.has(e.target.name) && searchParams.get(e.target.name) !== e.target.value) {
+            searchParams.set(e.target.name, e.target.value);
+            location.href = location.origin + location.pathname + '?' + searchParams.toString();
+        }
+    }
+
+    let selectElement;
+    ['sort-type-select', 'sort-direction-select', 'max-displayed-select']
+        .forEach((elementID) => {
+            selectElement = document.getElementById(elementID);
+            if (selectElement) {
+                selectElement.addEventListener('change', urlSearchParamOnChange);
+            }
+        });
 })();
