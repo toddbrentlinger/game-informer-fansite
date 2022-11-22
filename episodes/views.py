@@ -1,5 +1,6 @@
 from django.core.exceptions import FieldError
 from django.core.paginator import Paginator
+from django.db.models import F
 from django.shortcuts import render, get_object_or_404
 from django.views import generic
 from .models import Episode
@@ -34,7 +35,7 @@ def episode_list_view_ajax(request):
 
     # Sort type initialized with default 'airdate'
     sort_type = request.GET.get('sort', 'airdate')
-    
+
     # TODO: Confirm sort type validity. If not, set to 'airdate' OR raise error
     # Could use Form object instead Or try-catch if sort type NOT valid
     
@@ -49,13 +50,16 @@ def episode_list_view_ajax(request):
     sort_direction = request.GET.get('dir', 'asc')
 
     # Add '-' prefix to sort string if descending is True
-    if sort_direction == 'desc':
-        sort = '-' + sort
+    # if sort_direction == 'desc':
+    #     sort = '-' + sort
 
     max_displayed = request.GET.get('display', 25)
     # TODO: Limit between 0 to max value (100?)
     
-    episode_list = Episode.objects.all().order_by(sort)
+    if (sort_direction == 'asc'):
+        episode_list = Episode.objects.all().order_by(F(sort).asc(nulls_last=True))
+    else:
+        episode_list = Episode.objects.all().order_by(F(sort).desc(nulls_last=True))
 
     paginator = Paginator(episode_list, max_displayed)
 
