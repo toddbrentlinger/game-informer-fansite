@@ -1,50 +1,53 @@
-from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.views import generic
 from .models import Show, ShowEpisode
 from episodes.models import Episode
+from episodes.views import creat_sort_filter_context
 
 class ShowListView(generic.ListView):
-    model = Show
-    paginate_by = 20
-
-class ShowDetailView(generic.DetailView):
+    """Return a HttpResponse using generic ListView to display list of Shows."""
     model = Show
 
 def show_detail_slug_view(request, slug):
+    """Return a HttpResponse to display list of Episodes that are part of a single Show, given slug for specific Show."""
+    # If no slug is provided OR show title slug is 'other', get all Episodes that are NOT part of any show
     if slug is None or slug == 'other':
-        show = None
-        show_episodes_list = Episode.objects.exclude(id__in=ShowEpisode.objects.all().values_list('id', flat=True))
+        # Get QuerySet of all Episodes NOT associated with any ShowEpisode instance
+        query_set = Episode.objects.exclude(id__in=ShowEpisode.objects.all().values_list('episode_id', flat=True))
+        
+        # Create base context to display Episode list with sort and filter options
+        context = creat_sort_filter_context(request, query_set)
+
+        # Render using template for no existing Show
+        return render(request, 'shows/no_show_detail.html', context=context)
+    # Else get all Episodes part of show title slug
     else:
+        # Find Show matching slug OR throw 404 Error if NO match found
         show = get_object_or_404(Show, slug=slug)
-        show_episodes_list = show.showepisode_set.all()
-
-    paginator = Paginator(show_episodes_list, 20)
-    page_number = request.GET.get('page')
-    episode_page_obj = paginator.get_page(page_number)
-
-    context = {
-        'show': show,
-        'episode_page_obj': episode_page_obj,
-    }
-
-    return render(
-        request, 
-        'shows/show_detail.html' if show else 'shows/no_show_detail.html', 
-        context=context
-    )
+        
+        # Get QuerySet of all ShowEpisodes associated with the Show
+        query_set = show.showepisode_set.all()
+        
+        # Create base context to display Episode list with sort and filter options
+        # passing in sort prefix to sort by Episode data instead of ShowEpisode that
+        # is passed in QuerySet.
+        context = creat_sort_filter_context(request, query_set, 'episode__')
+        
+        # Add show to context to be used in template
+        context['show'] = show
+        
+        # Render using template for existing Show
+        return render(request, 'shows/show_detail.html', context=context)
 
 def showepisode_detail_slug_view(request, *args, **kwargs):
-    # show_slug
-    #show = get_object_or_404(Show, slug=kwargs['show_slug'])
-    show = Show.objects.get(slug=kwargs['show_slug'])
+    """Return a HttpResponse to display single ShowEpisode detail, given slugs for specific Show and ShowEpisode."""
+    # Show slug
+    show = get_object_or_404(Show, slug=kwargs['show_slug'])
     
-    # showepisode_slug
-    #showepisode = get_object_or_404(show=show, slug=kwargs['showepisode_slug'])
-    showepisode = ShowEpisode.objects.get(show=show, slug=kwargs['showepisode_slug'])
+    # ShowEpisode slug
+    showepisode = get_object_or_404(ShowEpisode, show=show, slug=kwargs['showepisode_slug'])
 
-    context = {
-        'episode': showepisode.episode,
-    }
+    # Add Episode of ShowEpisode to context that is passed to template
+    context = { 'episode': showepisode.episode, }
 
     return render(request, 'shows/showepisode_detail.html', context=context)

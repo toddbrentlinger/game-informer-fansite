@@ -9,5 +9,5 @@
 {% block content %}
     <h1>{{ show.name }}</h1>
     
-    {% showepisode_basic_list_display episode_page_obj %}
+    {% showepisode_basic_list_display episode_page_obj sort=sort filter=filter get_query=request.GET %}
 {% endblock %}

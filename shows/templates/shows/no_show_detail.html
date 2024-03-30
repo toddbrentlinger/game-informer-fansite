@@ -9,5 +9,5 @@
 {% block content %}
     <h1>No Shows</h1>
     
-    {% episode_basic_list_display episode_page_obj %}
+    {% episode_basic_list_display episode_page_obj sort=sort filter=filter get_query=request.GET %}
 {% endblock %}
