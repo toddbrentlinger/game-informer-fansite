@@ -1,17 +1,13 @@
 import uuid # used for unique model instances
-import re
 
 from django.db import models
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.template.defaultfilters import slugify
 from games.models import Game
 from people.models import Person
 from shows.models import ShowEpisode
-#from episodes.models import Episode
-
-# Create your models here.
-
-# Models
 
 '''
 TODO:
@@ -25,7 +21,6 @@ No need to save base thumbnails in database.
 
 class Article(models.Model):
     """Model representing an article."""
-
     # Fields
 
     title = models.CharField(max_length=100, help_text='Enter article title.')
@@ -44,11 +39,32 @@ class Article(models.Model):
     def __str__(self):
         return f'{self.title} by {self.author} on {self.datetime.strftime("%b %d, %Y at %I:%M %p")}'
 
+class ReplayEpisodeManager(models.Manager):
+    def with_season_and_episode(self, season, season_episode):
+        # If season is zero, season_episode is number of special unoffical episode
+        if season == 0:
+            return get_object_or_404(self.model, number=season_episode * -1)
+
+        # If season number is greater than existing seasons, raise Http404 error
+        total_seasons = len(ReplayEpisode.replay_season_start_episodes)
+        if season > total_seasons:
+            raise Http404(f'Season number {season} is larger than max Replay seasons of {total_seasons}.')
+        
+        # If season episode number is NOT within season, raise Http404 error
+        if (season < total_seasons):
+            episodes_in_season = ReplayEpisode.replay_season_start_episodes[season] - ReplayEpisode.replay_season_start_episodes[season - 1]
+            if season_episode > episodes_in_season:
+                raise Http404(f'Season number {season} only has {episodes_in_season} episodes.')
+        
+        # Add first overall episode number in season to season_episode
+        number = ReplayEpisode.replay_season_start_episodes[season - 1] + season_episode - 1
+
+        return get_object_or_404(self.model, number=number)
+
 # TODO: Replace 'middle_segment' and 'second_segment' with 'segments' ManyToManyField.
 # Should add main segment inside segments instead of having separate field just for main segment games?
 class ReplayEpisode(models.Model):
     """Model representing an episode of Replay."""
-
     # Fields
 
     show_episode = models.OneToOneField(ShowEpisode, on_delete=models.PROTECT, help_text='Enter show episode for the Replay episode.')
@@ -59,6 +75,14 @@ class ReplayEpisode(models.Model):
     # middle_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_middle_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Middle Segment', help_text='Enter middle segment for the Replay episode.')
     # second_segment = models.ForeignKey(Segment, related_name='%(app_label)s_%(class)s_second_segment_related', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Second Segment', help_text='Enter second segment for the Replay episode.')
     article = models.OneToOneField(Article, on_delete=models.SET_NULL, null=True, blank=True, help_text='Enter article for the Replay episode.')
+
+    # Manager
+    objects = ReplayEpisodeManager()
+
+    # Static Class Attributes
+
+    # Episode numbers less than 1 are special unofficial episodes
+    replay_season_start_episodes = [1, 107, 268, 385, 443, 499] # [S1, S2, S3, S4, S5, S6]
 
     # Metadata
 
@@ -75,7 +99,6 @@ class ReplayEpisode(models.Model):
         # replay/s2/45 -> Replay Season 2 Episode 45
         # replay/metal-gear-solid-3
         return reverse('replay-detail-slug', kwargs={'slug': self.show_episode.slug})
-        #return reverse('replay-detail', args=[str(self.id)])
 
     # def save(self, *args, **kwargs):
     #     if not self.slug:
@@ -83,22 +106,19 @@ class ReplayEpisode(models.Model):
     #     return super(ReplayEpisode, self).save(*args, **kwargs)
 
     def get_season(self):
-        # Episode numbers less than 1 are special unofficial episodes
-        replaySeasonStartEpisodes = [1, 107, 268, 385, 443, 499] # [S1, S2, S3, S4, S5, S6]
-
         # Season
         
-        for index in range(len(replaySeasonStartEpisodes)):
-            if (self.number < replaySeasonStartEpisodes[index]):
+        for index in range(len(ReplayEpisode.replay_season_start_episodes)):
+            if (self.number < ReplayEpisode.replay_season_start_episodes[index]):
                 season = index
                 break
             # If reached end of loop, assign last season
-            if index == (len(replaySeasonStartEpisodes) - 1):
-                season = len(replaySeasonStartEpisodes)
+            if index == (len(ReplayEpisode.replay_season_start_episodes) - 1):
+                season = len(ReplayEpisode.replay_season_start_episodes)
 
         # Season Episode
 
-        seasonEpisode = self.number - replaySeasonStartEpisodes[season - 1] + 1 if season > 1 else self.number
+        seasonEpisode = self.number - ReplayEpisode.replay_season_start_episodes[season - 1] + 1 if season > 1 else self.number
 
         # Return tuple (season, seasonEpisode)
         return (season, seasonEpisode)
