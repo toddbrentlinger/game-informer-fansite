@@ -9,7 +9,7 @@
 {% block content %}
     <h1>Segment Type List View</h1>
     {% if page_obj %}
-        {% create_page_selection page_obj %}
+        {% create_page_selection page_obj=page_obj get_query=request.GET %}
         <ul>
             {% for segmenttype in page_obj %}
             <li>
@@ -17,7 +17,7 @@
             </li>
             {% endfor %}
         </ul>
-        {% create_page_selection page_obj %}
+        {% create_page_selection page_obj=page_obj get_query=request.GET %}
     {% else %}
         <p>There are no Replay segment types!</p>
     {% endif %}

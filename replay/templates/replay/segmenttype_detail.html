@@ -20,6 +20,6 @@
 
     <h2>{{ episode_page_obj.count }} Replay Episode{{ episode_page_obj.count|pluralize }} featuring {{ segmenttype.title }} Played By Game Informer:</h2>
     
-    {% replayepisode_basic_list_display episode_page_obj %}
+    {% replayepisode_basic_list_display replayepisode_page_obj=episode_page_obj sort=sort filter=filter get_query=request.GET %}
 
 {% endblock %}

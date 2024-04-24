@@ -11,6 +11,5 @@
     
     <h1>Replay Episode List</h1>
 
-    {% replayepisode_basic_list_display episode_page_obj %}
-    
+    {% replayepisode_basic_list_display replayepisode_page_obj=episode_page_obj sort=sort filter=filter get_query=request.GET %}
 {% endblock %}
