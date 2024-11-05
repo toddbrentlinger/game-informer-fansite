@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views import generic
 from .models import Episode
 
-def creat_sort_filter_context(request, query_set, sort_prefix = ''):
+def creat_sort_filter_context(request, query_set, sort_prefix = '', sort_updates = {}, sort_default = 'airdate'):
     """Return a base context object for sorted and filtered Episode list."""
     # Conversions from select option value to query string used in order_by() method
     SORT_TYPES = {
@@ -13,8 +13,11 @@ def creat_sort_filter_context(request, query_set, sort_prefix = ''):
         'views': 'youtube_video__views',
     }
 
-    # Sort type initialized with default 'airdate'
-    sort_type = request.GET.get('sort', 'airdate')
+    # Add any sort_updates to SORT_TYPES by merging dicts
+    SORT_TYPES.update(sort_updates)
+
+    # Sort type initialized with default value
+    sort_type = request.GET.get('sort', sort_default)
 
     # TODO: Confirm sort type validity. If not, set to 'airdate' OR raise error
     # Could use Form object instead Or try-catch if sort type NOT valid
@@ -32,11 +35,13 @@ def creat_sort_filter_context(request, query_set, sort_prefix = ''):
     # TODO: Limit between 0 to max value (100?)
     max_displayed = request.GET.get('display', 25)
 
+    # Create QuerySet
     if (sort_direction == 'asc'):
         query_set = query_set.order_by(F(sort_prefix + sort).asc(nulls_last=True))
     else:
         query_set = query_set.order_by(F(sort_prefix + sort).desc(nulls_last=True))
 
+    # Create Page object with QuerySet
     paginator = Paginator(query_set, max_displayed)
     page_number = request.GET.get('page')
     episode_page_obj = paginator.get_page(page_number)
