@@ -8,5 +8,5 @@
 
 {% block content %}
     <h1>People List View</h1>
-    {% person_basic_list_display page_obj %}
+    {% person_basic_list_display page_obj=page_obj get_query=request.GET %}
 {% endblock %}

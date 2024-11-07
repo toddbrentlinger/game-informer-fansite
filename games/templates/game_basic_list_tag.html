@@ -1,7 +1,7 @@
 {% load fansite_tags %}
 
 {% if page_obj %}
-    {% create_page_selection page_obj %}
+    {% create_page_selection page_obj=page_obj get_query=get_query %}
     <ul 
         class="game-basic-list"
         style="display: grid;grid-template-columns: repeat(auto-fill, minmax(250px, 20%));justify-content: space-around;gap: 1em;"
@@ -45,5 +45,5 @@
             <li>There are no video games!</li>
         {% endfor %}
     </ul>
-    {% create_page_selection page_obj %}
+    {% create_page_selection page_obj=page_obj get_query=get_query %}
 {% endif %}
