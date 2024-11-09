@@ -73,7 +73,7 @@ html {
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;
-  background-position: center;
+  background-position: top;
 }
 
 *, *::before, *::after {
@@ -85,7 +85,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: -webkit-max-content 1fr;
   grid-template-columns: max-content 1fr;
   grid-template-rows: auto 1fr auto;
   grid-template-areas: "header header" "main main" "footer footer";
@@ -101,10 +100,6 @@ header,
 #main-content,
 footer {
   padding: 1.8rem;
-}
-
-#sidenav-list {
-  margin-right: 2rem;
 }
 
 header {
@@ -162,9 +157,9 @@ header img {
 
 #sidenav-list {
   display: grid;
-  grid-template-columns: -webkit-max-content;
   grid-template-columns: max-content;
   gap: 1.6rem;
+  margin-right: 2rem;
 }
 
 #sidenav hr {
@@ -241,6 +236,22 @@ a:active {
 }
 
 /* Video Player */
+/*
+ytd-watch-flexy[full-bleed-player] #full-bleed-container.ytd-watch-flexy {
+	display: -moz-box;
+	display: flex;
+	-moz-box-orient: horizontal;
+	-moz-box-direction: normal;
+	flex-direction: row;
+	position: relative;
+	width: 100%;
+	height: 56.25vw;
+	max-height: calc(100vh - 169px);
+	min-height: 480px;
+	overflow-x: clip;
+	background: #000;
+}
+*/
 /* max-height set in code */
 #video-player-container {
   margin: 0;
