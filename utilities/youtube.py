@@ -142,12 +142,15 @@ def save_gi_youtube_data():
     with open('utilities/gi_youtube_video_data.json', 'w') as outfile:
             json.dump(video_data, outfile, indent=2)
 
-def main():
+def youtube_api_test():
     youtube_inst = YouTube()
     pprint.pprint(
         youtube_inst.get_youtube_video_data('o5mi4ckGAgg'),
         indent=4
     )
+
+def main():
+    save_gi_youtube_data()
 
 if __name__ == "__main__":
     main()
