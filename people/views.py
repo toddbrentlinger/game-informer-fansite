@@ -6,9 +6,12 @@ from replay.models import ReplayEpisode
 from episodes.models import Episode
 
 def person_list_view(request):
+    """Return a HttpResponse to display list of people."""
+    # Create QuerySet of all people
     person_list = Person.objects.all()
-    paginator = Paginator(person_list, 20)
 
+    # Create Page object with QuerySet of all people
+    paginator = Paginator(person_list, 25)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
